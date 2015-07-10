@@ -37,6 +37,7 @@ namespace NETPLAY
     virtual bool Initialize(void);
     virtual void Deinitialize(void);
 
+    // implementation of IGame
     virtual ADDON_STATUS Create(void* callbacks, void* props);
     virtual void         Stop(void);
     virtual void         Destroy(void);
@@ -46,7 +47,6 @@ namespace NETPLAY
     virtual ADDON_STATUS SetSetting(const char* settingName, const void* settingValue);
     virtual void         FreeSettings(void);
     virtual void         Announce(const char* flag, const char* sender, const char* message, const void* data);
-
     virtual const char* GetGameAPIVersion(void);
     virtual const char* GetMininumGameAPIVersion(void);
     virtual GAME_ERROR LoadGame(const char* url);
@@ -81,7 +81,6 @@ namespace NETPLAY
     ADDON_STATUS (*m_ADDON_SetSetting)(const char* settingName, const void* settingValue);
     void         (*m_ADDON_FreeSettings)(void);
     void         (*m_ADDON_Announce)(const char* flag, const char* sender, const char* message, const void* data);
-
     const char* (*m_GetGameAPIVersion)(void);
     const char* (*m_GetMininumGameAPIVersion)(void);
     GAME_ERROR (*m_LoadGame)(const char* url);
