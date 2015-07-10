@@ -61,24 +61,24 @@ void CFrontendDLL::Deinitialize(void)
   m_game  = NULL;
 }
 
-void CFrontendDLL::Log(const addon_log_t loglevel, const char* msg)
+void CFrontendDLL::Log(const addon_log_t loglevel, const std::string& msg)
 {
-  return m_addon->Log(loglevel, msg);
+  return m_addon->Log(loglevel, msg.c_str());
 }
 
-bool CFrontendDLL::GetSetting(const char* settingName, void* settingValue)
+bool CFrontendDLL::GetSetting(const std::string& settingName, void* settingValue)
 {
-  return m_addon->GetSetting(settingName, settingValue);
+  return m_addon->GetSetting(settingName.c_str(), settingValue);
 }
 
-void CFrontendDLL::QueueNotification(const queue_msg_t type, const char* msg)
+void CFrontendDLL::QueueNotification(const queue_msg_t type, const std::string& msg)
 {
-  return m_addon->QueueNotification(type, msg);
+  return m_addon->QueueNotification(type, msg.c_str());
 }
 
-bool CFrontendDLL::WakeOnLan(const char* mac)
+bool CFrontendDLL::WakeOnLan(const std::string& mac)
 {
-  return m_addon->WakeOnLan(mac);
+  return m_addon->WakeOnLan(mac.c_str());
 }
 
 std::string CFrontendDLL::UnknownToUTF8(const std::string& str)
@@ -96,14 +96,14 @@ std::string CFrontendDLL::GetDVDMenuLanguage()
   return AddonUtils::GetDVDMenuLanguage(m_addon);
 }
 
-void* CFrontendDLL::OpenFile(const char* strFileName, unsigned int flags)
+void* CFrontendDLL::OpenFile(const std::string& strFileName, unsigned int flags)
 {
-  return m_addon->OpenFile(strFileName, flags);
+  return m_addon->OpenFile(strFileName.c_str(), flags);
 }
 
-void* CFrontendDLL::OpenFileForWrite(const char* strFileName, bool bOverWrite)
+void* CFrontendDLL::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
 {
-  return m_addon->OpenFileForWrite(strFileName, bOverWrite);
+  return m_addon->OpenFileForWrite(strFileName.c_str(), bOverWrite);
 }
 
 ssize_t CFrontendDLL::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
@@ -156,38 +156,39 @@ int CFrontendDLL::GetFileChunkSize(void* file)
   return m_addon->GetFileChunkSize(file);
 }
 
-bool CFrontendDLL::FileExists(const char* strFileName, bool bUseCache)
+bool CFrontendDLL::FileExists(const std::string& strFileName, bool bUseCache)
 {
-  return m_addon->FileExists(strFileName, bUseCache);
+  return m_addon->FileExists(strFileName.c_str(), bUseCache);
 }
 
-int CFrontendDLL::StatFile(const char* strFileName, struct __stat64* buffer)
+/* TODO
+int CFrontendDLL::StatFile(const std::string& strFileName, struct __stat64* buffer)
 {
-  //return m_addon->StatFile(strFileName, buffer); // TODO
-  return 0;
+  return m_addon->StatFile(strFileName.c_str(), buffer);
+}
+*/
+
+bool CFrontendDLL::DeleteFile(const std::string& strFileName)
+{
+  return m_addon->DeleteFile(strFileName.c_str());
 }
 
-bool CFrontendDLL::DeleteFile(const char* strFileName)
+bool CFrontendDLL::CanOpenDirectory(const std::string& strUrl)
 {
-  return m_addon->DeleteFile(strFileName);
+  return m_addon->CanOpenDirectory(strUrl.c_str());
 }
 
-bool CFrontendDLL::CanOpenDirectory(const char* strUrl)
+bool CFrontendDLL::CreateDirectory(const std::string& strPath)
 {
-  return m_addon->CanOpenDirectory(strUrl);
+  return m_addon->CreateDirectory(strPath.c_str());
 }
 
-bool CFrontendDLL::CreateDirectory(const char* strPath)
+bool CFrontendDLL::DirectoryExists(const std::string& strPath)
 {
-  return m_addon->CreateDirectory(strPath);
+  return m_addon->DirectoryExists(strPath.c_str());
 }
 
-bool CFrontendDLL::DirectoryExists(const char* strPath)
+bool CFrontendDLL::RemoveDirectory(const std::string& strPath)
 {
-  return m_addon->DirectoryExists(strPath);
-}
-
-bool CFrontendDLL::RemoveDirectory(const char* strPath)
-{
-  return m_addon->RemoveDirectory(strPath);
+  return m_addon->RemoveDirectory(strPath.c_str());
 }

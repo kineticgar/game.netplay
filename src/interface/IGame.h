@@ -22,6 +22,8 @@
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
 
+#include <string>
+
 namespace NETPLAY
 {
   class IGame
@@ -38,13 +40,13 @@ namespace NETPLAY
     virtual ADDON_STATUS GetStatus(void) = 0;
     virtual bool         HasSettings(void) = 0;
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet) = 0;
-    virtual ADDON_STATUS SetSetting(const char* settingName, const void* settingValue) = 0;
+    virtual ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue) = 0;
     virtual void         FreeSettings(void) = 0;
-    virtual void         Announce(const char* flag, const char* sender, const char* message, const void* data) = 0;
+    virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data) = 0;
 
     virtual const char* GetGameAPIVersion(void) = 0;
     virtual const char* GetMininumGameAPIVersion(void) = 0;
-    virtual GAME_ERROR LoadGame(const char* url);
+    virtual GAME_ERROR LoadGame(const std::string& url);
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount) = 0;
     virtual GAME_ERROR LoadStandalone(void) = 0;
     virtual GAME_ERROR UnloadGame(void) = 0;
@@ -61,6 +63,6 @@ namespace NETPLAY
     virtual GAME_ERROR Deserialize(const uint8_t* data, size_t size) = 0;
     virtual GAME_ERROR CheatReset(void) = 0;
     virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size) = 0;
-    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code) = 0;
+    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code) = 0;
   };
 }

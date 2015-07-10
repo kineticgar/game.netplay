@@ -167,7 +167,7 @@ unsigned int CGameDLL::GetSettings(ADDON_StructSetting*** sSet)
   return m_ADDON_GetSettings(sSet);
 }
 
-ADDON_STATUS CGameDLL::SetSetting(const char* settingName, const void* settingValue)
+ADDON_STATUS CGameDLL::SetSetting(const std::string& settingName, const void* settingValue)
 {
   return m_ADDON_SetSetting(settingName, settingValue);
 }
@@ -177,7 +177,7 @@ void CGameDLL::FreeSettings(void)
   return m_ADDON_FreeSettings();
 }
 
-void CGameDLL::Announce(const char* flag, const char* sender, const char* message, const void* data)
+void CGameDLL::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
   return m_ADDON_Announce(flag, sender, message, data);
 }
@@ -192,7 +192,7 @@ const char* CGameDLL::GetMininumGameAPIVersion(void)
   return m_GetMininumGameAPIVersion();
 }
 
-GAME_ERROR CGameDLL::LoadGame(const char* url)
+GAME_ERROR CGameDLL::LoadGame(const std::string& url)
 {
   return m_LoadGame(url);
 }
@@ -277,7 +277,7 @@ GAME_ERROR CGameDLL::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* s
   return m_GetMemory(type, data, size);
 }
 
-GAME_ERROR CGameDLL::SetCheat(unsigned int index, bool enabled, const char* code)
+GAME_ERROR CGameDLL::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   return m_SetCheat(index, enabled, code);
 }

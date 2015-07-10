@@ -118,7 +118,7 @@ unsigned int CNetplay::GetSettings(ADDON_StructSetting*** sSet)
   return 0;
 }
 
-ADDON_STATUS CNetplay::SetSetting(const char* settingName, const void* settingValue)
+ADDON_STATUS CNetplay::SetSetting(const std::string& settingName, const void* settingValue)
 {
   if (m_game)
     return m_game->SetSetting(settingName, settingValue);
@@ -132,7 +132,7 @@ void CNetplay::FreeSettings(void)
     return m_game->FreeSettings();
 }
 
-void CNetplay::Announce(const char* flag, const char* sender, const char* message, const void* data)
+void CNetplay::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
   if (m_game)
     return m_game->Announce(flag, sender, message, data);
@@ -154,7 +154,7 @@ const char* CNetplay::GetMininumGameAPIVersion(void)
   return GAME_MIN_API_VERSION;
 }
 
-GAME_ERROR CNetplay::LoadGame(const char* url)
+GAME_ERROR CNetplay::LoadGame(const std::string& url)
 {
   if (m_game)
     return m_game->LoadGame(url);
@@ -286,7 +286,7 @@ GAME_ERROR CNetplay::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* s
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CNetplay::SetCheat(unsigned int index, bool enabled, const char* code)
+GAME_ERROR CNetplay::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   if (m_game)
     return m_game->SetCheat(index, enabled, code);
@@ -294,13 +294,13 @@ GAME_ERROR CNetplay::SetCheat(unsigned int index, bool enabled, const char* code
   return GAME_ERROR_FAILED;
 }
 
-void CNetplay::Log(const ADDON::addon_log_t loglevel, const char* msg)
+void CNetplay::Log(const ADDON::addon_log_t loglevel, const std::string& msg)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->Log(loglevel, msg);
 }
 
-bool CNetplay::GetSetting(const char* settingName, void* settingValue)
+bool CNetplay::GetSetting(const std::string& settingName, void* settingValue)
 {
   IFrontend* master = GetMaster();
   if (master)
@@ -309,13 +309,13 @@ bool CNetplay::GetSetting(const char* settingName, void* settingValue)
   return false;
 }
 
-void CNetplay::QueueNotification(const ADDON::queue_msg_t type, const char* msg)
+void CNetplay::QueueNotification(const ADDON::queue_msg_t type, const std::string& msg)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->QueueNotification(type, msg);
 }
 
-bool CNetplay::WakeOnLan(const char* mac)
+bool CNetplay::WakeOnLan(const std::string& mac)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -353,12 +353,12 @@ std::string CNetplay::GetDVDMenuLanguage(void)
   return "";
 }
 
-void* CNetplay::OpenFile(const char* strFileName, unsigned int flags)
+void* CNetplay::OpenFile(const std::string& strFileName, unsigned int flags)
 {
   return NULL; // TODO
 }
 
-void* CNetplay::OpenFileForWrite(const char* strFileName, bool bOverWrite)
+void* CNetplay::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
 {
   return NULL; // TODO
 }
@@ -413,7 +413,7 @@ int CNetplay::GetFileChunkSize(void* file)
   return -1; // TODO
 }
 
-bool CNetplay::FileExists(const char* strFileName, bool bUseCache)
+bool CNetplay::FileExists(const std::string& strFileName, bool bUseCache)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -425,7 +425,7 @@ bool CNetplay::FileExists(const char* strFileName, bool bUseCache)
 }
 
 /* TODO
-int CNetplay::StatFile(const char* strFileName, struct __stat64* buffer)
+int CNetplay::StatFile(const std::string& strFileName, struct __stat64* buffer)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -437,7 +437,7 @@ int CNetplay::StatFile(const char* strFileName, struct __stat64* buffer)
 }
 */
 
-bool CNetplay::DeleteFile(const char* strFileName)
+bool CNetplay::DeleteFile(const std::string& strFileName)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -448,7 +448,7 @@ bool CNetplay::DeleteFile(const char* strFileName)
   return false;
 }
 
-bool CNetplay::CanOpenDirectory(const char* strUrl)
+bool CNetplay::CanOpenDirectory(const std::string& strUrl)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -459,7 +459,7 @@ bool CNetplay::CanOpenDirectory(const char* strUrl)
   return false;
 }
 
-bool CNetplay::CreateDirectory(const char* strPath)
+bool CNetplay::CreateDirectory(const std::string& strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -470,7 +470,7 @@ bool CNetplay::CreateDirectory(const char* strPath)
   return false;
 }
 
-bool CNetplay::DirectoryExists(const char* strPath)
+bool CNetplay::DirectoryExists(const std::string& strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -481,7 +481,7 @@ bool CNetplay::DirectoryExists(const char* strPath)
   return false;
 }
 
-bool CNetplay::RemoveDirectory(const char* strPath)
+bool CNetplay::RemoveDirectory(const std::string& strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {

@@ -44,12 +44,12 @@ namespace NETPLAY
     virtual ADDON_STATUS GetStatus(void);
     virtual bool         HasSettings(void);
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet);
-    virtual ADDON_STATUS SetSetting(const char* settingName, const void* settingValue);
+    virtual ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue);
     virtual void         FreeSettings(void);
-    virtual void         Announce(const char* flag, const char* sender, const char* message, const void* data);
+    virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
     virtual const char* GetGameAPIVersion(void);
     virtual const char* GetMininumGameAPIVersion(void);
-    virtual GAME_ERROR LoadGame(const char* url);
+    virtual GAME_ERROR LoadGame(const std::string& url);
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
     virtual GAME_ERROR LoadStandalone(void);
     virtual GAME_ERROR UnloadGame(void);
@@ -66,7 +66,7 @@ namespace NETPLAY
     virtual GAME_ERROR Deserialize(const uint8_t* data, size_t size);
     virtual GAME_ERROR CheatReset(void);
     virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
-    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code);
+    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
     const std::string m_strPath;
@@ -78,12 +78,12 @@ namespace NETPLAY
     ADDON_STATUS (*m_ADDON_GetStatus)(void);
     bool         (*m_ADDON_HasSettings)(void);
     unsigned int (*m_ADDON_GetSettings)(ADDON_StructSetting*** sSet);
-    ADDON_STATUS (*m_ADDON_SetSetting)(const char* settingName, const void* settingValue);
+    ADDON_STATUS (*m_ADDON_SetSetting)(const std::string& settingName, const void* settingValue);
     void         (*m_ADDON_FreeSettings)(void);
-    void         (*m_ADDON_Announce)(const char* flag, const char* sender, const char* message, const void* data);
+    void         (*m_ADDON_Announce)(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
     const char* (*m_GetGameAPIVersion)(void);
     const char* (*m_GetMininumGameAPIVersion)(void);
-    GAME_ERROR (*m_LoadGame)(const char* url);
+    GAME_ERROR (*m_LoadGame)(const std::string& url);
     GAME_ERROR (*m_LoadGameSpecial)(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
     GAME_ERROR (*m_LoadStandalone)(void);
     GAME_ERROR (*m_UnloadGame)(void);
@@ -100,6 +100,6 @@ namespace NETPLAY
     GAME_ERROR (*m_Deserialize)(const uint8_t* data, size_t size);
     GAME_ERROR (*m_CheatReset)(void);
     GAME_ERROR (*m_GetMemory)(GAME_MEMORY type, const uint8_t** data, size_t* size);
-    GAME_ERROR (*m_SetCheat)(unsigned int index, bool enabled, const char* code);
+    GAME_ERROR (*m_SetCheat)(unsigned int index, bool enabled, const std::string& code);
   };
 }
