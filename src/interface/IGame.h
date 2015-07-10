@@ -46,7 +46,7 @@ namespace NETPLAY
 
     virtual const char* GetGameAPIVersion(void) = 0;
     virtual const char* GetMininumGameAPIVersion(void) = 0;
-    virtual GAME_ERROR LoadGame(const std::string& url);
+    virtual GAME_ERROR LoadGame(const std::string& url) = 0;
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount) = 0;
     virtual GAME_ERROR LoadStandalone(void) = 0;
     virtual GAME_ERROR UnloadGame(void) = 0;
