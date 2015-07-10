@@ -31,5 +31,33 @@ namespace NETPLAY
 
     virtual bool Initialize(void);
     virtual void Deinitialize(void);
+
+    // implementation of IFrontend
+    virtual void Log(const ADDON::addon_log_t loglevel, const std::string& msg);
+    virtual bool GetSetting(const std::string& settingName, void* settingValue);
+    virtual void QueueNotification(const ADDON::queue_msg_t type, const std::string& msg);
+    virtual bool WakeOnLan(const std::string& mac);
+    virtual std::string UnknownToUTF8(const std::string& str);
+    virtual std::string GetLocalizedString(int dwCode, const std::string& strDefault = "");
+    virtual std::string GetDVDMenuLanguage(void);
+    virtual void* OpenFile(const std::string& strFileName, unsigned int flags);
+    virtual void* OpenFileForWrite(const std::string& strFileName, bool bOverWrite);
+    virtual ssize_t ReadFile(void* file, void* lpBuf, size_t uiBufSize);
+    virtual bool ReadFileString(void* file, char* szLine, int iLineLength);
+    virtual ssize_t WriteFile(void* file, const void* lpBuf, size_t uiBufSize);
+    virtual void FlushFile(void* file);
+    virtual int64_t SeekFile(void* file, int64_t iFilePosition, int iWhence);
+    virtual int TruncateFile(void* file, int64_t iSize);
+    virtual int64_t GetFilePosition(void* file);
+    virtual int64_t GetFileLength(void* file);
+    virtual void CloseFile(void* file);
+    virtual int GetFileChunkSize(void* file);
+    virtual bool FileExists(const std::string& strFileName, bool bUseCache);
+    virtual int StatFile(const std::string& strFileName, struct __stat64* buffer);
+    virtual bool DeleteFile(const std::string& strFileName);
+    virtual bool CanOpenDirectory(const std::string& strUrl);
+    virtual bool CreateDirectory(const std::string& strPath);
+    virtual bool DirectoryExists(const std::string& strPath);
+    virtual bool RemoveDirectory(const std::string& strPath);
   };
 }
