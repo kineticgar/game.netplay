@@ -18,16 +18,66 @@
  *
  */
 
+#include "interface/dll/FrontendDLL.h"
+#include "interface/dll/GameDLL.h"
+#include "Netplay.h"
+
 #include "kodi/kodi_game_dll.h"
 #include "kodi/xbmc_addon_dll.h"
 
-//using namespace NETPLAY;
+#include <cstring>
+
+using namespace NETPLAY;
+
+#ifndef SAFE_DELETE
+  #define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)
+#endif
+
+namespace NETPLAY
+{
+  IGame*     GAME     = NULL;
+  IFrontend* FRONTEND = NULL;
+  CNetplay*  SESSION  = NULL;
+}
 
 extern "C"
 {
 
 ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 {
+  if (callbacks == NULL || props == NULL)
+    return ADDON_STATUS_UNKNOWN;
+
+  game_client_properties* gameProps = static_cast<game_client_properties*>(props);
+
+  try
+  {
+    SESSION = new CNetplay;
+    if (!SESSION->Initialize())
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+
+    const bool bLoadGame = (gameProps->library_path && std::strlen(gameProps->library_path) > 0);
+    if (bLoadGame)
+    {
+      GAME = new CGameDLL(gameProps->library_path);
+      if (!GAME->Initialize())
+        throw ADDON_STATUS_PERMANENT_FAILURE;
+
+      SESSION->RegisterGame(GAME);
+    }
+
+    FRONTEND = new CFrontendDLL(callbacks);
+    if (!FRONTEND->Initialize())
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+
+    SESSION->RegisterFrontend(FRONTEND);
+  }
+  catch (const ADDON_STATUS& status)
+  {
+    ADDON_Destroy();
+    return status;
+  }
+
   return ADDON_GetStatus();
 }
 
@@ -37,10 +87,21 @@ void ADDON_Stop()
 
 void ADDON_Destroy()
 {
+  if (GAME)
+    SESSION->UnregisterGame();
+  SESSION->UnregisterFrontend(FRONTEND);
+  SESSION->Deinitialize();
+
+  SAFE_DELETE(GAME);
+  SAFE_DELETE(FRONTEND);
+  SAFE_DELETE(SESSION);
 }
 
 ADDON_STATUS ADDON_GetStatus()
 {
+  if (SESSION == NULL)
+    return ADDON_STATUS_UNKNOWN;
+
   return ADDON_STATUS_OK;
 }
 

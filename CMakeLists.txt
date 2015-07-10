@@ -17,7 +17,12 @@ include_directories(${INCLUDES}
 
 list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${platform_LIBRARIES})
 
-set(NETPLAY_SOURCES src/client.cpp)
+set(NETPLAY_SOURCES src/client.cpp
+                    src/interface/dll/FrontendDLL.cpp
+                    src/interface/dll/GameDLL.cpp
+                    src/interface/network/FrontendNetwork.cpp
+                    src/interface/network/GameNetwork.cpp
+                    src/Netplay.cpp)
 
 # Uncomment to compile with pedantic warnings. Disabled because of excessive
 # warnings despite valid behavior in add-on API callbacks:
