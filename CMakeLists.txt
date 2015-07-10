@@ -19,6 +19,13 @@ list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${platform_LIBRARIES})
 
 set(NETPLAY_SOURCES src/client.cpp)
 
+# Uncomment to compile with pedantic warnings. Disabled because of excessive
+# warnings despite valid behavior in add-on API callbacks:
+#
+#   warning: ISO C++ forbids casting between pointer-to-function and pointer-to-object
+#
+#set(WARN_PEDANTIC "-Wpedantic")
+
 if(MSVC)
   # Force to always compile with W4
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -28,7 +35,7 @@ if(MSVC)
   endif()
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long ${WARN_PEDANTIC}")
 endif()
 
 build_addon(game.netplay NETPLAY DEPLIBS)
