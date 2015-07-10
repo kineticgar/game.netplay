@@ -19,6 +19,8 @@
  */
 
 #include "Netplay.h"
+#include "interface/IFrontend.h"
+#include "interface/IGame.h"
 
 #include "kodi/libKODI_game.h"
 #include "kodi/libXBMC_addon.h"

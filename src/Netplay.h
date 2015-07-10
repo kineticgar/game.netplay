@@ -19,12 +19,13 @@
  */
 #pragma once
 
-#include "interface/IFrontend.h"
-#include "interface/IGame.h"
-
+#include "kodi/libXBMC_addon.h"
+#include "kodi/xbmc_addon_types.h"
+#include "kodi/kodi_game_types.h"
 #include "platform/threads/mutex.h"
 
 #include <stddef.h>
+#include <string>
 #include <vector>
 
 namespace NETPLAY
@@ -32,7 +33,7 @@ namespace NETPLAY
   class IFrontend;
   class IGame;
 
-  class CNetplay : public IGame, IFrontend
+  class CNetplay
   {
   public:
     CNetplay(void);
@@ -47,64 +48,64 @@ namespace NETPLAY
     void RegisterFrontend(IFrontend* frontend);
     void UnregisterFrontend(IFrontend* frontend);
 
-    // implementation of IGame
-    virtual ADDON_STATUS Create(void* callbacks, void* props);
-    virtual void         Stop(void);
-    virtual void         Destroy(void);
-    virtual ADDON_STATUS GetStatus(void);
-    virtual bool         HasSettings(void);
-    virtual unsigned int GetSettings(ADDON_StructSetting*** sSet);
-    virtual ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue);
-    virtual void         FreeSettings(void);
-    virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
-    virtual const char* GetGameAPIVersion(void);
-    virtual const char* GetMininumGameAPIVersion(void);
-    virtual GAME_ERROR LoadGame(const std::string& url);
-    virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
-    virtual GAME_ERROR LoadStandalone(void);
-    virtual GAME_ERROR UnloadGame(void);
-    virtual GAME_ERROR GetGameInfo(game_system_av_info* info);
-    virtual GAME_REGION GetRegion(void);
-    virtual void FrameEvent(void);
-    virtual GAME_ERROR Reset(void);
-    virtual GAME_ERROR HwContextReset(void);
-    virtual GAME_ERROR HwContextDestroy(void);
-    virtual void UpdatePort(unsigned int port, bool connected, const game_controller* controller);
-    virtual bool InputEvent(unsigned int port, const game_input_event* event);
-    virtual size_t SerializeSize(void);
-    virtual GAME_ERROR Serialize(uint8_t* data, size_t size);
-    virtual GAME_ERROR Deserialize(const uint8_t* data, size_t size);
-    virtual GAME_ERROR CheatReset(void);
-    virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
-    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
+    // partial implementation of IGame
+    ADDON_STATUS Create(void* callbacks, void* props);
+    void         Stop(void);
+    void         Destroy(void);
+    ADDON_STATUS GetStatus(void);
+    bool         HasSettings(void);
+    unsigned int GetSettings(ADDON_StructSetting*** sSet);
+    ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue);
+    void         FreeSettings(void);
+    void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
+    const char* GetGameAPIVersion(void);
+    const char* GetMininumGameAPIVersion(void);
+    GAME_ERROR LoadGame(const std::string& url);
+    GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
+    GAME_ERROR LoadStandalone(void);
+    GAME_ERROR UnloadGame(void);
+    GAME_ERROR GetGameInfo(game_system_av_info* info);
+    GAME_REGION GetRegion(void);
+    void FrameEvent(void);
+    GAME_ERROR Reset(void);
+    GAME_ERROR HwContextReset(void);
+    GAME_ERROR HwContextDestroy(void);
+    void UpdatePort(unsigned int port, bool connected, const game_controller* controller);
+    bool InputEvent(unsigned int port, const game_input_event* event);
+    size_t SerializeSize(void);
+    GAME_ERROR Serialize(uint8_t* data, size_t size);
+    GAME_ERROR Deserialize(const uint8_t* data, size_t size);
+    GAME_ERROR CheatReset(void);
+    GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
+    GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
-    // implementation of IFrontend
-    virtual void Log(const ADDON::addon_log_t loglevel, const std::string& msg);
-    virtual bool GetSetting(const std::string& settingName, void *settingValue);
-    virtual void QueueNotification(const ADDON::queue_msg_t type, const std::string& msg);
-    virtual bool WakeOnLan(const std::string& mac);
-    virtual std::string UnknownToUTF8(const std::string& str);
-    virtual std::string GetLocalizedString(int dwCode, const std::string& strDefault = "");
-    virtual std::string GetDVDMenuLanguage(void);
-    virtual void* OpenFile(const std::string& strFileName, unsigned int flags);
-    virtual void* OpenFileForWrite(const std::string& strFileName, bool bOverWrite);
-    virtual ssize_t ReadFile(void* file, void* lpBuf, size_t uiBufSize);
-    virtual bool ReadFileString(void* file, char* szLine, int iLineLength);
-    virtual ssize_t WriteFile(void* file, const void* lpBuf, size_t uiBufSize);
-    virtual void FlushFile(void* file);
-    virtual int64_t SeekFile(void* file, int64_t iFilePosition, int iWhence);
-    virtual int TruncateFile(void* file, int64_t iSize);
-    virtual int64_t GetFilePosition(void* file);
-    virtual int64_t GetFileLength(void* file);
-    virtual void CloseFile(void* file);
-    virtual int GetFileChunkSize(void* file);
-    virtual bool FileExists(const std::string& strFileName, bool bUseCache);
-    //virtual int StatFile(const std::string& strFileName, struct __stat64* buffer); // TODO
-    virtual bool DeleteFile(const std::string& strFileName);
-    virtual bool CanOpenDirectory(const std::string& strUrl);
-    virtual bool CreateDirectory(const std::string& strPath);
-    virtual bool DirectoryExists(const std::string& strPath);
-    virtual bool RemoveDirectory(const std::string& strPath);
+    // partial implementation of IFrontend
+    void Log(const ADDON::addon_log_t loglevel, const std::string& msg);
+    bool GetSetting(const std::string& settingName, void *settingValue);
+    void QueueNotification(const ADDON::queue_msg_t type, const std::string& msg);
+    bool WakeOnLan(const std::string& mac);
+    std::string UnknownToUTF8(const std::string& str);
+    std::string GetLocalizedString(int dwCode, const std::string& strDefault = "");
+    std::string GetDVDMenuLanguage(void);
+    void* OpenFile(const std::string& strFileName, unsigned int flags);
+    void* OpenFileForWrite(const std::string& strFileName, bool bOverWrite);
+    ssize_t ReadFile(void* file, void* lpBuf, size_t uiBufSize);
+    bool ReadFileString(void* file, char* szLine, int iLineLength);
+    ssize_t WriteFile(void* file, const void* lpBuf, size_t uiBufSize);
+    void FlushFile(void* file);
+    int64_t SeekFile(void* file, int64_t iFilePosition, int iWhence);
+    int TruncateFile(void* file, int64_t iSize);
+    int64_t GetFilePosition(void* file);
+    int64_t GetFileLength(void* file);
+    void CloseFile(void* file);
+    int GetFileChunkSize(void* file);
+    bool FileExists(const std::string& strFileName, bool bUseCache);
+    //int StatFile(const std::string& strFileName, struct __stat64* buffer); // TODO
+    bool DeleteFile(const std::string& strFileName);
+    bool CanOpenDirectory(const std::string& strUrl);
+    bool CreateDirectory(const std::string& strPath);
+    bool DirectoryExists(const std::string& strPath);
+    bool RemoveDirectory(const std::string& strPath);
 
   private:
     IFrontend* GetMaster(void);
