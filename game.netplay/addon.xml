@@ -11,7 +11,8 @@
        library_linux="game.netplay.so"
        library_osx="game.netplay.dylib"
        library_windx="game.netplay.dll">
-	</extension>
+      <supports_no_game>true</supports_no_game>
+    </extension>
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Netplay support for Kodi's Game API</summary>
     <description>This add-on provides netplay support for game add-ons.</description>
