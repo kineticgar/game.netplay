@@ -192,3 +192,83 @@ bool CFrontendDLL::RemoveDirectory(const std::string& strPath)
 {
   return m_addon->RemoveDirectory(strPath.c_str());
 }
+
+void CFrontendDLL::CloseGame(void)
+{
+  return m_game->CloseGame();
+}
+
+void CFrontendDLL::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+{
+  return m_game->VideoFrame(data, width, height, format);
+}
+
+unsigned int CFrontendDLL::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+{
+  return m_game->AudioFrames(data, frames, format);
+}
+
+void CFrontendDLL::HwSetInfo(const game_hw_info* hw_info)
+{
+  return m_game->HwSetInfo(hw_info);
+}
+
+uintptr_t CFrontendDLL::HwGetCurrentFramebuffer(void)
+{
+  return m_game->HwGetCurrentFramebuffer();
+}
+
+game_proc_address_t CFrontendDLL::HwGetProcAddress(const char* symbol)
+{
+  return m_game->HwGetProcAddress(symbol);
+}
+
+bool CFrontendDLL::OpenPort(unsigned int port)
+{
+  return m_game->OpenPort(port);
+}
+
+void CFrontendDLL::ClosePort(unsigned int port)
+{
+  return m_game->ClosePort(port);
+}
+
+void CFrontendDLL::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
+{
+  return m_game->RumbleSetState(port, effect, strength);
+}
+
+void CFrontendDLL::SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
+{
+  return m_game->SetCameraInfo(width, height, caps);
+}
+
+bool CFrontendDLL::StartCamera(void)
+{
+  return m_game->StartCamera();
+}
+
+void CFrontendDLL::StopCamera(void)
+{
+  return m_game->StopCamera();
+}
+
+bool CFrontendDLL::StartLocation(void)
+{
+  return m_game->StartLocation();
+}
+
+void CFrontendDLL::StopLocation(void)
+{
+  return m_game->StopLocation();
+}
+
+bool CFrontendDLL::GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
+{
+  return m_game->GetLocation(lat, lon, horizAccuracy, vertAccuracy);
+}
+
+void CFrontendDLL::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
+{
+  return m_game->SetLocationInterval(intervalMs, intervalDistance);
+}

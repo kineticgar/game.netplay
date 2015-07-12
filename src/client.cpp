@@ -151,17 +151,11 @@ void ADDON_Announce(const char* flag, const char* sender, const char* message, c
 
 const char* GetGameAPIVersion(void)
 {
-  if (SESSION)
-    return SESSION->GetGameAPIVersion();
-
   return GAME_API_VERSION;
 }
 
 const char* GetMininumGameAPIVersion(void)
 {
-  if (SESSION)
-    return SESSION->GetGameAPIVersion();
-
   return GAME_MIN_API_VERSION;
 }
 

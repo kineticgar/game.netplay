@@ -34,6 +34,8 @@ namespace NETPLAY
     virtual bool Initialize(void) = 0;
     virtual void Deinitialize(void) = 0;
 
+    // --- Add-on operations ---------------------------------------------------
+
     virtual ADDON_STATUS Create(void *callbacks, void* props) = 0;
     virtual void         Stop(void) = 0;
     virtual void         Destroy(void) = 0;
@@ -44,8 +46,10 @@ namespace NETPLAY
     virtual void         FreeSettings(void) = 0;
     virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data) = 0;
 
-    virtual const char* GetGameAPIVersion(void) = 0;
-    virtual const char* GetMininumGameAPIVersion(void) = 0;
+    // --- Game operations -----------------------------------------------------
+
+    virtual std::string GetGameAPIVersion(void) = 0;
+    virtual std::string GetMininumGameAPIVersion(void) = 0;
     virtual GAME_ERROR LoadGame(const std::string& url) = 0;
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount) = 0;
     virtual GAME_ERROR LoadStandalone(void) = 0;

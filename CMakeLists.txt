@@ -1,5 +1,5 @@
 project(game.netpaly)
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 enable_language(CXX)
 
@@ -8,16 +8,24 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
 find_package(kodi REQUIRED)
 find_package(kodiplatform REQUIRED)
 find_package(platform REQUIRED)
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+
+file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/messages/*.proto")
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${ProtoFiles})
 
 include_directories(${INCLUDES}
                     ${kodi_INCLUDE_DIR}
                     ${kodiplatform_INCLUDE_DIRS}
                     ${platform_INCLUDE_DIRS}
+                    ${CMAKE_CURRENT_BINARY_DIR} # For protobuf
                     ${PROJECT_SOURCE_DIR}/src)
 
-list(APPEND DEPLIBS ${kodiplatform_LIBRARIES} ${platform_LIBRARIES})
+list(APPEND DEPLIBS ${kodiplatform_LIBRARIES}
+                    ${platform_LIBRARIES})
 
-set(NETPLAY_SOURCES src/client.cpp
+set(NETPLAY_SOURCES ${PROTO_SRCS}
+                    src/client.cpp
                     src/interface/dll/FrontendDLL.cpp
                     src/interface/dll/GameDLL.cpp
                     src/interface/network/FrontendNetwork.cpp

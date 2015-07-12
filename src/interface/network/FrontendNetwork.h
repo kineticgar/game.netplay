@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include "RPC.h"
 #include "interface/IFrontend.h"
 
 namespace NETPLAY
@@ -53,11 +54,36 @@ namespace NETPLAY
     virtual void CloseFile(void* file);
     virtual int GetFileChunkSize(void* file);
     virtual bool FileExists(const std::string& strFileName, bool bUseCache);
-    virtual int StatFile(const std::string& strFileName, struct __stat64* buffer);
+    //virtual int StatFile(const std::string& strFileName, struct __stat64* buffer); // TODO
     virtual bool DeleteFile(const std::string& strFileName);
     virtual bool CanOpenDirectory(const std::string& strUrl);
     virtual bool CreateDirectory(const std::string& strPath);
     virtual bool DirectoryExists(const std::string& strPath);
     virtual bool RemoveDirectory(const std::string& strPath);
+    virtual void CloseGame(void);
+    virtual void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format);
+    virtual unsigned int AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format);
+    virtual void HwSetInfo(const game_hw_info* hw_info);
+    virtual uintptr_t HwGetCurrentFramebuffer(void);
+    virtual game_proc_address_t HwGetProcAddress(const char* symbol);
+    virtual bool OpenPort(unsigned int port);
+    virtual void ClosePort(unsigned int port);
+    virtual void RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength);
+    virtual void SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps);
+    virtual bool StartCamera(void);
+    virtual void StopCamera(void);
+    virtual bool StartLocation(void);
+    virtual void StopLocation(void);
+    virtual bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy);
+    virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
+
+  private:
+    class RPC
+    {
+    public:
+      bool Send(RPC_METHOD method, const std::string& request, std::string& response) { return false; }
+    };
+
+    RPC m_rpc;
   };
 }

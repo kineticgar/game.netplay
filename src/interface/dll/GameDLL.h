@@ -47,8 +47,8 @@ namespace NETPLAY
     virtual ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue);
     virtual void         FreeSettings(void);
     virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
-    virtual const char* GetGameAPIVersion(void);
-    virtual const char* GetMininumGameAPIVersion(void);
+    virtual std::string GetGameAPIVersion(void);
+    virtual std::string GetMininumGameAPIVersion(void);
     virtual GAME_ERROR LoadGame(const std::string& url);
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
     virtual GAME_ERROR LoadStandalone(void);

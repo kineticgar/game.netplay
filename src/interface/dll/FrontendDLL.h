@@ -62,6 +62,22 @@ namespace NETPLAY
     virtual bool CreateDirectory(const std::string& strPath);
     virtual bool DirectoryExists(const std::string& strPath);
     virtual bool RemoveDirectory(const std::string& strPath);
+    virtual void CloseGame(void);
+    virtual void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format);
+    virtual unsigned int AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format);
+    virtual void HwSetInfo(const game_hw_info* hw_info);
+    virtual uintptr_t HwGetCurrentFramebuffer(void);
+    virtual game_proc_address_t HwGetProcAddress(const char* symbol);
+    virtual bool OpenPort(unsigned int port);
+    virtual void ClosePort(unsigned int port);
+    virtual void RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength);
+    virtual void SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps);
+    virtual bool StartCamera(void);
+    virtual void StopCamera(void);
+    virtual bool StartLocation(void);
+    virtual void StopLocation(void);
+    virtual bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy);
+    virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
     ADDON::CHelper_libXBMC_addon* m_addon;

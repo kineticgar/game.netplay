@@ -140,7 +140,7 @@ void CNetplay::Announce(const std::string& flag, const std::string& sender, cons
     return m_game->Announce(flag, sender, message, data);
 }
 
-const char* CNetplay::GetGameAPIVersion(void)
+std::string CNetplay::GetGameAPIVersion(void)
 {
   if (m_game)
     return m_game->GetGameAPIVersion();
@@ -148,7 +148,7 @@ const char* CNetplay::GetGameAPIVersion(void)
   return GAME_API_VERSION;
 }
 
-const char* CNetplay::GetMininumGameAPIVersion(void)
+std::string CNetplay::GetMininumGameAPIVersion(void)
 {
   if (m_game)
     return m_game->GetMininumGameAPIVersion();

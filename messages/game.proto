@@ -1,0 +1,333 @@
+syntax = "proto2";
+
+package game;
+
+// --- Game types --------------------------------------------------------------
+
+message game_controller {
+  required string controller_id = 1;
+  optional uint32 digital_button_count = 2;
+  optional uint32 analog_button_count = 3;
+  optional uint32 analog_stick_count = 4;
+  optional uint32 accelerometer_count = 5;
+  optional uint32 key_count = 6;
+  optional uint32 rel_pointer_count = 7;
+  optional uint32 abs_pointer_count = 8;
+}
+
+message game_digital_button_event {
+  required bool pressed = 1;
+}
+
+message game_analog_button_event {
+  required float magnitude = 1;
+}
+
+message game_analog_stick_event {
+  required float x = 1;
+  required float y = 2;
+}
+
+message game_accelerometer_event {
+  required float x = 1;
+  required float y = 2;
+  required float z = 3;
+}
+
+message game_key_event {
+  required bool pressed = 1;
+  required uint32 character = 2; // text character of the pressed key (UTF-32)
+  required uint32 modifiers = 3;
+}
+
+message game_rel_pointer_event {
+  required sint32 x = 1;
+  required sint32 y = 2;
+}
+
+message game_abs_pointer_event {
+  required bool pressed = 1;
+  required float x = 2;
+  required float y = 3;
+}
+
+message game_input_event {
+  required uint32 type = 1;
+  required uint32 port = 2;
+  required string controller_id = 3;
+  required string feature_name = 4;
+  oneof input_event {
+    game_digital_button_event digital_button = 6;
+    game_analog_button_event analog_button = 7;
+    game_analog_stick_event analog_stick = 8;
+    game_accelerometer_event accelerometer = 9;
+    game_key_event key = 10;
+    game_rel_pointer_event rel_pointer = 11;
+    game_abs_pointer_event abs_pointer = 12;
+  }
+}
+
+message game_geometry {
+  required uint32 base_width = 1;          // Nominal video width of game
+  required uint32 base_height = 2;         // Nominal video height of game
+  required uint32 max_width = 3;           // Maximum possible width of game
+  required uint32 max_height = 4;          // Maximum possible height of game
+  required float  aspect_ratio = 5;        // Nominal aspect ratio of game. If aspect_ratio is <= 0.0,
+}
+
+message game_system_timing {
+  required double fps = 1;                   // FPS of video content.
+  required double sample_rate = 2;           // Sampling rate of audio.
+}
+
+message game_system_av_info {
+  required game_geometry geometry = 1;
+  required game_system_timing timing = 2;
+}
+
+message game_camera_info {
+  required uint64 caps = 1;                // Camera capabilities
+  required uint32 width = 2;               // Hint at desired resolution
+  required uint32 height = 3;              // Hint at desired resolution
+}
+
+message game_hw_info {
+  required uint32 context_type = 1;        // Which API to use. Set by game client
+  required bool   depth = 2;               // Set if render buffers should have depth component attached
+  required bool   stencil = 3;             // Set if stencil buffers should be attached
+                                           // If depth and stencil are true, a packed 24/8 buffer will be added. Only attaching stencil is invalid and will be ignored
+  required bool   bottom_left_origin = 4;  // Use conventional bottom-left origin convention. Is false, standard top-left origin semantics are used
+  required uint32 version_major = 5;       // Major version number for core GL context
+  required uint32 version_minor = 6;       // Minor version number for core GL context
+  required bool   cache_context = 7;       // If this is true, the frontend will go very far to avoid resetting context in scenarios like toggling fullscreen, etc.
+                                           // The reset callback might still be called in extreme situations such as if the context is lost beyond recovery
+                                           // For optimal stability, set this to false, and allow context to be reset at any time
+  required bool   context_debug = 8;       // Creates a debug context
+}
+
+// --- Game operations ---------------------------------------------------------
+
+message GetGameAPIVersionRequest {
+}
+
+message GetGameAPIVersionResponse {
+  required string result = 1;
+}
+
+message GetMininumGameAPIVersionRequest {
+}
+
+message GetMininumGameAPIVersionResponse {
+  required string result = 1;
+}
+
+message LoadGameRequest {
+  required string url = 1;
+}
+
+message LoadGameResponse {
+  required uint32 result = 1;
+}
+
+message LoadGameSpecialRequest {
+  required uint32 type = 1;
+  repeated string url = 2;
+}
+
+message LoadGameSpecialResponse {
+  required uint32 result = 1;
+}
+
+message LoadStandaloneRequest {
+}
+
+message LoadStandaloneResponse {
+  required uint32 result = 1;
+}
+
+message UnloadGameRequest {
+}
+
+message UnloadGameResponse {
+  required uint32 result = 1;
+}
+
+message GetGameInfoRequest {
+}
+
+message GetGameInfoResponse {
+  required uint32 result = 1;
+  required game_system_av_info info = 2;
+}
+
+message GetRegionRequest {
+}
+
+message GetRegionResponse {
+  required uint32 result = 1;
+}
+
+message FrameEventRequest {
+}
+
+message FrameEventResponse {
+}
+
+message ResetRequest {
+}
+
+message ResetResponse {
+  required uint32 result = 1;
+}
+
+message UpdatePortRequest {
+  required uint32 port = 1;
+  required bool connected = 2;
+  required game_controller controller = 3;
+}
+
+message UpdatePortResponse {
+}
+
+message InputEventRequest {
+  required uint32 port = 1;
+  required game_input_event event = 2;
+}
+
+message InputEventResponse {
+  required bool result = 1;
+}
+
+message SerializeSizeRequest {
+}
+
+message SerializeSizeResponse {
+  required uint32 result = 1;
+}
+
+message SerializeRequest {
+}
+
+message SerializeResponse {
+  required uint32 result = 1;
+  required bytes data = 2;
+}
+
+message DeserializeRequest {
+  required bytes data = 1;
+}
+
+message DeserializeResponse {
+  required uint32 result = 1;
+}
+
+message CheatResetRequest {
+}
+
+message CheatResetResponse {
+  required uint32 result = 1;
+}
+
+message GetMemoryRequest {
+  required uint32 type = 1;
+}
+
+message GetMemoryResponse {
+  required uint32 result = 1;
+  required bytes data = 2;
+}
+
+message SetCheatRequest {
+  required uint32 index = 1;
+  required bool enabled = 2;
+  required string code = 3;
+}
+
+message SetCheatResponse {
+  required uint32 result = 1;
+}
+
+// --- Game callbacks ----------------------------------------------------------
+
+message CloseGameRequest {
+}
+
+message CloseGameResponse {
+}
+
+message VideoFrameRequest {
+  required bytes data = 1;
+  required uint32 width = 2;
+  required uint32 height = 3;
+  required uint32 format = 4;
+}
+
+message VideoFrameResponse {
+}
+
+message AudioFramesRequest {
+  required bytes data = 1;
+  required uint32 frames = 2;
+  required uint32 format = 3;
+}
+
+message AudioFramesResponse {
+  required uint32 result = 1;
+}
+
+message OpenPortRequest {
+  required uint32 port = 1;
+}
+
+message OpenPortResponse {
+  required bool result = 1;
+}
+
+message ClosePortRequest {
+  required uint32 port = 1;
+}
+
+message ClosePortResponse {
+}
+
+message RumbleSetStateRequest {
+  required uint32 port = 1;
+  required uint32 effect = 2;
+  required float strength = 3;
+}
+
+message RumbleSetStateResponse {
+}
+
+message StartLocationRequest {
+}
+
+message StartLocationResponse {
+  required bool result = 1;
+}
+
+message StopLocationRequest {
+}
+
+message StopLocationResponse {
+}
+
+message GetLocationRequest {
+}
+
+message GetLocationResponse {
+  required uint32 result = 1;
+  required double lat = 2;
+  required double lon = 3;
+  required double horizAccuracy = 4;
+  required double vertAccuracy = 5;
+}
+
+message SetLocationIntervalRequest {
+  required uint32 intervalMs = 1;
+  required uint32 intervalDistance = 2;
+}
+
+message SetLocationIntervalResponse {
+}
+

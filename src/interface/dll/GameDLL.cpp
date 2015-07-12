@@ -182,12 +182,12 @@ void CGameDLL::Announce(const std::string& flag, const std::string& sender, cons
   return m_ADDON_Announce(flag, sender, message, data);
 }
 
-const char* CGameDLL::GetGameAPIVersion(void)
+std::string CGameDLL::GetGameAPIVersion(void)
 {
   return m_GetGameAPIVersion();
 }
 
-const char* CGameDLL::GetMininumGameAPIVersion(void)
+std::string CGameDLL::GetMininumGameAPIVersion(void)
 {
   return m_GetMininumGameAPIVersion();
 }

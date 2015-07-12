@@ -35,6 +35,8 @@ namespace NETPLAY
     virtual bool Initialize(void) = 0;
     virtual void Deinitialize(void) = 0;
 
+    // --- Add-on callbacks ----------------------------------------------------
+
     virtual void Log(const ADDON::addon_log_t loglevel, const std::string& msg) = 0;
     virtual bool GetSetting(const std::string& settingName, void* settingValue) = 0;
     virtual void QueueNotification(const ADDON::queue_msg_t type, const std::string& msg) = 0;
@@ -61,5 +63,24 @@ namespace NETPLAY
     virtual bool CreateDirectory(const std::string& strPath) = 0;
     virtual bool DirectoryExists(const std::string& strPath) = 0;
     virtual bool RemoveDirectory(const std::string& strPath) = 0;
+
+    // --- Game callbacks ------------------------------------------------------
+
+    virtual void CloseGame(void) = 0;
+    virtual void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format) = 0;
+    virtual unsigned int AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format) = 0;
+    virtual void HwSetInfo(const game_hw_info* hw_info) = 0;
+    virtual uintptr_t HwGetCurrentFramebuffer(void) = 0;
+    virtual game_proc_address_t HwGetProcAddress(const char* symbol) = 0;
+    virtual bool OpenPort(unsigned int port) = 0;
+    virtual void ClosePort(unsigned int port) = 0;
+    virtual void RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength) = 0;
+    virtual void SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps) = 0;
+    virtual bool StartCamera(void) = 0;
+    virtual void StopCamera(void) = 0;
+    virtual bool StartLocation(void) = 0;
+    virtual void StopLocation(void) = 0;
+    virtual bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy) = 0;
+    virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance) = 0;
   };
 }
