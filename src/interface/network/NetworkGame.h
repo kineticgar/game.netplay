@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "RPC.h"
+#include "RPCMethods.h"
 #include "interface/IGame.h"
 
 #include <map>
