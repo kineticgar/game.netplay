@@ -55,8 +55,6 @@ namespace NETPLAY
 
     ssize_t Write(const uint8_t* buffer, size_t size, int timeout_ms = -1, bool more_data = false);
 
-    static char* ip2txt(uint32_t ip, unsigned int port, char* str);
-
    private:
     int              m_fd;
     PLATFORM::CMutex m_MutexWrite;

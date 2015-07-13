@@ -19,8 +19,7 @@
  */
 #pragma once
 
-#include "RPCMethods.h"
-#include "Server.h"
+#include "Client.h"
 #include "interface/IGame.h"
 
 #include <map>
@@ -28,19 +27,16 @@
 
 namespace NETPLAY
 {
-  class CGameNetwork : public IGame
+  class CNetworkGame : public IGame
   {
   public:
-    CGameNetwork(void);
-    virtual ~CGameNetwork(void) { Deinitialize(); }
-
-    virtual bool Initialize(void);
-    virtual void Deinitialize(void);
+    CNetworkGame(const std::string& strAddress, unsigned int port);
+    virtual ~CNetworkGame(void) { Deinitialize(); }
 
     // implementation of IGame
-    virtual ADDON_STATUS Create(void *callbacks, void* props);
+    virtual ADDON_STATUS Initialize(void);
+    virtual void         Deinitialize(void);
     virtual void         Stop(void);
-    virtual void         Destroy(void);
     virtual ADDON_STATUS GetStatus(void);
     virtual bool         HasSettings(void);
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet);
@@ -69,7 +65,8 @@ namespace NETPLAY
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
-    CServer m_rpc;
+    CClient m_rpc;
+
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
   };
 }

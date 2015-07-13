@@ -56,7 +56,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file);
     virtual int GetFileChunkSize(void* file);
     virtual bool FileExists(const std::string& strFileName, bool bUseCache);
-    //virtual int StatFile(const std::string& strFileName, struct __stat64* buffer); // TODO
+    //virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer); // TODO
     virtual bool DeleteFile(const std::string& strFileName);
     virtual bool CanOpenDirectory(const std::string& strUrl);
     virtual bool CreateDirectory(const std::string& strPath);

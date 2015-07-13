@@ -18,9 +18,10 @@
  *
  */
 
-#include "interface/dll/DLLFrontend.h"
 #include "interface/dll/DLLGame.h"
-#include "Netplay.h"
+#include "interface/network/NetworkGame.h"
+#include "interface/network/Server.h"
+#include "log/Log.h"
 
 #include "kodi/kodi_game_dll.h"
 #include "kodi/xbmc_addon_dll.h"
@@ -35,9 +36,46 @@ using namespace NETPLAY;
 
 namespace NETPLAY
 {
-  IGame*     GAME     = NULL;
-  IFrontend* FRONTEND = NULL;
-  CNetplay*  SESSION  = NULL;
+  IFrontend*        FRONTEND  = NULL;
+  CFrontendManager* CALLBACKS = NULL;
+  IGame*            GAME      = NULL;
+  CServer*          SERVER    = NULL;
+}
+
+// --- Helper functions --------------------------------------------------------
+
+namespace NETPLAY
+{
+  /*!
+   * \brief Get the path to the game client being loaded by this add-on
+   *
+   * \return The game client's DLL path, or empty if connecting to a remote server
+   */
+  std::string GetGameDllPath(const game_client_properties& properties)
+  {
+    return properties.game_client_dll_path ? properties.game_client_dll_path : "";
+  }
+
+  /*!
+   * \brief Get the path to this DLL from add-on properties
+   *
+   * \return The first item in the list of proxy DLLs, or empty if none were given
+   */
+  std::string GetNetplayDllPath(const game_client_properties& properties)
+  {
+    if (properties.proxy_dll_count >= 1)
+      return properties.proxy_dll_paths[0] ? properties.proxy_dll_paths[0] : "";
+    return "";
+  }
+
+  /*!
+   * \brief Remove the first item from the list of proxy DLLs
+   */
+  void PopProxyDLL(game_client_properties& properties)
+  {
+    properties.proxy_dll_paths++;
+    properties.proxy_dll_count--;
+  }
 }
 
 extern "C"
@@ -48,77 +86,112 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   if (callbacks == NULL || props == NULL)
     return ADDON_STATUS_UNKNOWN;
 
-  game_client_properties* gameProps = static_cast<game_client_properties*>(props);
+  game_client_properties gameProps(*static_cast<game_client_properties*>(props));
+
+  std::string strDllPath = GetNetplayDllPath(gameProps);
+  if (strDllPath.empty())
+    return ADDON_STATUS_UNKNOWN;
+
+  ADDON_STATUS returnStatus(ADDON_STATUS_UNKNOWN);
 
   try
   {
-    SESSION = new CNetplay;
-
-    const bool bLoadGame = (gameProps->library_path && std::strlen(gameProps->library_path) > 0);
-    if (bLoadGame)
-    {
-      GAME = new CDLLGame(gameProps->library_path);
-      if (!GAME->Initialize())
-        throw ADDON_STATUS_PERMANENT_FAILURE;
-
-      SESSION->RegisterGame(GAME);
-    }
-
     FRONTEND = new CDLLFrontend(callbacks);
     if (!FRONTEND->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
-    SESSION->RegisterFrontend(FRONTEND);
+    CALLBACKS = new CFrontendManager;
+    CALLBACKS->RegisterFrontend(FRONTEND);
+
+    const bool bLoadGameClient = !GetGameDllPath(gameProps).empty();
+    if (bLoadGameClient)
+    {
+      PopProxyDLL(gameProps);
+      GAME = new CDLLGame(CALLBACKS, gameProps);
+    }
+    else
+    {
+      std::string address = gameProps.netplay_server;
+      unsigned int port = gameProps.netplay_server_port;
+
+      if (!address.empty())
+      {
+        GAME = new CNetworkGame(address, port);
+      }
+      else
+      {
+        // TODO
+        esyslog("Network discovery not implemented");
+      }
+    }
+
+    if (!GAME)
+      throw ADDON_STATUS_UNKNOWN;
+
+    ADDON_STATUS status = GAME->Initialize();
+    if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
+    {
+      throw status;
+    }
+
+    SERVER = new CServer(GAME, CALLBACKS);
+    if (!SERVER->Initialize())
+    {
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+    }
+
+    returnStatus = ADDON_STATUS_OK;
   }
   catch (const ADDON_STATUS& status)
   {
     ADDON_Destroy();
-    return status;
+    returnStatus = status;
   }
 
-  return SESSION->Create(callbacks, props);
+  return returnStatus;
 }
 
 void ADDON_Stop()
 {
-  if (SESSION)
-    return SESSION->Stop();
+  if (GAME)
+    GAME->Stop();
 }
 
 void ADDON_Destroy()
 {
-  if (SESSION)
+  if (SERVER)
   {
-    if (GAME)
-      SESSION->UnregisterGame();
-    SESSION->UnregisterFrontend(FRONTEND);
+    SERVER->Deinitialize();
+    GAME->Deinitialize();
+    CALLBACKS->UnregisterFrontend(FRONTEND);
   }
 
+  SAFE_DELETE(SERVER);
   SAFE_DELETE(GAME);
+  SAFE_DELETE(CALLBACKS);
   SAFE_DELETE(FRONTEND);
-  SAFE_DELETE(SESSION);
 }
 
 ADDON_STATUS ADDON_GetStatus()
 {
-  if (SESSION)
-    return SESSION->GetStatus();
+  if (GAME)
+    return GAME->GetStatus();
 
   return ADDON_STATUS_UNKNOWN;
 }
 
 bool ADDON_HasSettings()
 {
-  if (SESSION)
-    return SESSION->HasSettings();
+  if (GAME)
+    return GAME->HasSettings();
 
   return false;
 }
 
 unsigned int ADDON_GetSettings(ADDON_StructSetting*** sSet)
 {
-  if (SESSION)
-    return SESSION->GetSettings(sSet);
+  if (GAME)
+    return GAME->GetSettings(sSet);
 
   return false;
 }
@@ -128,22 +201,22 @@ ADDON_STATUS ADDON_SetSetting(const char* settingName, const void* settingValue)
   if (!settingName || !settingValue)
     return ADDON_STATUS_UNKNOWN;
 
-  if (SESSION)
-    return SESSION->SetSetting(settingName, settingValue);
+  if (GAME)
+    return GAME->SetSetting(settingName, settingValue);
 
   return ADDON_STATUS_OK;
 }
 
 void ADDON_FreeSettings()
 {
-  if (SESSION)
-    return SESSION->FreeSettings();
+  if (GAME)
+    return GAME->FreeSettings();
 }
 
 void ADDON_Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
-  if (SESSION)
-    return SESSION->Announce(flag, sender, message, data);
+  if (GAME)
+    return GAME->Announce(flag, sender, message, data);
 }
 
 const char* GetGameAPIVersion(void)
@@ -161,8 +234,8 @@ GAME_ERROR LoadGame(const char* url)
   if (url == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->LoadGame(url);
+  if (GAME)
+    return GAME->LoadGame(url);
 
   return GAME_ERROR_FAILED;
 }
@@ -172,24 +245,24 @@ GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t url
   if (urls == NULL || urlCount == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->LoadGameSpecial(type, urls, urlCount);
+  if (GAME)
+    return GAME->LoadGameSpecial(type, urls, urlCount);
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR LoadStandalone(void)
 {
-  if (SESSION)
-    return SESSION->LoadStandalone();
+  if (GAME)
+    return GAME->LoadStandalone();
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR UnloadGame(void)
 {
-  if (SESSION)
-    return SESSION->UnloadGame();
+  if (GAME)
+    return GAME->UnloadGame();
 
   return GAME_ERROR_FAILED;
 }
@@ -199,60 +272,60 @@ GAME_ERROR GetGameInfo(game_system_av_info* info)
   if (info == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->GetGameInfo(info);
+  if (GAME)
+    return GAME->GetGameInfo(info);
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_REGION GetRegion(void)
 {
-  if (SESSION)
-    return SESSION->GetRegion();
+  if (GAME)
+    return GAME->GetRegion();
 
   return GAME_REGION_UNKNOWN;
 }
 
 void FrameEvent(void)
 {
-  if (SESSION)
-    return SESSION->FrameEvent();
+  if (GAME)
+    return GAME->FrameEvent();
 }
 
 GAME_ERROR Reset(void)
 {
-  if (SESSION)
-    return SESSION->Reset();
+  if (GAME)
+    return GAME->Reset();
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR HwContextReset()
 {
-  if (SESSION)
-    return SESSION->HwContextReset();
+  if (GAME)
+    return GAME->HwContextReset();
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR HwContextDestroy()
 {
-  if (SESSION)
-    return SESSION->HwContextDestroy();
+  if (GAME)
+    return GAME->HwContextDestroy();
 
   return GAME_ERROR_FAILED;
 }
 
 void UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
-  if (SESSION)
-    return SESSION->UpdatePort(port, connected, controller);
+  if (GAME)
+    return GAME->UpdatePort(port, connected, controller);
 }
 
 bool InputEvent(unsigned int port, const game_input_event* event)
 {
-  if (SESSION)
-    return SESSION->InputEvent(port, event);
+  if (GAME)
+    return GAME->InputEvent(port, event);
 
   return false;
 }
@@ -325,8 +398,8 @@ GAME_ERROR Serialize(uint8_t* data, size_t size)
   if (data == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->Serialize(data, size);
+  if (GAME)
+    return GAME->Serialize(data, size);
 
   return GAME_ERROR_FAILED;
 }
@@ -336,16 +409,16 @@ GAME_ERROR Deserialize(const uint8_t* data, size_t size)
   if (data == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->Deserialize(data, size);
+  if (GAME)
+    return GAME->Deserialize(data, size);
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR CheatReset(void)
 {
-  if (SESSION)
-    return SESSION->CheatReset();
+  if (GAME)
+    return GAME->CheatReset();
 
   return GAME_ERROR_FAILED;
 }
@@ -355,16 +428,16 @@ GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
   if (data == NULL || size == NULL)
     return GAME_ERROR_INVALID_PARAMETERS;
 
-  if (SESSION)
-    return SESSION->GetMemory(type, data, size);
+  if (GAME)
+    return GAME->GetMemory(type, data, size);
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code)
 {
-  if (SESSION)
-    return SESSION->SetCheat(index, enabled, code);
+  if (GAME)
+    return GAME->SetCheat(index, enabled, code);
 
   return GAME_ERROR_FAILED;
 }

@@ -19,6 +19,8 @@
  */
 
 #include "DLLGame.h"
+#include "interface/FrontendCallbackLib.h"
+#include "log/Log.h"
 
 #ifdef _WIN32
   #include "dlfcn-win32.h"
@@ -27,6 +29,11 @@
 #endif
 
 using namespace NETPLAY;
+using namespace PLATFORM;
+
+// --- REGISTER_SYMBOL() macro -------------------------------------------------
+
+#define REGISTER_SYMBOL(dll, functionPtr)  NETPLAY::RegisterSymbol(dll, m_ ## functionPtr, #functionPtr)
 
 namespace NETPLAY
 {
@@ -34,16 +41,17 @@ namespace NETPLAY
   template <typename T>
   bool RegisterSymbol(void* dll, T& functionPtr, const char* strFunctionPtr)
   {
-    return (functionPtr = (T)dlsym(dll, strFunctionPtr)) != NULL;
+    return (functionPtr = reinterpret_cast<T>(dlsym(dll, strFunctionPtr))) != NULL;
   }
-
-  // Convert functionPtr to a string literal
-  #define REGISTER_SYMBOL(dll, functionPtr)  RegisterSymbol(dll, m_ ## functionPtr, #functionPtr)
 }
 
-CDLLGame::CDLLGame(const std::string& strDllPath) :
-  m_strPath(strDllPath),
+// --- CDLLGame ----------------------------------------------------------------
+
+CDLLGame::CDLLGame(IFrontend* callbacks, const game_client_properties& properties) :
+  m_callbacks(callbacks),
+  m_properties(TranslateProperties(properties)),
   m_dll(NULL),
+  m_pHelper(NULL),
   m_ADDON_Create(NULL),
   m_ADDON_Stop(NULL),
   m_ADDON_Destroy(NULL),
@@ -76,60 +84,76 @@ CDLLGame::CDLLGame(const std::string& strDllPath) :
 {
 }
 
-bool CDLLGame::Initialize(void)
+ADDON_STATUS CDLLGame::Initialize(void)
 {
   Deinitialize();
 
-  m_dll = dlopen(m_strPath.c_str(), RTLD_LAZY);
+  std::string strDllPath;
+
+  if (!m_properties.proxy_dll_paths.empty())
+    strDllPath = m_properties.proxy_dll_paths[0];
+  else
+    strDllPath = m_properties.game_client_dll_path;
+
+  m_dll = dlopen(strDllPath.c_str(), RTLD_LAZY);
   if (m_dll == NULL)
   {
-    //esyslog("Unable to load %s: %s", m_strPath.c_str(), dlerror());
-    return false;
+    esyslog("Unable to load %s: %s", strDllPath.c_str(), dlerror());
+    return ADDON_STATUS_PERMANENT_FAILURE;
   }
 
   try
   {
-    if (!REGISTER_SYMBOL(m_dll, ADDON_Create)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_Stop)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_Destroy)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_GetStatus)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_HasSettings)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_GetSettings)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_SetSetting)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_FreeSettings)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, ADDON_Announce)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, GetGameAPIVersion)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, GetMininumGameAPIVersion)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, LoadGame)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, LoadGameSpecial)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, LoadStandalone)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, UnloadGame)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, GetGameInfo)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, GetRegion)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, FrameEvent)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, Reset)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, HwContextReset)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, HwContextDestroy)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, UpdatePort)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, InputEvent)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, SerializeSize)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, Serialize)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, Deserialize)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, CheatReset)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, GetMemory)) throw false;
-    if (!REGISTER_SYMBOL(m_dll, SetCheat)) throw false;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_Create)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_Stop)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_Destroy)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_GetStatus)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_HasSettings)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_GetSettings)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_SetSetting)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_FreeSettings)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, ADDON_Announce)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, GetGameAPIVersion)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, GetMininumGameAPIVersion)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, LoadGame)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, LoadGameSpecial)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, LoadStandalone)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, UnloadGame)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, GetGameInfo)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, GetRegion)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, FrameEvent)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, Reset)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, HwContextReset)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, HwContextDestroy)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, UpdatePort)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, InputEvent)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, SerializeSize)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, Serialize)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, Deserialize)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, CheatReset)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, GetMemory)) throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!REGISTER_SYMBOL(m_dll, SetCheat)) throw ADDON_STATUS_PERMANENT_FAILURE;
   }
-  catch (const bool& bSuccess)
+  catch (const ADDON_STATUS& status)
   {
-    //esyslog("Unable to assign function %s", dlerror());
-    return bSuccess;
+    esyslog("Unable to assign function %s", dlerror());
+    return status;
   }
 
-  return true;
+  m_pHelper = new CFrontendCallbackLib(m_callbacks);
+
+  GameClientProperties propsCopy(m_properties);
+  return m_ADDON_Create(m_pHelper->GetCallbacks(), &propsCopy);
 }
 
 void CDLLGame::Deinitialize(void)
 {
+  CLockObject lock(m_mutex);
+
+  m_ADDON_Destroy();
+
+  delete m_pHelper;
+
   if (m_dll)
   {
     dlclose(m_dll);
@@ -137,147 +161,181 @@ void CDLLGame::Deinitialize(void)
   }
 }
 
-ADDON_STATUS CDLLGame::Create(void* callbacks, void* props)
-{
-  return m_ADDON_Create(callbacks, props);
-}
-
 void CDLLGame::Stop(void)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_Stop();
-}
-
-void CDLLGame::Destroy(void)
-{
-  return m_ADDON_Destroy();
 }
 
 ADDON_STATUS CDLLGame::GetStatus(void)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_GetStatus();
 }
 
 bool CDLLGame::HasSettings(void)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_HasSettings();
 }
 
 unsigned int CDLLGame::GetSettings(ADDON_StructSetting*** sSet)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_GetSettings(sSet);
 }
 
 ADDON_STATUS CDLLGame::SetSetting(const std::string& settingName, const void* settingValue)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_SetSetting(settingName, settingValue);
 }
 
 void CDLLGame::FreeSettings(void)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_FreeSettings();
 }
 
 void CDLLGame::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
+  CLockObject lock(m_mutex);
   return m_ADDON_Announce(flag, sender, message, data);
 }
 
 std::string CDLLGame::GetGameAPIVersion(void)
 {
+  CLockObject lock(m_mutex);
   return m_GetGameAPIVersion();
 }
 
 std::string CDLLGame::GetMininumGameAPIVersion(void)
 {
+  CLockObject lock(m_mutex);
   return m_GetMininumGameAPIVersion();
 }
 
 GAME_ERROR CDLLGame::LoadGame(const std::string& url)
 {
+  CLockObject lock(m_mutex);
   return m_LoadGame(url);
 }
 
 GAME_ERROR CDLLGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
+  CLockObject lock(m_mutex);
   return m_LoadGameSpecial(type, urls, urlCount);
 }
 
 GAME_ERROR CDLLGame::LoadStandalone(void)
 {
+  CLockObject lock(m_mutex);
   return m_LoadStandalone();
 }
 
 GAME_ERROR CDLLGame::UnloadGame(void)
 {
+  CLockObject lock(m_mutex);
   return m_UnloadGame();
 }
 
 GAME_ERROR CDLLGame::GetGameInfo(game_system_av_info* info)
 {
+  CLockObject lock(m_mutex);
   return m_GetGameInfo(info);
 }
 
 GAME_REGION CDLLGame::GetRegion(void)
 {
+  CLockObject lock(m_mutex);
   return m_GetRegion();
 }
 
 void CDLLGame::FrameEvent(void)
 {
+  CLockObject lock(m_mutex);
   return m_FrameEvent();
 }
 
 GAME_ERROR CDLLGame::Reset(void)
 {
+  CLockObject lock(m_mutex);
   return m_Reset();
 }
 
 GAME_ERROR CDLLGame::HwContextReset(void)
 {
+  CLockObject lock(m_mutex);
   return m_HwContextReset();
 }
 
 GAME_ERROR CDLLGame::HwContextDestroy(void)
 {
+  CLockObject lock(m_mutex);
   return m_HwContextDestroy();
 }
 
 void CDLLGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
+  CLockObject lock(m_mutex);
   return m_UpdatePort(port, connected, controller);
 }
 
 bool CDLLGame::InputEvent(unsigned int port, const game_input_event* event)
 {
+  CLockObject lock(m_mutex);
   return m_InputEvent(port, event);
 }
 
 size_t CDLLGame::SerializeSize(void)
 {
+  CLockObject lock(m_mutex);
   return m_SerializeSize();
 }
 
 GAME_ERROR CDLLGame::Serialize(uint8_t* data, size_t size)
 {
+  CLockObject lock(m_mutex);
   return m_Serialize(data, size);
 }
 
 GAME_ERROR CDLLGame::Deserialize(const uint8_t* data, size_t size)
 {
+  CLockObject lock(m_mutex);
   return m_Deserialize(data, size);
 }
 
 GAME_ERROR CDLLGame::CheatReset(void)
 {
+  CLockObject lock(m_mutex);
   return m_CheatReset();
 }
 
 GAME_ERROR CDLLGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
 {
+  CLockObject lock(m_mutex);
   return m_GetMemory(type, data, size);
 }
 
 GAME_ERROR CDLLGame::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
+  CLockObject lock(m_mutex);
   return m_SetCheat(index, enabled, code);
+}
+
+CDLLGame::GameClientProperties CDLLGame::TranslateProperties(const game_client_properties& props)
+{
+  GameClientProperties properties = { };
+
+  properties.game_client_dll_path = props.game_client_dll_path ? props.game_client_dll_path : "";
+  properties.netplay_server       = props.netplay_server       ? props.netplay_server       : "";
+  properties.netplay_server_port  = props.netplay_server_port;
+  properties.system_directory     = props.system_directory     ? props.system_directory     : "";
+  properties.content_directory    = props.content_directory    ? props.content_directory    : "";
+  properties.save_directory       = props.save_directory       ? props.save_directory       : "";
+
+  for (unsigned int i = 0; i < props.proxy_dll_count; i++)
+    properties.proxy_dll_paths.push_back(props.proxy_dll_paths[i] ? props.proxy_dll_paths[i] : "");
+
+  return properties;
 }

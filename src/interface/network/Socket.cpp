@@ -205,30 +205,3 @@ void CSocket::SetHandle(int h)
     m_pollerWrite = new CPoller(m_fd, true);
   }
 }
-
-char* CSocket::ip2txt(uint32_t ip, unsigned int port, char* str)
-{
-  // inet_ntoa is not thread-safe (?)
-  if (str)
-  {
-    unsigned int iph = static_cast<unsigned int>(ntohl(ip));
-    unsigned int porth = static_cast<unsigned int>(ntohs(port));
-
-    if (porth == 0)
-    {
-      std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
-                                       ((iph >> 16) & 0xff),
-                                       ((iph >> 8)  & 0xff),
-                                       ((iph)       & 0xff));
-    }
-    else
-    {
-      std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
-                                          ((iph >> 16) & 0xff),
-                                          ((iph >> 8)  & 0xff),
-                                          ((iph)       & 0xff),
-                                          porth);
-    }
-  }
-  return str;
-}

@@ -27,29 +27,25 @@
 
 using namespace NETPLAY;
 
-CGameNetwork::CGameNetwork(void)
+CNetworkGame::CNetworkGame(const std::string& strAddress, unsigned int port) :
+  m_rpc(strAddress, port)
 {
 }
 
-bool CGameNetwork::Initialize(void)
+ADDON_STATUS CNetworkGame::Initialize(void)
 {
-  return false; // TODO
-}
-
-void CGameNetwork::Deinitialize(void)
-{
-}
-
-ADDON_STATUS CGameNetwork::Create(void* callbacks, void* props)
-{
-  addon::CreateRequest request;
+  if (!m_rpc.Open())
+  {
+    return ADDON_STATUS_UNKNOWN;
+  }
+  addon::LoginRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::Create, strRequest, strResponse))
+    if (m_rpc.Send(RPC_METHOD::Login, strRequest, strResponse))
     {
-      addon::CreateResponse response;
+      addon::LoginResponse response;
       if (response.ParseFromString(strResponse))
         return static_cast<ADDON_STATUS>(response.result());
     }
@@ -58,29 +54,23 @@ ADDON_STATUS CGameNetwork::Create(void* callbacks, void* props)
   return ADDON_STATUS_UNKNOWN;
 }
 
-void CGameNetwork::Stop(void)
+void CNetworkGame::Deinitialize(void)
 {
-  addon::StopRequest request;
+  addon::LogoutRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::Stop, strRequest, strResponse);
+    m_rpc.Send(RPC_METHOD::Logout, strRequest, strResponse);
   }
 }
 
-void CGameNetwork::Destroy(void)
+void CNetworkGame::Stop(void)
 {
-  addon::DestroyRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    m_rpc.Send(RPC_METHOD::Destroy, strRequest, strResponse);
-  }
+  // Removed from network API
 }
 
-ADDON_STATUS CGameNetwork::GetStatus(void)
+ADDON_STATUS CNetworkGame::GetStatus(void)
 {
   addon::GetStatusRequest request;
   std::string strRequest;
@@ -98,30 +88,31 @@ ADDON_STATUS CGameNetwork::GetStatus(void)
   return ADDON_STATUS_UNKNOWN;
 }
 
-bool CGameNetwork::HasSettings(void)
+bool CNetworkGame::HasSettings(void)
 {
   return false;
 }
 
-unsigned int CGameNetwork::GetSettings(ADDON_StructSetting*** sSet)
+unsigned int CNetworkGame::GetSettings(ADDON_StructSetting*** sSet)
 {
   return 0;
 }
 
-ADDON_STATUS CGameNetwork::SetSetting(const std::string& settingName, const void* settingValue)
+ADDON_STATUS CNetworkGame::SetSetting(const std::string& settingName, const void* settingValue)
 {
-  return ADDON_STATUS_UNKNOWN; // TODO
+  return ADDON_STATUS_UNKNOWN;
 }
 
-void CGameNetwork::FreeSettings(void)
+void CNetworkGame::FreeSettings(void)
 {
 }
 
-void CGameNetwork::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
+void CNetworkGame::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
   addon::AnnounceRequest request;
   request.set_flag(flag);
   request.set_sender(sender);
+  request.set_msg(message);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
@@ -130,7 +121,7 @@ void CGameNetwork::Announce(const std::string& flag, const std::string& sender, 
   }
 }
 
-std::string CGameNetwork::GetGameAPIVersion(void)
+std::string CNetworkGame::GetGameAPIVersion(void)
 {
   game::GetGameAPIVersionRequest request;
   std::string strRequest;
@@ -148,7 +139,7 @@ std::string CGameNetwork::GetGameAPIVersion(void)
   return GAME_API_VERSION;
 }
 
-std::string CGameNetwork::GetMininumGameAPIVersion(void)
+std::string CNetworkGame::GetMininumGameAPIVersion(void)
 {
   game::GetMininumGameAPIVersionRequest request;
   std::string strRequest;
@@ -166,7 +157,7 @@ std::string CGameNetwork::GetMininumGameAPIVersion(void)
   return GAME_MIN_API_VERSION;
 }
 
-GAME_ERROR CGameNetwork::LoadGame(const std::string& url)
+GAME_ERROR CNetworkGame::LoadGame(const std::string& url)
 {
   game::LoadGameRequest request;
   std::string strRequest;
@@ -184,7 +175,7 @@ GAME_ERROR CGameNetwork::LoadGame(const std::string& url)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
+GAME_ERROR CNetworkGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
   game::LoadGameSpecialRequest request;
   request.set_type(type);
@@ -205,7 +196,7 @@ GAME_ERROR CGameNetwork::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** ur
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::LoadStandalone(void)
+GAME_ERROR CNetworkGame::LoadStandalone(void)
 {
   game::LoadStandaloneRequest request;
   std::string strRequest;
@@ -223,7 +214,7 @@ GAME_ERROR CGameNetwork::LoadStandalone(void)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::UnloadGame(void)
+GAME_ERROR CNetworkGame::UnloadGame(void)
 {
   game::UnloadGameRequest request;
   std::string strRequest;
@@ -241,7 +232,7 @@ GAME_ERROR CGameNetwork::UnloadGame(void)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::GetGameInfo(game_system_av_info* info)
+GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
@@ -272,7 +263,7 @@ GAME_ERROR CGameNetwork::GetGameInfo(game_system_av_info* info)
   return result;
 }
 
-GAME_REGION CGameNetwork::GetRegion(void)
+GAME_REGION CNetworkGame::GetRegion(void)
 {
   game::GetRegionRequest request;
   std::string strRequest;
@@ -290,7 +281,7 @@ GAME_REGION CGameNetwork::GetRegion(void)
   return GAME_REGION_UNKNOWN;
 }
 
-void CGameNetwork::FrameEvent(void)
+void CNetworkGame::FrameEvent(void)
 {
   game::FrameEventRequest request;
   std::string strRequest;
@@ -301,7 +292,7 @@ void CGameNetwork::FrameEvent(void)
   }
 }
 
-GAME_ERROR CGameNetwork::Reset(void)
+GAME_ERROR CNetworkGame::Reset(void)
 {
   game::ResetRequest request;
   std::string strRequest;
@@ -319,17 +310,17 @@ GAME_ERROR CGameNetwork::Reset(void)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::HwContextReset(void)
+GAME_ERROR CNetworkGame::HwContextReset(void)
 {
   return GAME_ERROR_NOT_IMPLEMENTED;
 }
 
-GAME_ERROR CGameNetwork::HwContextDestroy(void)
+GAME_ERROR CNetworkGame::HwContextDestroy(void)
 {
   return GAME_ERROR_NOT_IMPLEMENTED;
 }
 
-void CGameNetwork::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
+void CNetworkGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
   game::UpdatePortRequest request;
   request.set_port(port);
@@ -350,7 +341,7 @@ void CGameNetwork::UpdatePort(unsigned int port, bool connected, const game_cont
   }
 }
 
-bool CGameNetwork::InputEvent(unsigned int port, const game_input_event* event)
+bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
 {
   game::InputEventRequest request;
   request.set_port(port);
@@ -407,7 +398,7 @@ bool CGameNetwork::InputEvent(unsigned int port, const game_input_event* event)
   return false;
 }
 
-size_t CGameNetwork::SerializeSize(void)
+size_t CNetworkGame::SerializeSize(void)
 {
   game::SerializeSizeRequest request;
   std::string strRequest;
@@ -425,7 +416,7 @@ size_t CGameNetwork::SerializeSize(void)
   return 0;
 }
 
-GAME_ERROR CGameNetwork::Serialize(uint8_t* data, size_t size)
+GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
@@ -452,7 +443,7 @@ GAME_ERROR CGameNetwork::Serialize(uint8_t* data, size_t size)
   return result;
 }
 
-GAME_ERROR CGameNetwork::Deserialize(const uint8_t* data, size_t size)
+GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
 {
   game::DeserializeRequest request;
   request.mutable_data()->resize(size);
@@ -472,7 +463,7 @@ GAME_ERROR CGameNetwork::Deserialize(const uint8_t* data, size_t size)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::CheatReset(void)
+GAME_ERROR CNetworkGame::CheatReset(void)
 {
   game::CheatResetRequest request;
   std::string strRequest;
@@ -490,7 +481,7 @@ GAME_ERROR CGameNetwork::CheatReset(void)
   return GAME_ERROR_FAILED;
 }
 
-GAME_ERROR CGameNetwork::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
+GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
@@ -521,7 +512,7 @@ GAME_ERROR CGameNetwork::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
   return result;
 }
 
-GAME_ERROR CGameNetwork::SetCheat(unsigned int index, bool enabled, const std::string& code)
+GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   game::SetCheatRequest request;
   request.set_index(index);

@@ -27,6 +27,8 @@
 
 namespace NETPLAY
 {
+  struct STAT_STRUCTURE;
+
   class IFrontend
   {
   public:
@@ -57,7 +59,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file) = 0;
     virtual int GetFileChunkSize(void* file) = 0;
     virtual bool FileExists(const std::string& strFileName, bool bUseCache) = 0;
-    //virtual int StatFile(const std::string& strFileName, struct __stat64* buffer) = 0; // TODO
+    //virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE* buffer) = 0; // TODO
     virtual bool DeleteFile(const std::string& strFileName) = 0;
     virtual bool CanOpenDirectory(const std::string& strUrl) = 0;
     virtual bool CreateDirectory(const std::string& strPath) = 0;

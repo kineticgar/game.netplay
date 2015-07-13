@@ -21,13 +21,52 @@
 
 #include "RPCMethods.h"
 
+#include <stddef.h>
 #include <string>
+
+namespace PLATFORM
+{
+  class CMutex;
+  class CTcpConnection;
+}
 
 namespace NETPLAY
 {
   class CClient
   {
   public:
-    bool Receive(RPC_METHOD method, const std::string& request, std::string& response) { return false; }
+    CClient(const std::string& strAddress, unsigned int port);
+    virtual ~CClient(void);
+
+    bool Open(void);
+    bool IsOpen(void);
+    void Close(void);
+
+    //bool Login(void);
+    bool Send(RPC_METHOD method, const std::string& request);
+    bool Send(RPC_METHOD method, const std::string& request, std::string& response);
+
+  private:
+    bool SendHeader(RPC_METHOD method, size_t msgLength);
+    bool SendData(const std::string& request);
+
+    bool ReadMessage(RPC_METHOD method,
+                     std::string& response,
+                     unsigned int iInitialTimeoutMs = 10000,
+                     unsigned int iDatapacketTimeoutMs = 10000);
+    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
+    bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
+
+    void OnDisconnect(void) { }
+    void OnReconnect(void) { }
+
+    void SignalConnectionLost(void);
+    bool IsConnectionLost(void) const { return m_bConnectionLost; }
+
+    const std::string         m_strAddress;
+    const unsigned int        m_port;
+    PLATFORM::CTcpConnection* m_socket;
+    PLATFORM::CMutex*         m_readMutex;
+    bool                      m_bConnectionLost;
   };
 }

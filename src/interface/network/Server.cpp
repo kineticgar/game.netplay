@@ -19,15 +19,25 @@
  */
 
 #include "Server.h"
+#include "Client.h"
+#include "Connection.h"
+#include "interface/IGame.h"
+#include "log/Log.h"
 
-#include "platform/sockets/tcp.h"
-#include "platform/threads/mutex.h"
+#include <assert.h>
+#include <cstdio>
+#include <cstring>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <time.h>
 
 using namespace NETPLAY;
 using namespace PLATFORM;
 
-#define CONNECTION_TIMEOUT_MS  2000
-#define MAX_MESSAGE_LENGTH     (16 * 1024 * 1024) // 16 MB
+#define LISTEN_PORT   34890
 
 // --- Version -----------------------------------------------------------------
 
@@ -74,251 +84,185 @@ namespace NETPLAY
   };
 }
 
+// --- ip2txt ------------------------------------------------------------------
+
+std::string ip2txt(uint32_t ip, unsigned int port)
+{
+  // inet_ntoa is not thread-safe (?)
+  unsigned int iph = static_cast<unsigned int>(ntohl(ip));
+  unsigned int porth = static_cast<unsigned int>(ntohs(port));
+
+  char str[64];
+
+  if (porth == 0)
+  {
+    std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
+                                     ((iph >> 16) & 0xff),
+                                     ((iph >> 8)  & 0xff),
+                                     ((iph)       & 0xff));
+  }
+  else
+  {
+    std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
+                                        ((iph >> 16) & 0xff),
+                                        ((iph >> 8)  & 0xff),
+                                        ((iph)       & 0xff),
+                                        porth);
+  }
+
+  return str;
+}
+
 // --- CServer -----------------------------------------------------------------
 
-CServer::CServer(void) :
-    m_socket(NULL),
-    m_readMutex(new CMutex),
-    m_bConnectionLost(true)
+CServer::CServer(IGame* game, CFrontendManager* callbacks) :
+  m_game(game),
+  m_callbacks(callbacks),
+  m_socketFd(-1)
 {
+  assert(m_game);
+  assert(m_callbacks);
 }
 
-CServer::~CServer(void)
+bool CServer::Initialize(void)
 {
-  Close();
-  delete m_readMutex;
-}
+  uint16_t port = LISTEN_PORT;
 
-bool CServer::Open(const std::string& hostname, unsigned int port)
-{
-  uint64_t iNow = GetTimeMs();
-  uint64_t iTarget = iNow + CONNECTION_TIMEOUT_MS;
+  m_socketFd = socket(AF_INET, SOCK_STREAM, 0);
+  if(m_socketFd == -1)
+    return false;
 
-  if (!m_socket)
-    m_socket = new CTcpConnection(hostname.c_str(), port);
+  fcntl(m_socketFd, F_SETFD, fcntl(m_socketFd, F_GETFD) | FD_CLOEXEC);
 
-  while (!m_socket->IsOpen() && iNow < iTarget)
+  int one = 1;
+  setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+
+  struct sockaddr_in s;
+  std::memset(&s, 0, sizeof(s));
+  s.sin_family = AF_INET;
+  s.sin_port = htons(port);
+
+  int x = bind(m_socketFd, (struct sockaddr *)&s, sizeof(s));
+  if (x < 0)
   {
-    if (!m_socket->Open(iTarget - iNow))
-      CEvent::Sleep(100);
+    esyslog("%s - Unable to start server, port already in use?", __FUNCTION__);
 
-    iNow = GetTimeMs();
-  }
-
-  if (!m_socket->IsOpen())
-  {
-    //XBMC->Log(LOG_ERROR, "%s - failed to connect to the backend (%s)", __FUNCTION__, m_socket->GetError().c_str()); // TODO
+    close(m_socketFd);
+    m_socketFd = -1;
     return false;
   }
 
-  return true;
-}
+  listen(m_socketFd, 10);
 
-bool CServer::IsOpen(void)
-{
-  bool bReturn(false);
-
-  if (m_socket && m_socket->IsOpen())
-    bReturn = true;
-
-  return bReturn;
-}
-
-void CServer::Close(void)
-{
-  if (IsOpen())
-    m_socket->Close();
-
-  if (m_socket)
+  if (CreateThread())
   {
-    delete m_socket;
-    m_socket = NULL;
-  }
-}
-
-bool CServer::Login(void)
-{
-  std::string strRequest;
-  std::string strResponse;
-  if (Send(RPC_METHOD::Login, strRequest, strResponse))
-  {
-    try
-    {
-      /* TODO
-      uint32_t    version       = vresp->extract_U32();
-      uint32_t    vdrTime       = vresp->extract_U32();
-      int32_t     vdrTimeOffset = vresp->extract_S32();
-      std::string ServerName    = vresp->extract_String();
-      std::string ServerVersion = vresp->extract_String();
-
-      std::string strVersion;
-      uint32_t    vdrTime;
-      int32_t     vdrTimeOffset;
-      std::string ServerName;
-      std::string ServerVersion;
-
-      m_server    = ServerName;
-      m_version   = ServerVersion;
-      m_protocol  = protocol;
-
-      if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-        throw "Protocol versions do not match";
-
-      //XBMC->Log(LOG_NOTICE, "Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol); // TODO
-      */
-      throw "Not implemented";
-    }
-    catch (const char* strError)
-    {
-      //XBMC->Log(LOG_ERROR, "%s - %s", __FUNCTION__, strError); // TODO
-      if (m_socket)
-      {
-        m_socket->Close();
-        delete m_socket;
-        m_socket = NULL;
-      }
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool CServer::Send(RPC_METHOD method, const std::string& request)
-{
-  if (!IsOpen())
-    return false;
-
-  try
-  {
-    if (!SendHeader(method, request.length()))
-      throw false;
-
-    if (!SendData(request))
-      throw false;
-  }
-  catch (bool bSuccess)
-  {
-    SignalConnectionLost();
-    return bSuccess;
-  }
-
-  return true;
-}
-
-bool CServer::Send(RPC_METHOD method, const std::string& request, std::string& response)
-{
-  if (!Send(method, request))
-    return false;;
-
-  try
-  {
-    if (!ReadMessage(method, response))
-      throw false;
-  }
-  catch (bool bSuccess)
-  {
-    SignalConnectionLost();
-    return bSuccess;
-  }
-
-  return true;
-}
-
-bool CServer::SendHeader(RPC_METHOD method, size_t msgLength)
-{
-  std::string header;
-  header.resize(5);
-  header[0] = static_cast<uint16_t>(method) >> 8;
-  header[1] = static_cast<uint16_t>(method) & 0xff;
-  header[2] = msgLength >> 16;
-  header[3] = (msgLength >> 8) & 0xff;
-  header[4] = msgLength & 0xff;
-  return SendData(header);
-}
-
-bool CServer::SendData(const std::string& request)
-{
-  ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.c_str()), request.length());
-  if (iWriteResult != (ssize_t)request.length())
-  {
-    //XBMC->Log(LOG_ERROR, "%s - Failed to write packet (%s), bytes written: %d of total: %d", __FUNCTION__, m_socket->GetError().c_str(), iWriteResult, vrp->getLen()); // TODO
-    return false;
-  }
-  return true;
-}
-
-bool CServer::ReadMessage(RPC_METHOD method,
-                          std::string& response,
-                          unsigned int iInitialTimeoutMs /* = 10000 */,
-                          unsigned int iDatapacketTimeoutMs /* = 10000 */)
-{
-  RPC_METHOD msgMethod = RPC_METHOD::Invalid;
-  size_t msgLength = 0;
-
-  CLockObject lock(*m_readMutex);
-
-  while (msgMethod != method)
-  {
-    if (!ReadHeader(msgMethod, msgLength, iInitialTimeoutMs))
-      return false;
-  }
-
-  // Validate input
-  if (msgLength > MAX_MESSAGE_LENGTH)
-    return false;
-
-  response.resize(msgLength);
-  return ReadData(response, msgLength, iDatapacketTimeoutMs);
-}
-
-bool CServer::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
-{
-  std::string header;
-  if (ReadData(header, 2, timeoutMs))
-  {
-    method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
-    length = header[2] << 16 | header[3] << 8 | header[4];
+    isyslog("Netplay server started on port %d", port);
     return true;
   }
 
   return false;
 }
 
-bool CServer::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
+void CServer::Deinitialize(void)
 {
-  unsigned int bytesRead = 0;
+  StopThread();
+}
 
-  buffer.resize(totalBytes);
-  bytesRead += m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, timeoutMs);
+void* CServer::Process(void)
+{
+  fd_set fds;
+  struct timeval tv;
 
-  if (bytesRead != totalBytes)
+  while (!IsStopped())
   {
-    if (m_socket->GetErrorNumber() == ETIMEDOUT && bytesRead > 0)
+    FD_ZERO(&fds);
+    FD_SET(m_socketFd, &fds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 250 * 1000; // 250 ms
+
+    int r = select(m_socketFd + 1, &fds, NULL, NULL, &tv);
+    if (r == -1)
     {
-      // We read something, so try to finish the read
-      bytesRead += m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
-                                  totalBytes - bytesRead,
-                                  timeoutMs);
+      // Failed
     }
-    else if (m_socket->GetErrorNumber() == ETIMEDOUT)
+    else if (r == 0)
     {
-      SignalConnectionLost();
+      PLATFORM::CLockObject lock(m_mutex);
+
+      // Remove disconnected clients
+      for (std::vector<CConnection*>::iterator it = m_clients.begin(); it != m_clients.end(); )
+      {
+        if (!(*it)->IsOpen())
+        {
+          isyslog("Client seems to be disconnected, removing client");
+          delete (*it);
+          it = m_clients.erase(it);
+        }
+        else
+        {
+          it++;
+        }
+      }
+    }
+    else
+    {
+
+      int fd = accept(m_socketFd, 0, 0);
+      if (fd >= 0)
+      {
+        NewClientConnected(fd);
+      }
+      else
+      {
+        esyslog("%s - accept failed", __FUNCTION__);
+      }
     }
   }
 
-  return bytesRead == totalBytes;
+  return NULL;
 }
 
-void CServer::SignalConnectionLost(void)
+void CServer::NewClientConnected(int fd)
 {
-  if (m_bConnectionLost)
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+
+  if (getpeername(fd, reinterpret_cast<struct sockaddr*>(&sin), &len))
+  {
+    esyslog("%s - getpeername() failed, dropping new incoming connection", __FUNCTION__);
+    close(fd);
     return;
+  }
 
-  //XBMC->Log(LOG_ERROR, "%s - connection lost !!!", __FUNCTION__); // TODO
+  if (fcntl(fd, F_SETFL, fcntl (fd, F_GETFL) | O_NONBLOCK) == -1)
+  {
+    esyslog("%s - Error setting control socket to nonblocking mode", __FUNCTION__);
+    close(fd);
+    return;
+  }
 
-  m_bConnectionLost = true;
-  Close();
+  int val = 1;
+  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 
-  OnDisconnect();
+  val = 30;
+  setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+
+  val = 15;
+  setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+
+  val = 5;
+  setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+
+  val = 1;
+  setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+
+  CConnection* connection = new CConnection(fd, ip2txt(sin.sin_addr.s_addr, sin.sin_port).c_str());
+
+  isyslog("Client connected: %s", connection->Name().c_str());
+
+  {
+    PLATFORM::CLockObject lock(m_mutex);
+    m_clients.push_back(connection);
+  }
 }

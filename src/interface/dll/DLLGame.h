@@ -23,24 +23,26 @@
 
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
+#include "platform/threads/mutex.h"
 
 #include <string>
+#include <vector>
 
 namespace NETPLAY
 {
+  class IFrontend;
+  class CFrontendCallbackLib;
+
   class CDLLGame : public IGame
   {
   public:
-    CDLLGame(const std::string& strDllPath);
+    CDLLGame(IFrontend* frontend, const game_client_properties& properties);
     virtual ~CDLLGame(void) { Deinitialize(); }
 
-    virtual bool Initialize(void);
-    virtual void Deinitialize(void);
-
     // implementation of IGame
-    virtual ADDON_STATUS Create(void* callbacks, void* props);
+    virtual ADDON_STATUS Initialize(void);
+    virtual void Deinitialize(void);
     virtual void         Stop(void);
-    virtual void         Destroy(void);
     virtual ADDON_STATUS GetStatus(void);
     virtual bool         HasSettings(void);
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet);
@@ -69,8 +71,24 @@ namespace NETPLAY
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
-    const std::string m_strPath;
-    void*             m_dll;
+    struct GameClientProperties
+    {
+      std::string              game_client_dll_path;
+      std::vector<std::string> proxy_dll_paths;
+      std::string              netplay_server;
+      unsigned int             netplay_server_port;
+      std::string              system_directory;
+      std::string              content_directory;
+      std::string              save_directory;
+    };
+
+    static GameClientProperties TranslateProperties(const game_client_properties& props);
+
+    IFrontend* const           m_callbacks;
+    const GameClientProperties m_properties;
+    void*                      m_dll;
+    CFrontendCallbackLib*      m_pHelper;
+    PLATFORM::CMutex           m_mutex;
 
     ADDON_STATUS (*m_ADDON_Create)(void* callbacks, void* props);
     void         (*m_ADDON_Stop)(void);

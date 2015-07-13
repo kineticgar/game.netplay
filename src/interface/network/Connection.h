@@ -19,42 +19,29 @@
  */
 #pragma once
 
-#include "interface/FrontendManager.h"
+#include "Socket.h"
 
-#include "platform/threads/mutex.h"
 #include "platform/threads/threads.h"
 
-#include <vector>
+#include <string>
 
 namespace NETPLAY
 {
-  class CConnection;
-  class IGame;
-
-  class CServer : protected PLATFORM::CThread
+  class CConnection : protected PLATFORM::CThread
   {
   public:
-    CServer(IGame* game, CFrontendManager* callbacks);
-    virtual ~CServer(void) { }
+    CConnection(int fd, const std::string& strClientAdr);
+    virtual ~CConnection(void) { }
 
-    bool Initialize(void);
-    void Deinitialize(void);
+    bool IsOpen(void) { return IsRunning(); }
 
-    void RegisterFrontend(IFrontend* frontend) { m_callbacks->RegisterFrontend(frontend); }
-    void UnregisterFrontend(IFrontend* frontend) { m_callbacks->UnregisterFrontend(frontend); }
-
-    void WaitForExit(void) { Sleep(0); }
+    const std::string& Name(void) const { return m_strClientAddress; }
 
   protected:
     virtual void* Process(void);
 
   private:
-    void NewClientConnected(int fd);
-
-    IGame* const              m_game;
-    CFrontendManager* const   m_callbacks;
-    int                       m_socketFd;
-    std::vector<CConnection*> m_clients;
-    PLATFORM::CMutex          m_mutex;
+    const std::string m_strClientAddress;
+    CSocket           m_socket;
   };
 }

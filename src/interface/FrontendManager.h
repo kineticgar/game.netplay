@@ -19,24 +19,32 @@
  */
 #pragma once
 
-#include "interface/IFrontend.h"
+#include "IFrontend.h"
 
 namespace NETPLAY
 {
-  class CClient;
+  class IFrontend;
 
-  class CNetworkFrontend : public IFrontend
+  class CFrontendManager : public IFrontend
   {
   public:
-    CNetworkFrontend(CClient* rpc);
-    virtual ~CNetworkFrontend(void) { Deinitialize(); }
+    CFrontendManager(void) { }
 
-    virtual bool Initialize(void);
-    virtual void Deinitialize(void);
+    /*!
+     * \brief Register an initialized frontend with this manager
+     */
+    void RegisterFrontend(IFrontend* frontend);
+
+    /*!
+     * \brief Unregister a frontend from this manager
+     */
+    void UnregisterFrontend(IFrontend* frontend);
 
     // implementation of IFrontend
+    virtual bool Initialize(void) { return true; }
+    virtual void Deinitialize(void) { }
     virtual void Log(const ADDON::addon_log_t loglevel, const std::string& msg);
-    virtual bool GetSetting(const std::string& settingName, void* settingValue);
+    virtual bool GetSetting(const std::string& settingName, void *settingValue);
     virtual void QueueNotification(const ADDON::queue_msg_t type, const std::string& msg);
     virtual bool WakeOnLan(const std::string& mac);
     virtual std::string UnknownToUTF8(const std::string& str);
@@ -55,7 +63,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file);
     virtual int GetFileChunkSize(void* file);
     virtual bool FileExists(const std::string& strFileName, bool bUseCache);
-    virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE* buffer);
+    virtual int StatFile(const std::string& strFileName, struct __stat64* buffer);
     virtual bool DeleteFile(const std::string& strFileName);
     virtual bool CanOpenDirectory(const std::string& strUrl);
     virtual bool CreateDirectory(const std::string& strPath);
@@ -79,6 +87,11 @@ namespace NETPLAY
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
-    CClient* const m_rpc;
+    /*!
+     * \brief Get the "master" frontend, the first frontend to be registered
+     */
+    IFrontend* GetMaster(void);
+
+    std::vector<IFrontend*> m_frontends;
   };
 }

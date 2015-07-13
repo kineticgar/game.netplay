@@ -19,59 +19,64 @@
  */
 
 #include "NetworkFrontend.h"
+#include "Client.h"
+#include "filesystem/StatStructure.h"
 
 #include "addon.pb.h"
 #include "game.pb.h"
 
+#include <assert.h>
 #include <cstring>
 
 using namespace NETPLAY;
 
-CFrontendNetwork::CFrontendNetwork(void)
+CNetworkFrontend::CNetworkFrontend(CClient* rpc) :
+  m_rpc(rpc)
+{
+  assert(m_rpc);
+}
+
+bool CNetworkFrontend::Initialize(void)
+{
+  return true;
+}
+
+void CNetworkFrontend::Deinitialize(void)
 {
 }
 
-bool CFrontendNetwork::Initialize(void)
-{
-  return false;
-}
-
-void CFrontendNetwork::Deinitialize(void)
-{
-}
-
-void CFrontendNetwork::Log(const ADDON::addon_log_t loglevel, const std::string& msg)
+void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const std::string& msg)
 {
   addon::LogRequest request;
   request.set_level(loglevel);
-  request.set_message(msg);
+  request.set_msg(msg);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::Log, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::Log, strRequest, strResponse);
   }
 }
 
-bool CFrontendNetwork::GetSetting(const std::string& settingName, void* settingValue)
+bool CNetworkFrontend::GetSetting(const std::string& settingName, void* settingValue)
 {
   return false; // TODO
 }
 
-void CFrontendNetwork::QueueNotification(const ADDON::queue_msg_t type, const std::string& msg)
+void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const std::string& msg)
 {
   addon::QueueNotificationRequest request;
   request.set_type(type);
-  request.set_message(msg);
+  request.set_msg(msg);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::QueueNotification, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::QueueNotification, strRequest, strResponse);
   }
 }
 
-bool CFrontendNetwork::WakeOnLan(const std::string& mac)
+bool CNetworkFrontend::WakeOnLan(const std::string& mac)
 {
   addon::WakeOnLanRequest request;
   request.set_mac_address(mac);
@@ -79,7 +84,7 @@ bool CFrontendNetwork::WakeOnLan(const std::string& mac)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::WakeOnLan, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::WakeOnLan, strRequest, strResponse))
     {
       addon::WakeOnLanResponse response;
       if (response.ParseFromString(strResponse))
@@ -90,7 +95,7 @@ bool CFrontendNetwork::WakeOnLan(const std::string& mac)
   return false;
 }
 
-std::string CFrontendNetwork::UnknownToUTF8(const std::string& str)
+std::string CNetworkFrontend::UnknownToUTF8(const std::string& str)
 {
   addon::UnknownToUTF8Request request;
   request.set_str(str);
@@ -98,7 +103,7 @@ std::string CFrontendNetwork::UnknownToUTF8(const std::string& str)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
     {
       addon::UnknownToUTF8Response response;
       if (response.ParseFromString(strResponse))
@@ -109,7 +114,7 @@ std::string CFrontendNetwork::UnknownToUTF8(const std::string& str)
   return "";
 }
 
-std::string CFrontendNetwork::GetLocalizedString(int dwCode, const std::string& strDefault /* = "" */)
+std::string CNetworkFrontend::GetLocalizedString(int dwCode, const std::string& strDefault /* = "" */)
 {
   std::string result(strDefault);
 
@@ -119,7 +124,7 @@ std::string CFrontendNetwork::GetLocalizedString(int dwCode, const std::string& 
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
     {
       addon::GetLocalizedStringResponse response;
       if (response.ParseFromString(strResponse))
@@ -130,14 +135,14 @@ std::string CFrontendNetwork::GetLocalizedString(int dwCode, const std::string& 
   return result;
 }
 
-std::string CFrontendNetwork::GetDVDMenuLanguage()
+std::string CNetworkFrontend::GetDVDMenuLanguage()
 {
   addon::GetDVDMenuLanguageRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
     {
       addon::GetDVDMenuLanguageResponse response;
       if (response.ParseFromString(strResponse))
@@ -148,111 +153,109 @@ std::string CFrontendNetwork::GetDVDMenuLanguage()
   return "";
 }
 
-void* CFrontendNetwork::OpenFile(const std::string& strFileName, unsigned int flags)
+void* CNetworkFrontend::OpenFile(const std::string& strFileName, unsigned int flags)
 {
   return NULL; // TODO
 }
 
-void* CFrontendNetwork::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
+void* CNetworkFrontend::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
 {
   return NULL; // TODO
 }
 
-ssize_t CFrontendNetwork::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
+ssize_t CNetworkFrontend::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
 {
   return 0; // TODO
 }
 
-bool CFrontendNetwork::ReadFileString(void* file, char* szLine, int iLineLength)
+bool CNetworkFrontend::ReadFileString(void* file, char* szLine, int iLineLength)
 {
   return false; // TODO
 }
 
-ssize_t CFrontendNetwork::WriteFile(void* file, const void* lpBuf, size_t uiBufSize)
+ssize_t CNetworkFrontend::WriteFile(void* file, const void* lpBuf, size_t uiBufSize)
 {
   return 0; // TODO
 }
 
-void CFrontendNetwork::FlushFile(void* file)
+void CNetworkFrontend::FlushFile(void* file)
 {
   // TODO
 }
 
-int64_t CFrontendNetwork::SeekFile(void* file, int64_t iFilePosition, int iWhence)
+int64_t CNetworkFrontend::SeekFile(void* file, int64_t iFilePosition, int iWhence)
 {
   return -1; // TODO
 }
 
-int CFrontendNetwork::TruncateFile(void* file, int64_t iSize)
+int CNetworkFrontend::TruncateFile(void* file, int64_t iSize)
 {
   return -1; // TODO
 }
 
-int64_t CFrontendNetwork::GetFilePosition(void* file)
+int64_t CNetworkFrontend::GetFilePosition(void* file)
 {
   return -1; // TODO
 }
 
-int64_t CFrontendNetwork::GetFileLength(void* file)
+int64_t CNetworkFrontend::GetFileLength(void* file)
 {
   return -1; // TODO
 }
 
-void CFrontendNetwork::CloseFile(void* file)
+void CNetworkFrontend::CloseFile(void* file)
 {
   // TODO
 }
 
-int CFrontendNetwork::GetFileChunkSize(void* file)
+int CNetworkFrontend::GetFileChunkSize(void* file)
 {
   return -1; // TODO
 }
 
-bool CFrontendNetwork::FileExists(const std::string& strFileName, bool bUseCache)
+bool CNetworkFrontend::FileExists(const std::string& strFileName, bool bUseCache)
 {
   return false; // TODO
 }
 
-/* TODO
-int CFrontendNetwork::StatFile(const std::string& strFileName, struct __stat64* buffer)
-{
-  return -1;
-}
-*/
-
-bool CFrontendNetwork::DeleteFile(const std::string& strFileName)
+bool CNetworkFrontend::StatFile(const std::string& strFileName, STAT_STRUCTURE* buffer)
 {
   return false; // TODO
 }
 
-bool CFrontendNetwork::CanOpenDirectory(const std::string& strUrl)
+bool CNetworkFrontend::DeleteFile(const std::string& strFileName)
 {
   return false; // TODO
 }
 
-bool CFrontendNetwork::CreateDirectory(const std::string& strPath)
+bool CNetworkFrontend::CanOpenDirectory(const std::string& strUrl)
 {
   return false; // TODO
 }
 
-bool CFrontendNetwork::DirectoryExists(const std::string& strPath)
+bool CNetworkFrontend::CreateDirectory(const std::string& strPath)
 {
   return false; // TODO
 }
 
-bool CFrontendNetwork::RemoveDirectory(const std::string& strPath)
+bool CNetworkFrontend::DirectoryExists(const std::string& strPath)
 {
   return false; // TODO
 }
 
-void CFrontendNetwork::CloseGame(void)
+bool CNetworkFrontend::RemoveDirectory(const std::string& strPath)
+{
+  return false; // TODO
+}
+
+void CNetworkFrontend::CloseGame(void)
 {
   game::CloseGameRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::CloseGame, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::CloseGame, strRequest, strResponse);
   }
 }
 
@@ -272,7 +275,7 @@ unsigned int GetStride(GAME_RENDER_FORMAT format, unsigned int width)
   return 0;
 }
 
-void CFrontendNetwork::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
   game::VideoFrameRequest request;
   unsigned int size = GetStride(format, width) * height; // TODO
@@ -287,7 +290,7 @@ void CFrontendNetwork::VideoFrame(const uint8_t* data, unsigned int width, unsig
     if (request.SerializeToString(&strRequest))
     {
       std::string strResponse;
-      m_rpc.Send(RPC_METHOD::VideoFrame, strRequest, strResponse);
+      m_rpc->Send(RPC_METHOD::VideoFrame, strRequest, strResponse);
     }
   }
 }
@@ -304,7 +307,7 @@ unsigned int GetFrameSize(GAME_AUDIO_FORMAT format)
   return 0;
 }
 
-void CFrontendNetwork::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   game::AudioFramesRequest request;
   unsigned int size = GetFrameSize(format) * frames; // TODO
@@ -318,26 +321,26 @@ void CFrontendNetwork::AudioFrames(const uint8_t* data, unsigned int frames, GAM
     if (request.SerializeToString(&strRequest))
     {
       std::string strResponse;
-      m_rpc.Send(RPC_METHOD::AudioFrames, strRequest, strResponse);
+      m_rpc->Send(RPC_METHOD::AudioFrames, strRequest, strResponse);
     }
   }
 }
 
-void CFrontendNetwork::HwSetInfo(const game_hw_info* hw_info)
+void CNetworkFrontend::HwSetInfo(const game_hw_info* hw_info)
 {
 }
 
-uintptr_t CFrontendNetwork::HwGetCurrentFramebuffer(void)
+uintptr_t CNetworkFrontend::HwGetCurrentFramebuffer(void)
 {
   return 0;
 }
 
-game_proc_address_t CFrontendNetwork::HwGetProcAddress(const char* symbol)
+game_proc_address_t CNetworkFrontend::HwGetProcAddress(const char* symbol)
 {
   return NULL;
 }
 
-bool CFrontendNetwork::OpenPort(unsigned int port)
+bool CNetworkFrontend::OpenPort(unsigned int port)
 {
   game::OpenPortRequest request;
   request.set_port(port);
@@ -345,7 +348,7 @@ bool CFrontendNetwork::OpenPort(unsigned int port)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::OpenPort, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::OpenPort, strRequest, strResponse))
     {
       game::OpenPortResponse response;
       if (response.ParseFromString(strResponse))
@@ -356,7 +359,7 @@ bool CFrontendNetwork::OpenPort(unsigned int port)
   return false;
 }
 
-void CFrontendNetwork::ClosePort(unsigned int port)
+void CNetworkFrontend::ClosePort(unsigned int port)
 {
   game::ClosePortRequest request;
   request.set_port(port);
@@ -364,11 +367,11 @@ void CFrontendNetwork::ClosePort(unsigned int port)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::ClosePort, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::ClosePort, strRequest, strResponse);
   }
 }
 
-void CFrontendNetwork::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
+void CNetworkFrontend::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
 {
   game::RumbleSetStateRequest request;
   request.set_port(port);
@@ -378,33 +381,33 @@ void CFrontendNetwork::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effe
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::RumbleSetState, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::RumbleSetState, strRequest, strResponse);
   }
 }
 
-void CFrontendNetwork::SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
+void CNetworkFrontend::SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
 {
   // tODO
 }
 
-bool CFrontendNetwork::StartCamera(void)
+bool CNetworkFrontend::StartCamera(void)
 {
   return false; // TODO
 }
 
-void CFrontendNetwork::StopCamera(void)
+void CNetworkFrontend::StopCamera(void)
 {
   // TODO
 }
 
-bool CFrontendNetwork::StartLocation(void)
+bool CNetworkFrontend::StartLocation(void)
 {
   game::StartLocationRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::StartLocation, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::StartLocation, strRequest, strResponse))
     {
       game::StartLocationResponse response;
       if (response.ParseFromString(strResponse))
@@ -415,25 +418,25 @@ bool CFrontendNetwork::StartLocation(void)
   return false;
 }
 
-void CFrontendNetwork::StopLocation(void)
+void CNetworkFrontend::StopLocation(void)
 {
   game::StopLocationRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::StopLocation, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::StopLocation, strRequest, strResponse);
   }
 }
 
-bool CFrontendNetwork::GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
+bool CNetworkFrontend::GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
 {
   game::GetLocationRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc.Send(RPC_METHOD::GetLocation, strRequest, strResponse))
+    if (m_rpc->Send(RPC_METHOD::GetLocation, strRequest, strResponse))
     {
       game::GetLocationResponse response;
       if (response.ParseFromString(strResponse))
@@ -450,7 +453,7 @@ bool CFrontendNetwork::GetLocation(double* lat, double* lon, double* horizAccura
   return false;
 }
 
-void CFrontendNetwork::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
+void CNetworkFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
 {
   game::SetLocationIntervalRequest request;
   request.set_intervalms(intervalMs);
@@ -459,6 +462,6 @@ void CFrontendNetwork::SetLocationInterval(unsigned int intervalMs, unsigned int
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc.Send(RPC_METHOD::SetLocationInterval, strRequest, strResponse);
+    m_rpc->Send(RPC_METHOD::SetLocationInterval, strRequest, strResponse);
   }
 }

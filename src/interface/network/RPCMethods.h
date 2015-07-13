@@ -23,19 +23,13 @@ namespace NETPLAY
 {
   enum class RPC_METHOD
   {
-    // --- Temporary methods (TODO) --------------------------------------------
-
     Invalid = 0, // Message is invalid
-    Login,
 
     // --- Add-on methods ------------------------------------------------------
 
-    Create,
-    Stop,
-    Destroy,
+    Login,
+    Logout,
     GetStatus,
-    HasSettings,
-    GetSettings,
     SetSetting,
     Announce,
 
@@ -49,7 +43,7 @@ namespace NETPLAY
     GetLocalizedString,
     GetDVDMenuLanguage,
 
-    // --- Game methods -------------------------------------------------------------
+    // --- Game methods --------------------------------------------------------
 
     GetGameAPIVersion,
     GetMininumGameAPIVersion,

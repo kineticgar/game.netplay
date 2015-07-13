@@ -1,0 +1,110 @@
+/*
+ *      Copyright (C) 2015 Garrett Brown
+ *      Copyright (C) 2015 Team XBMC
+ *
+ *  This Program is free software you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This Program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with XBMC see the file COPYING.  If not, see
+ *  <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#include "FrontendCallbackLib.h"
+#include "FrontendCallbacks.h"
+#include "IFrontend.h"
+#include "log/Log.h"
+
+#include "kodi/kodi_addon_callbacks.h"
+#include "kodi/kodi_game_callbacks.h"
+
+using namespace NETPLAY;
+
+#define LIB_BASE_PATH  "/home/garrett/Documents/game.frontend/build" // TODO
+
+CFrontendCallbackLib::CFrontendCallbackLib(IFrontend* frontend) :
+  m_frontend(frontend),
+  m_callbacks(new AddonCB),
+  m_helperAddon(NULL),
+  m_helperGame(NULL)
+{
+  static const std::string strLibBasePath(LIB_BASE_PATH);
+
+  m_callbacks->libBasePath        = new char[strLibBasePath.length() + 1];
+  m_callbacks->addonData          = this;
+  m_callbacks->RegisterAddonLib   = CFrontendCallbackLib::RegisterAddonLib;
+  m_callbacks->UnregisterAddonLib = CFrontendCallbackLib::UnregisterAddonLib;
+  m_callbacks->RegisterGameLib    = CFrontendCallbackLib::RegisterGameLib;
+  m_callbacks->UnregisterGameLib  = CFrontendCallbackLib::UnregisterGameLib;
+
+  std::strcpy(m_callbacks->libBasePath, strLibBasePath.c_str());
+}
+
+CFrontendCallbackLib::~CFrontendCallbackLib(void)
+{
+  delete   m_helperAddon;
+  delete   m_helperGame;
+  delete[] m_callbacks->libBasePath;
+  delete   m_callbacks;
+}
+
+CB_AddOnLib* CFrontendCallbackLib::RegisterAddonLib(void* addonData)
+{
+  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
+  if (addon == NULL)
+  {
+    esyslog("%s - called with a null pointer", __FUNCTION__);
+    return NULL;
+  }
+
+  addon->m_helperAddon = new CFrontendCallbacksAddon(addon->m_frontend);
+
+  return addon->m_helperAddon->GetCallbacks();
+}
+
+void CFrontendCallbackLib::UnregisterAddonLib(void* addonData, CB_AddOnLib* cbTable)
+{
+  CFrontendCallbackLib* addon = (CFrontendCallbackLib*) addonData;
+  if (addon == NULL)
+  {
+    esyslog("%s - called with a null pointer", __FUNCTION__);
+    return;
+  }
+
+  delete addon->m_helperAddon;
+  addon->m_helperAddon = NULL;
+}
+
+CB_GameLib* CFrontendCallbackLib::RegisterGameLib(void* addonData)
+{
+  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
+  if (addon == NULL)
+  {
+    esyslog("%s - called with a null pointer", __FUNCTION__);
+    return NULL;
+  }
+
+  addon->m_helperGame = new CFrontendCallbacksGame(addon->m_frontend);
+  return addon->m_helperGame->GetCallbacks();
+}
+
+void CFrontendCallbackLib::UnregisterGameLib(void* addonData, CB_GameLib *cbTable)
+{
+  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
+  if (addon == NULL)
+  {
+    esyslog("%s - called with a null pointer", __FUNCTION__);
+    return;
+  }
+
+  delete addon->m_helperGame;
+  addon->m_helperGame = NULL;
+}

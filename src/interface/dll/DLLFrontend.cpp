@@ -19,6 +19,7 @@
  */
 
 #include "DLLFrontend.h"
+#include "filesystem/StatStructure.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
@@ -162,9 +163,17 @@ bool CDLLFrontend::FileExists(const std::string& strFileName, bool bUseCache)
 }
 
 /* TODO
-int CDLLFrontend::StatFile(const std::string& strFileName, struct __stat64* buffer)
+bool CDLLFrontend::StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer)
 {
-  return m_addon->StatFile(strFileName.c_str(), buffer);
+  struct stat64 statBuffer;
+
+  if (m_addon->StatFile(strFileName.c_str(), static_cast<ADDON::__stat64*>(&statBuffer)) >= 0)
+  {
+    TranslateStat(&statBuffer, buffer);
+    return true;
+  }
+
+  return false;
 }
 */
 

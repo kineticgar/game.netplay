@@ -31,14 +31,12 @@ namespace NETPLAY
   public:
     virtual ~IGame(void) { }
 
-    virtual bool Initialize(void) = 0;
+    virtual ADDON_STATUS Initialize(void) = 0;
     virtual void Deinitialize(void) = 0;
 
     // --- Add-on operations ---------------------------------------------------
 
-    virtual ADDON_STATUS Create(void *callbacks, void* props) = 0;
     virtual void         Stop(void) = 0;
-    virtual void         Destroy(void) = 0;
     virtual ADDON_STATUS GetStatus(void) = 0;
     virtual bool         HasSettings(void) = 0;
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet) = 0;
