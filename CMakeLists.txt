@@ -30,6 +30,9 @@ set(NETPLAY_SOURCES ${PROTO_SRCS}
                     src/interface/dll/DLLGame.cpp
                     src/interface/network/NetworkFrontend.cpp
                     src/interface/network/NetworkGame.cpp
+                    src/log/Log.cpp
+                    src/log/LogAddon.cpp
+                    src/log/LogConsole.cpp
                     src/Netplay.cpp)
 
 # Uncomment to compile with pedantic warnings. Disabled because of excessive
