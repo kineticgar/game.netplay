@@ -203,7 +203,7 @@ void CFrontendDLL::VideoFrame(const uint8_t* data, unsigned int width, unsigned 
   return m_game->VideoFrame(data, width, height, format);
 }
 
-unsigned int CFrontendDLL::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CFrontendDLL::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   return m_game->AudioFrames(data, frames, format);
 }

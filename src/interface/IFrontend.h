@@ -68,7 +68,7 @@ namespace NETPLAY
 
     virtual void CloseGame(void) = 0;
     virtual void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format) = 0;
-    virtual unsigned int AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format) = 0;
+    virtual void AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format) = 0;
     virtual void HwSetInfo(const game_hw_info* hw_info) = 0;
     virtual uintptr_t HwGetCurrentFramebuffer(void) = 0;
     virtual game_proc_address_t HwGetProcAddress(const char* symbol) = 0;

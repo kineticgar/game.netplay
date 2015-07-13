@@ -506,12 +506,10 @@ void CNetplay::VideoFrame(const uint8_t* data, unsigned int width, unsigned int 
     (*it)->VideoFrame(data, width, height, format);
 }
 
-unsigned int CNetplay::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CNetplay::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->AudioFrames(data, frames, format);
-
-  return 0; // TODO
 }
 
 void CNetplay::HwSetInfo(const game_hw_info* hw_info)

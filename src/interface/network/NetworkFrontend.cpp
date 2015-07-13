@@ -304,7 +304,7 @@ unsigned int GetFrameSize(GAME_AUDIO_FORMAT format)
   return 0;
 }
 
-unsigned int CFrontendNetwork::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CFrontendNetwork::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   game::AudioFramesRequest request;
   unsigned int size = GetFrameSize(format) * frames; // TODO
@@ -318,16 +318,9 @@ unsigned int CFrontendNetwork::AudioFrames(const uint8_t* data, unsigned int fra
     if (request.SerializeToString(&strRequest))
     {
       std::string strResponse;
-      if (m_rpc.Send(RPC_METHOD::AudioFrames, strRequest, strResponse))
-      {
-        game::AudioFramesResponse response;
-        if (response.ParseFromString(strResponse))
-          return response.result();
-      }
+      m_rpc.Send(RPC_METHOD::AudioFrames, strRequest, strResponse);
     }
   }
-
-  return 0;
 }
 
 void CFrontendNetwork::HwSetInfo(const game_hw_info* hw_info)
