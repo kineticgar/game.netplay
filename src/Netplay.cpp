@@ -28,43 +28,30 @@
 #include <algorithm>
 
 using namespace NETPLAY;
-using namespace PLATFORM;
 
 CNetplay::CNetplay(void) :
   m_game(NULL)
 {
 }
 
-bool CNetplay::Initialize(void)
-{
-  return true;
-}
-
-void CNetplay::Deinitialize(void)
-{
-}
-
 void CNetplay::RegisterGame(IGame* game)
 {
-  CLockObject lock(m_mutex);
-  m_game = game;
+  if (m_game == NULL)
+    m_game = game;
 }
 
 void CNetplay::UnregisterGame(void)
 {
-  CLockObject lock(m_mutex);
   m_game = NULL;
 }
 
 void CNetplay::RegisterFrontend(IFrontend* frontend)
 {
-  CLockObject lock(m_mutex);
   m_frontends.push_back(frontend);
 }
 
 void CNetplay::UnregisterFrontend(IFrontend* frontend)
 {
-  CLockObject lock(m_mutex);
   m_frontends.erase(std::remove(m_frontends.begin(), m_frontends.end(), frontend), m_frontends.end());
 }
 

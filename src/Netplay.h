@@ -22,7 +22,6 @@
 #include "kodi/libXBMC_addon.h"
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
-#include "platform/threads/mutex.h"
 
 #include <stddef.h>
 #include <string>
@@ -128,6 +127,5 @@ namespace NETPLAY
 
     std::vector<IFrontend*> m_frontends;
     IGame*                  m_game;
-    PLATFORM::CMutex        m_mutex;
   };
 }
