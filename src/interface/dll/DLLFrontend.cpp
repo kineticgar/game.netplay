@@ -18,7 +18,7 @@
  *
  */
 
-#include "FrontendDLL.h"
+#include "DLLFrontend.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"

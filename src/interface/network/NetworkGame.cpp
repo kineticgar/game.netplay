@@ -18,7 +18,7 @@
  *
  */
 
-#include "GameNetwork.h"
+#include "NetworkGame.h"
 
 #include "addon.pb.h"
 #include "game.pb.h"

@@ -18,7 +18,7 @@
  *
  */
 
-#include "GameDLL.h"
+#include "DLLGame.h"
 
 #ifdef _WIN32
   #include "dlfcn-win32.h"

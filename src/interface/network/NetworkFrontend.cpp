@@ -18,7 +18,7 @@
  *
  */
 
-#include "FrontendNetwork.h"
+#include "NetworkFrontend.h"
 
 #include "addon.pb.h"
 #include "game.pb.h"

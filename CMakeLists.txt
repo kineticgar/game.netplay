@@ -26,10 +26,10 @@ list(APPEND DEPLIBS ${kodiplatform_LIBRARIES}
 
 set(NETPLAY_SOURCES ${PROTO_SRCS}
                     src/client.cpp
-                    src/interface/dll/FrontendDLL.cpp
-                    src/interface/dll/GameDLL.cpp
-                    src/interface/network/FrontendNetwork.cpp
-                    src/interface/network/GameNetwork.cpp
+                    src/interface/dll/DLLFrontend.cpp
+                    src/interface/dll/DLLGame.cpp
+                    src/interface/network/NetworkFrontend.cpp
+                    src/interface/network/NetworkGame.cpp
                     src/Netplay.cpp)
 
 # Uncomment to compile with pedantic warnings. Disabled because of excessive

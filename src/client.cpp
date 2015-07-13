@@ -18,8 +18,8 @@
  *
  */
 
-#include "interface/dll/FrontendDLL.h"
-#include "interface/dll/GameDLL.h"
+#include "interface/dll/DLLFrontend.h"
+#include "interface/dll/DLLGame.h"
 #include "Netplay.h"
 
 #include "kodi/kodi_game_dll.h"
