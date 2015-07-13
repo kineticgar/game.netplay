@@ -20,6 +20,7 @@
 #pragma once
 
 #include "RPCMethods.h"
+#include "Server.h"
 #include "interface/IGame.h"
 
 #include <map>
@@ -68,13 +69,7 @@ namespace NETPLAY
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
-    class RPC
-    {
-    public:
-      bool Send(RPC_METHOD method, const std::string& request, std::string& response) { return false; }
-    };
-
-    RPC m_rpc;
+    CServer m_rpc;
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
   };
 }

@@ -23,6 +23,11 @@ namespace NETPLAY
 {
   enum class RPC_METHOD
   {
+    // --- Temporary methods (TODO) --------------------------------------------
+
+    Invalid = 0, // Message is invalid
+    Login,
+
     // --- Add-on methods ------------------------------------------------------
 
     Create,

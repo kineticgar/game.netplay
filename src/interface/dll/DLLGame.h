@@ -28,11 +28,11 @@
 
 namespace NETPLAY
 {
-  class CGameDLL : public IGame
+  class CDLLGame : public IGame
   {
   public:
-    CGameDLL(const std::string& strDllPath);
-    virtual ~CGameDLL(void) { Deinitialize(); }
+    CDLLGame(const std::string& strDllPath);
+    virtual ~CDLLGame(void) { Deinitialize(); }
 
     virtual bool Initialize(void);
     virtual void Deinitialize(void);

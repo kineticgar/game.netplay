@@ -29,8 +29,10 @@ set(NETPLAY_SOURCES ${PROTO_SRCS}
                     src/filesystem/Poller.cpp
                     src/interface/dll/DLLFrontend.cpp
                     src/interface/dll/DLLGame.cpp
+                    src/interface/network/Client.cpp
                     src/interface/network/NetworkFrontend.cpp
                     src/interface/network/NetworkGame.cpp
+                    src/interface/network/Server.cpp
                     src/interface/network/Socket.cpp
                     src/log/Log.cpp
                     src/log/LogAddon.cpp

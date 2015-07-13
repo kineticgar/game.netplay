@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "RPCMethods.h"
+#include "Server.h"
 #include "interface/IFrontend.h"
 
 namespace NETPLAY
@@ -78,12 +78,6 @@ namespace NETPLAY
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
-    class RPC
-    {
-    public:
-      bool Send(RPC_METHOD method, const std::string& request, std::string& response) { return false; }
-    };
-
-    RPC m_rpc;
+    CServer m_rpc;
   };
 }

@@ -41,7 +41,7 @@ namespace NETPLAY
   #define REGISTER_SYMBOL(dll, functionPtr)  RegisterSymbol(dll, m_ ## functionPtr, #functionPtr)
 }
 
-CGameDLL::CGameDLL(const std::string& strDllPath) :
+CDLLGame::CDLLGame(const std::string& strDllPath) :
   m_strPath(strDllPath),
   m_dll(NULL),
   m_ADDON_Create(NULL),
@@ -76,7 +76,7 @@ CGameDLL::CGameDLL(const std::string& strDllPath) :
 {
 }
 
-bool CGameDLL::Initialize(void)
+bool CDLLGame::Initialize(void)
 {
   Deinitialize();
 
@@ -128,7 +128,7 @@ bool CGameDLL::Initialize(void)
   return true;
 }
 
-void CGameDLL::Deinitialize(void)
+void CDLLGame::Deinitialize(void)
 {
   if (m_dll)
   {
@@ -137,147 +137,147 @@ void CGameDLL::Deinitialize(void)
   }
 }
 
-ADDON_STATUS CGameDLL::Create(void* callbacks, void* props)
+ADDON_STATUS CDLLGame::Create(void* callbacks, void* props)
 {
   return m_ADDON_Create(callbacks, props);
 }
 
-void CGameDLL::Stop(void)
+void CDLLGame::Stop(void)
 {
   return m_ADDON_Stop();
 }
 
-void CGameDLL::Destroy(void)
+void CDLLGame::Destroy(void)
 {
   return m_ADDON_Destroy();
 }
 
-ADDON_STATUS CGameDLL::GetStatus(void)
+ADDON_STATUS CDLLGame::GetStatus(void)
 {
   return m_ADDON_GetStatus();
 }
 
-bool CGameDLL::HasSettings(void)
+bool CDLLGame::HasSettings(void)
 {
   return m_ADDON_HasSettings();
 }
 
-unsigned int CGameDLL::GetSettings(ADDON_StructSetting*** sSet)
+unsigned int CDLLGame::GetSettings(ADDON_StructSetting*** sSet)
 {
   return m_ADDON_GetSettings(sSet);
 }
 
-ADDON_STATUS CGameDLL::SetSetting(const std::string& settingName, const void* settingValue)
+ADDON_STATUS CDLLGame::SetSetting(const std::string& settingName, const void* settingValue)
 {
   return m_ADDON_SetSetting(settingName, settingValue);
 }
 
-void CGameDLL::FreeSettings(void)
+void CDLLGame::FreeSettings(void)
 {
   return m_ADDON_FreeSettings();
 }
 
-void CGameDLL::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
+void CDLLGame::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
   return m_ADDON_Announce(flag, sender, message, data);
 }
 
-std::string CGameDLL::GetGameAPIVersion(void)
+std::string CDLLGame::GetGameAPIVersion(void)
 {
   return m_GetGameAPIVersion();
 }
 
-std::string CGameDLL::GetMininumGameAPIVersion(void)
+std::string CDLLGame::GetMininumGameAPIVersion(void)
 {
   return m_GetMininumGameAPIVersion();
 }
 
-GAME_ERROR CGameDLL::LoadGame(const std::string& url)
+GAME_ERROR CDLLGame::LoadGame(const std::string& url)
 {
   return m_LoadGame(url);
 }
 
-GAME_ERROR CGameDLL::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
+GAME_ERROR CDLLGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
   return m_LoadGameSpecial(type, urls, urlCount);
 }
 
-GAME_ERROR CGameDLL::LoadStandalone(void)
+GAME_ERROR CDLLGame::LoadStandalone(void)
 {
   return m_LoadStandalone();
 }
 
-GAME_ERROR CGameDLL::UnloadGame(void)
+GAME_ERROR CDLLGame::UnloadGame(void)
 {
   return m_UnloadGame();
 }
 
-GAME_ERROR CGameDLL::GetGameInfo(game_system_av_info* info)
+GAME_ERROR CDLLGame::GetGameInfo(game_system_av_info* info)
 {
   return m_GetGameInfo(info);
 }
 
-GAME_REGION CGameDLL::GetRegion(void)
+GAME_REGION CDLLGame::GetRegion(void)
 {
   return m_GetRegion();
 }
 
-void CGameDLL::FrameEvent(void)
+void CDLLGame::FrameEvent(void)
 {
   return m_FrameEvent();
 }
 
-GAME_ERROR CGameDLL::Reset(void)
+GAME_ERROR CDLLGame::Reset(void)
 {
   return m_Reset();
 }
 
-GAME_ERROR CGameDLL::HwContextReset(void)
+GAME_ERROR CDLLGame::HwContextReset(void)
 {
   return m_HwContextReset();
 }
 
-GAME_ERROR CGameDLL::HwContextDestroy(void)
+GAME_ERROR CDLLGame::HwContextDestroy(void)
 {
   return m_HwContextDestroy();
 }
 
-void CGameDLL::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
+void CDLLGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
   return m_UpdatePort(port, connected, controller);
 }
 
-bool CGameDLL::InputEvent(unsigned int port, const game_input_event* event)
+bool CDLLGame::InputEvent(unsigned int port, const game_input_event* event)
 {
   return m_InputEvent(port, event);
 }
 
-size_t CGameDLL::SerializeSize(void)
+size_t CDLLGame::SerializeSize(void)
 {
   return m_SerializeSize();
 }
 
-GAME_ERROR CGameDLL::Serialize(uint8_t* data, size_t size)
+GAME_ERROR CDLLGame::Serialize(uint8_t* data, size_t size)
 {
   return m_Serialize(data, size);
 }
 
-GAME_ERROR CGameDLL::Deserialize(const uint8_t* data, size_t size)
+GAME_ERROR CDLLGame::Deserialize(const uint8_t* data, size_t size)
 {
   return m_Deserialize(data, size);
 }
 
-GAME_ERROR CGameDLL::CheatReset(void)
+GAME_ERROR CDLLGame::CheatReset(void)
 {
   return m_CheatReset();
 }
 
-GAME_ERROR CGameDLL::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
+GAME_ERROR CDLLGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
 {
   return m_GetMemory(type, data, size);
 }
 
-GAME_ERROR CGameDLL::SetCheat(unsigned int index, bool enabled, const std::string& code)
+GAME_ERROR CDLLGame::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
   return m_SetCheat(index, enabled, code);
 }

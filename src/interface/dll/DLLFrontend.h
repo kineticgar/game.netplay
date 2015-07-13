@@ -26,11 +26,11 @@ class CHelper_libKODI_game;
 
 namespace NETPLAY
 {
-  class CFrontendDLL : public IFrontend
+  class CDLLFrontend : public IFrontend
   {
   public:
-    CFrontendDLL(void* callbacks);
-    virtual ~CFrontendDLL(void) { Deinitialize(); }
+    CDLLFrontend(void* callbacks);
+    virtual ~CDLLFrontend(void) { Deinitialize(); }
 
     virtual bool Initialize(void);
     virtual void Deinitialize(void);

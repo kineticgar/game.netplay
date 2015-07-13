@@ -59,14 +59,14 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     const bool bLoadGame = (gameProps->library_path && std::strlen(gameProps->library_path) > 0);
     if (bLoadGame)
     {
-      GAME = new CGameDLL(gameProps->library_path);
+      GAME = new CDLLGame(gameProps->library_path);
       if (!GAME->Initialize())
         throw ADDON_STATUS_PERMANENT_FAILURE;
 
       SESSION->RegisterGame(GAME);
     }
 
-    FRONTEND = new CFrontendDLL(callbacks);
+    FRONTEND = new CDLLFrontend(callbacks);
     if (!FRONTEND->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
