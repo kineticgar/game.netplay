@@ -106,6 +106,22 @@ namespace NETPLAY
     bool CreateDirectory(const std::string& strPath);
     bool DirectoryExists(const std::string& strPath);
     bool RemoveDirectory(const std::string& strPath);
+    void CloseGame(void);
+    void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format);
+    unsigned int AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format);
+    void HwSetInfo(const game_hw_info* hw_info);
+    uintptr_t HwGetCurrentFramebuffer(void);
+    game_proc_address_t HwGetProcAddress(const char* symbol);
+    bool OpenPort(unsigned int port);
+    void ClosePort(unsigned int port);
+    void RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength);
+    void SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps);
+    bool StartCamera(void);
+    void StopCamera(void);
+    bool StartLocation(void);
+    void StopLocation(void);
+    bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy);
+    void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
     IFrontend* GetMaster(void);

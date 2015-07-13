@@ -493,3 +493,131 @@ bool CNetplay::RemoveDirectory(const std::string& strPath)
 
   return false;
 }
+
+void CNetplay::CloseGame(void)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->CloseGame();
+}
+
+void CNetplay::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->VideoFrame(data, width, height, format);
+}
+
+unsigned int CNetplay::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->AudioFrames(data, frames, format);
+
+  return 0; // TODO
+}
+
+void CNetplay::HwSetInfo(const game_hw_info* hw_info)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->HwSetInfo(hw_info);
+}
+
+uintptr_t CNetplay::HwGetCurrentFramebuffer(void)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    uintptr_t framebuffer = (*it)->HwGetCurrentFramebuffer();
+    if (framebuffer != 0)
+      return framebuffer;
+  }
+
+  return 0;
+}
+
+game_proc_address_t CNetplay::HwGetProcAddress(const char* symbol)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    game_proc_address_t proc = (*it)->HwGetProcAddress(symbol);
+    if (proc != NULL)
+      return proc;
+  }
+
+  return NULL;
+}
+
+bool CNetplay::OpenPort(unsigned int port)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    if ((*it)->OpenPort(port))
+      return true;
+  }
+
+  return false;
+}
+
+void CNetplay::ClosePort(unsigned int port)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->ClosePort(port);
+}
+
+void CNetplay::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->RumbleSetState(port, effect, strength);
+}
+
+void CNetplay::SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->SetCameraInfo(width, height, caps);
+}
+
+bool CNetplay::StartCamera(void)
+{
+  bool bReturn = false;
+
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    bReturn |= (*it)->StartCamera();
+
+  return bReturn;
+}
+
+void CNetplay::StopCamera(void)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->StopCamera();
+}
+
+bool CNetplay::StartLocation(void)
+{
+  bool bReturn = false;
+
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    bReturn |= (*it)->StartLocation();
+
+  return bReturn;
+}
+
+void CNetplay::StopLocation(void)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->StopLocation();
+}
+
+bool CNetplay::GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    if ((*it)->GetLocation(lat, lon, horizAccuracy, vertAccuracy))
+      return true;
+  }
+
+  return false;
+}
+
+void CNetplay::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
+{
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->SetLocationInterval(intervalMs, intervalDistance);
+}
