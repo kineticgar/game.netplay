@@ -36,10 +36,7 @@ namespace NETPLAY
   {
   public:
     CNetplay(void);
-    ~CNetplay(void) { Deinitialize(); }
-
-    bool Initialize(void);
-    void Deinitialize(void);
+    ~CNetplay(void) { }
 
     void RegisterGame(IGame* game);
     void UnregisterGame(void);

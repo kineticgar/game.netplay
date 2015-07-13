@@ -53,8 +53,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   try
   {
     SESSION = new CNetplay;
-    if (!SESSION->Initialize())
-      throw ADDON_STATUS_PERMANENT_FAILURE;
 
     const bool bLoadGame = (gameProps->library_path && std::strlen(gameProps->library_path) > 0);
     if (bLoadGame)
@@ -94,7 +92,6 @@ void ADDON_Destroy()
     if (GAME)
       SESSION->UnregisterGame();
     SESSION->UnregisterFrontend(FRONTEND);
-    SESSION->Deinitialize();
   }
 
   SAFE_DELETE(GAME);
