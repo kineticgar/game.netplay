@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstring>
+#include <string>
 
 struct CB_AddOnLib;
 struct CB_GameLib;
@@ -44,7 +45,7 @@ namespace NETPLAY
   class CFrontendCallbackLib
   {
   public:
-    CFrontendCallbackLib(IFrontend* frontend);
+    CFrontendCallbackLib(IFrontend* frontend, const std::string& strHelperDir);
     ~CFrontendCallbackLib(void);
 
     AddonCB* GetCallbacks(void) { return m_callbacks; }

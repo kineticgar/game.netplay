@@ -25,8 +25,37 @@
 #include "utils/StringUtils.h"
 
 #include <iostream>
+#include <string>
 
 using namespace NETPLAY;
+
+#define HELPER_LIBRARY_DIR  "resources"
+
+// --- Helper functions --------------------------------------------------------
+
+namespace NETPLAY
+{
+  std::string GetProcessPath(void)
+  {
+    return ""; // TODO
+  }
+
+  /*!
+   * \brief Get the parent directory for a given file/folder
+   */
+  std::string GetParentDirectory(const std::string& strPath)
+  {
+    return strPath; // TODO
+  }
+
+  /*!
+   * \brief Get the directory for helper libraries
+   */
+  std::string GetHelperLibraryDir(void)
+  {
+    return GetParentDirectory(GetProcessPath()) + "/" + HELPER_LIBRARY_DIR;
+  }
+}
 
 enum OPTION
 {
@@ -103,7 +132,7 @@ int main(int argc, char** argv)
         props.save_directory       = argv[6];
       }
 
-      GAME = new CDLLGame(CALLBACKS, props);
+      GAME = new CDLLGame(CALLBACKS, props, GetHelperLibraryDir());
       break;
     }
     case OPTION_REMOTE_GAME:

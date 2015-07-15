@@ -36,7 +36,7 @@ namespace NETPLAY
   class CDLLGame : public IGame
   {
   public:
-    CDLLGame(IFrontend* frontend, const game_client_properties& properties);
+    CDLLGame(IFrontend* frontend, const game_client_properties& properties, const std::string& strLibBasePath);
     virtual ~CDLLGame(void) { Deinitialize(); }
 
     // implementation of IGame
@@ -86,6 +86,7 @@ namespace NETPLAY
 
     IFrontend* const           m_callbacks;
     const GameClientProperties m_properties;
+    const std::string          m_strLibBasePath;
     void*                      m_dll;
     CFrontendCallbackLib*      m_pHelper;
     PLATFORM::CMutex           m_mutex;

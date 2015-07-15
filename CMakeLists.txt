@@ -144,15 +144,15 @@ add_library(KODI_game ${GAME_HELPER_LIB_SOURCES})
 
 set_target_properties(XBMC_addon
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
 )
 set_target_properties(KODI_game
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
 )
 
 include(CPack)

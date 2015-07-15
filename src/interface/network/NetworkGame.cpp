@@ -35,9 +35,8 @@ CNetworkGame::CNetworkGame(const std::string& strAddress, unsigned int port) :
 ADDON_STATUS CNetworkGame::Initialize(void)
 {
   if (!m_rpc.Open())
-  {
     return ADDON_STATUS_UNKNOWN;
-  }
+
   addon::LoginRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))

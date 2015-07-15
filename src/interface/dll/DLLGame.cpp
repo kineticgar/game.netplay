@@ -47,9 +47,10 @@ namespace NETPLAY
 
 // --- CDLLGame ----------------------------------------------------------------
 
-CDLLGame::CDLLGame(IFrontend* callbacks, const game_client_properties& properties) :
+CDLLGame::CDLLGame(IFrontend* callbacks, const game_client_properties& properties, const std::string& strLibBasePath) :
   m_callbacks(callbacks),
   m_properties(TranslateProperties(properties)),
+  m_strLibBasePath(strLibBasePath),
   m_dll(NULL),
   m_pHelper(NULL),
   m_ADDON_Create(NULL),
@@ -140,7 +141,7 @@ ADDON_STATUS CDLLGame::Initialize(void)
     return status;
   }
 
-  m_pHelper = new CFrontendCallbackLib(m_callbacks);
+  m_pHelper = new CFrontendCallbackLib(m_callbacks, m_strLibBasePath);
 
   GameClientProperties propsCopy(m_properties);
   return m_ADDON_Create(m_pHelper->GetCallbacks(), &propsCopy);

@@ -28,24 +28,20 @@
 
 using namespace NETPLAY;
 
-#define LIB_BASE_PATH  "/home/garrett/Documents/game.frontend/build" // TODO
-
-CFrontendCallbackLib::CFrontendCallbackLib(IFrontend* frontend) :
+CFrontendCallbackLib::CFrontendCallbackLib(IFrontend* frontend, const std::string& strLibDir) :
   m_frontend(frontend),
   m_callbacks(new AddonCB),
   m_helperAddon(NULL),
   m_helperGame(NULL)
 {
-  static const std::string strLibBasePath(LIB_BASE_PATH);
-
-  m_callbacks->libBasePath        = new char[strLibBasePath.length() + 1];
+  m_callbacks->libBasePath        = new char[strLibDir.length() + 1];
   m_callbacks->addonData          = this;
   m_callbacks->RegisterAddonLib   = CFrontendCallbackLib::RegisterAddonLib;
   m_callbacks->UnregisterAddonLib = CFrontendCallbackLib::UnregisterAddonLib;
   m_callbacks->RegisterGameLib    = CFrontendCallbackLib::RegisterGameLib;
   m_callbacks->UnregisterGameLib  = CFrontendCallbackLib::UnregisterGameLib;
 
-  std::strcpy(m_callbacks->libBasePath, strLibBasePath.c_str());
+  std::strcpy(m_callbacks->libBasePath, strLibDir.c_str());
 }
 
 CFrontendCallbackLib::~CFrontendCallbackLib(void)
