@@ -59,6 +59,20 @@ namespace NETPLAY
   }
 
   /*!
+   * \brief Get the name of the current process's executable
+   */
+  std::string GetProcessName(void)
+  {
+    std::string processPath = GetProcessPath();
+
+    size_t pos = processPath.find_last_of("/\\");
+    if (pos != std::string::npos)
+      return processPath.substr(pos + 1);
+
+    return processPath;
+  }
+
+  /*!
    * \brief Get the parent directory for a given file/folder
    */
   std::string GetParentDirectory(const std::string& strPath)
@@ -112,13 +126,13 @@ int main(int argc, char** argv)
   if (option == OPTION_INVALID)
   {
     std::cout << "Load game client:" << std::endl;
-    std::cout << "  " << argv[0] << " --game <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << "  " << GetProcessName() << " --game <DLL> <system dir> <content dir> <save dir>" << std::endl;
     std::cout << "Load game client via proxy DLL:" << std::endl;
-    std::cout << "  " << argv[0] << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << "  " << GetProcessName() << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
     std::cout << "Load remote game client" << std::endl;
-    std::cout << "  " << argv[0] << " --remote <address> <port>" << std::endl;
+    std::cout << "  " << GetProcessName() << " --remote <address> <port>" << std::endl;
     std::cout << "Discover servers on the network:" << std::endl;
-    std::cout << "  " << argv[0] << " --discover" << std::endl;
+    std::cout << "  " << GetProcessName() << " --discover" << std::endl;
     return 1;
   }
 
