@@ -106,7 +106,7 @@ DLLEXPORT char* XBMC_unknown_to_utf8(AddonCB* handle, CB_AddOnLib* cbTable, cons
 DLLEXPORT char* XBMC_get_localized_string(AddonCB* handle, CB_AddOnLib* cbTable, int dwCode)
 {
   if (handle == NULL || cbTable == NULL)
-    return "";
+    return NULL;
 
   return cbTable->GetLocalizedString(handle->addonData, dwCode);
 }
@@ -114,7 +114,7 @@ DLLEXPORT char* XBMC_get_localized_string(AddonCB* handle, CB_AddOnLib* cbTable,
 DLLEXPORT char* XBMC_get_dvd_menu_language(AddonCB* handle, CB_AddOnLib* cbTable)
 {
   if (handle == NULL || cbTable == NULL)
-    return "";
+    return NULL;
 
   return cbTable->GetDVDMenuLanguage(handle->addonData);
 }

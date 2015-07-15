@@ -19,7 +19,10 @@
  */
 
 #include "interface/dll/DLLGame.h"
+#include "interface/FrontendManager.h"
+#include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
+#include "utils/StringUtils.h"
 
 #include <iostream>
 
@@ -35,8 +38,9 @@ enum OPTION
 
 int main(int argc, char** argv)
 {
-  IGame*   GAME   = NULL;
-  CServer* SERVER = NULL;
+  CFrontendManager* CALLBACKS = NULL;
+  IGame*            GAME      = NULL;
+  CServer*          SERVER    = NULL;
 
   OPTION option(OPTION_INVALID);
 
@@ -65,7 +69,12 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  const char* proxyDll = NULL;
+  CALLBACKS = new CFrontendManager;
+  if (!CALLBACKS->Initialize())
+  {
+    std::cerr << "Failed to initialize frontend" << std::endl;
+    return 2;
+  }
 
   switch (option)
   {
@@ -83,7 +92,7 @@ int main(int argc, char** argv)
       }
       else
       {
-        proxyDll = argv[2];
+        const char* proxyDll       = argv[2];
         props.proxy_dll_paths      = &proxyDll;
         props.proxy_dll_count      = 1;
         props.game_client_dll_path = argv[3];
@@ -94,21 +103,19 @@ int main(int argc, char** argv)
         props.save_directory       = argv[6];
       }
 
-      GAME = new CDLLGame(props);
-
+      GAME = new CDLLGame(CALLBACKS, props);
       break;
     }
     case OPTION_REMOTE_GAME:
     {
-      GAME = new CNetworkGame(argv[2], argv[3]);
-
+      GAME = new CNetworkGame(argv[2], StringUtils::IntVal(argv[3]));
       break;
     }
     case OPTION_DISCOVER:
     {
       // TODO
       std::cout << "Network discovery is unimplemented" << std::endl;
-      return 2;
+      return 3;
     }
     default:
       break;
@@ -117,19 +124,20 @@ int main(int argc, char** argv)
   if (!GAME || !GAME->Initialize())
   {
     std::cerr << "Failed to load game add-on" << std::endl;
-    return 3;
+    return 4;
   }
 
-  SERVER = new CServer(GAME);
+  SERVER = new CServer(GAME, CALLBACKS);
   if (!SERVER->Initialize())
   {
     std::cerr << "Failed to initialize server" << std::endl;
-    return 3;
+    return 5;
   }
 
   SERVER->WaitForExit();
 
   delete SERVER;
+  delete CALLBACKS;
   delete GAME;
 
   return 0;

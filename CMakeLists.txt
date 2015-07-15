@@ -61,6 +61,7 @@ set(NETPLAY_SOURCES
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
+    src/utils/StringUtils.cpp
 )
 
 set(STANDALONE_SOURCES
@@ -82,6 +83,11 @@ set(GAME_HELPER_LIB_SOURCES
 list(APPEND DEPLIBS
     ${kodiplatform_LIBRARIES}
     ${platform_LIBRARIES}
+)
+
+set(STANDALONE_DEPLIBS
+    protobuf
+    dl
 )
 
 ################################################################################
@@ -115,9 +121,9 @@ endif()
 #
 ################################################################################
 
-#add_executable(netplay_server ${NETPLAY_SOURCES} ${STANDALONE_SROUCES})
+add_executable(netplay_server ${NETPLAY_SOURCES} ${STANDALONE_SOURCES})
 
-#target_link_libraries(netplay_server ${DEPLIBS})
+target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
 
 ################################################################################
 #
@@ -133,8 +139,21 @@ build_addon(game.netplay NETPLAY ${ADDON_SROUCES} DEPLIBS)
 #
 ################################################################################
 
-#add_library(library.xmbc.addon.so ${ADDON_HELPER_LIB_SOURCES})
+add_library(XBMC_addon ${ADDON_HELPER_LIB_SOURCES})
+add_library(KODI_game ${GAME_HELPER_LIB_SOURCES})
 
-#add_library(library.kodi.game.so ${GAME_HELPER_LIB_SOURCES})
+set_target_properties(XBMC_addon
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.xmbc.addon"
+)
+set_target_properties(KODI_game
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library.kodi.game"
+)
 
 include(CPack)
+
