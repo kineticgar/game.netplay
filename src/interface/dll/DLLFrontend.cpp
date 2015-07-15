@@ -25,6 +25,8 @@
 #include "kodi/libKODI_game.h"
 #include "kodi/kodi_addon_utils.hpp"
 
+#include <sys/stat.h>
+
 using namespace ADDON;
 using namespace NETPLAY;
 
@@ -162,20 +164,18 @@ bool CDLLFrontend::FileExists(const std::string& strFileName, bool bUseCache)
   return m_addon->FileExists(strFileName.c_str(), bUseCache);
 }
 
-/* TODO
 bool CDLLFrontend::StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer)
 {
-  struct stat64 statBuffer;
+  struct __stat64 statBuffer;
 
-  if (m_addon->StatFile(strFileName.c_str(), static_cast<ADDON::__stat64*>(&statBuffer)) >= 0)
+  if (m_addon->StatFile(strFileName.c_str(), &statBuffer) >= 0)
   {
-    TranslateStat(&statBuffer, buffer);
+    TranslateToStruct(&statBuffer, buffer);
     return true;
   }
 
   return false;
 }
-*/
 
 bool CDLLFrontend::DeleteFile(const std::string& strFileName)
 {
@@ -280,4 +280,29 @@ bool CDLLFrontend::GetLocation(double* lat, double* lon, double* horizAccuracy, 
 void CDLLFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
 {
   return m_game->SetLocationInterval(intervalMs, intervalDistance);
+}
+
+void CDLLFrontend::TranslateToStruct(const struct __stat64* buffer, STAT_STRUCTURE& output)
+{
+  if (buffer)
+  {
+    output.deviceId         = buffer->st_dev;
+    output.size             = buffer->st_size;
+  #if defined(_WIN32)
+    output.accessTime       = buffer->st_atime;
+    output.modificationTime = buffer->st_mtime;
+    output.statusTime       = buffer->st_ctime;
+  #elif defined(__APPLE__)
+    output.accessTime       = buffer->st_atimespec;
+    output.modificationTime = buffer->st_mtimespec;
+    output.statusTime       = buffer->st_ctimespec;
+  #else
+    output.accessTime       = buffer->st_atim;
+    output.modificationTime = buffer->st_mtim;
+    output.statusTime       = buffer->st_ctim;
+  #endif
+    output.isDirectory      = S_ISDIR(buffer->st_mode);
+    output.isSymLink        = S_ISLNK(buffer->st_mode);
+    output.isHidden         = false; // TODO
+  }
 }

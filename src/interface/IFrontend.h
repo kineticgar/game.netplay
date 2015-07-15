@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "filesystem/StatStructure.h"
+
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
 #include "kodi/libXBMC_addon.h"
@@ -27,8 +29,6 @@
 
 namespace NETPLAY
 {
-  struct STAT_STRUCTURE;
-
   class IFrontend
   {
   public:
@@ -59,7 +59,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file) = 0;
     virtual int GetFileChunkSize(void* file) = 0;
     virtual bool FileExists(const std::string& strFileName, bool bUseCache) = 0;
-    //virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE* buffer) = 0; // TODO
+    virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer) = 0;
     virtual bool DeleteFile(const std::string& strFileName) = 0;
     virtual bool CanOpenDirectory(const std::string& strUrl) = 0;
     virtual bool CreateDirectory(const std::string& strPath) = 0;

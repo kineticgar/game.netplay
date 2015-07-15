@@ -178,18 +178,16 @@ bool CFrontendManager::FileExists(const std::string& strFileName, bool bUseCache
   return false;
 }
 
-/* TODO
-int CFrontendManager::StatFile(const std::string& strFileName, struct __stat64* buffer)
+bool CFrontendManager::StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
-    if ((*it)->StatFile(strFileName, buffer) != -1)
-      return 0;
+    if ((*it)->StatFile(strFileName, buffer))
+      return true;
   }
 
-  return -1;
+  return false;
 }
-*/
 
 bool CFrontendManager::DeleteFile(const std::string& strFileName)
 {

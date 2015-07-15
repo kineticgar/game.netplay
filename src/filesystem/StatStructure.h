@@ -20,7 +20,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <sys/stat.h>
 #include <time.h>
 
 namespace NETPLAY
@@ -42,7 +41,4 @@ namespace NETPLAY
     bool        isSymLink;        // The stat url is a symbolic link
     bool        isHidden;         // The file is hidden
   };
-
-  void TranslateStat(const struct ::stat64* buffer, STAT_STRUCTURE& output);
-  void TranslateStatStruct(const STAT_STRUCTURE& output, struct ::stat64* buffer);
 }

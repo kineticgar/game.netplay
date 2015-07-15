@@ -21,6 +21,8 @@
 
 #include "interface/IFrontend.h"
 
+#include "kodi/kodi_addon_callbacks.h"
+
 namespace ADDON { class CHelper_libXBMC_addon; }
 class CHelper_libKODI_game;
 
@@ -56,7 +58,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file);
     virtual int GetFileChunkSize(void* file);
     virtual bool FileExists(const std::string& strFileName, bool bUseCache);
-    //virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer); // TODO
+    virtual bool StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer);
     virtual bool DeleteFile(const std::string& strFileName);
     virtual bool CanOpenDirectory(const std::string& strUrl);
     virtual bool CreateDirectory(const std::string& strPath);
@@ -80,6 +82,8 @@ namespace NETPLAY
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
+    static void TranslateToStruct(const struct __stat64* buffer, STAT_STRUCTURE& output);
+
     ADDON::CHelper_libXBMC_addon* m_addon;
     CHelper_libKODI_game*         m_game;
   };

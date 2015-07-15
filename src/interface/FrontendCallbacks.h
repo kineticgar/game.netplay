@@ -25,6 +25,7 @@
 namespace NETPLAY
 {
   class IFrontend;
+  struct STAT_STRUCTURE;
 
   class CFrontendCallbacks
   {
@@ -35,6 +36,8 @@ namespace NETPLAY
 
   protected:
     static IFrontend* GetFrontend(void* addonData);
+
+    static void TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64* buffer);
 
   private:
     IFrontend* const m_frontend;
@@ -71,7 +74,7 @@ namespace NETPLAY
     static void CloseFile(void* addonData, void* file);
     static int GetFileChunkSize(void* addonData, void* file);
     static bool FileExists(void* addonData, const char* strFileName, bool bUseCache);
-    //static int StatFile(void* addonData, const char* strFileName, struct __stat64* buffer); // TODO
+    static int StatFile(void* addonData, const char* strFileName, struct __stat64* buffer);
     static bool DeleteFile(void* addonData, const char *strFileName);
     static bool CanOpenDirectory(void* addonData, const char* strURL);
     static bool CreateDirectory(void* addonData, const char* strPath);

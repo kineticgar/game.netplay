@@ -46,7 +46,6 @@ include_directories(
 set(NETPLAY_SOURCES
     ${PROTO_SRCS}
     src/filesystem/Poller.cpp
-    src/filesystem/StatStructure.cpp
     src/interface/dll/DLLFrontend.cpp
     src/interface/dll/DLLGame.cpp
     src/interface/FrontendCallbackLib.cpp
