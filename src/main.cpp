@@ -127,12 +127,16 @@ int main(int argc, char** argv)
   {
     std::cout << "Load game client:" << std::endl;
     std::cout << "  " << GetProcessName() << " --game <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << std::endl;
     std::cout << "Load game client via proxy DLL:" << std::endl;
     std::cout << "  " << GetProcessName() << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << std::endl;
     std::cout << "Load remote game client" << std::endl;
     std::cout << "  " << GetProcessName() << " --remote <address> <port>" << std::endl;
+    std::cout << std::endl;
     std::cout << "Discover servers on the network:" << std::endl;
     std::cout << "  " << GetProcessName() << " --discover" << std::endl;
+    std::cout << std::endl;
     return 1;
   }
 
