@@ -87,8 +87,6 @@ CDLLGame::CDLLGame(IFrontend* callbacks, const game_client_properties& propertie
 
 ADDON_STATUS CDLLGame::Initialize(void)
 {
-  Deinitialize();
-
   std::string strDllPath;
 
   if (!m_properties.proxy_dll_paths.empty())
