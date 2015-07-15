@@ -18,7 +18,7 @@
  *
  */
 
-#include "interface/FrontendCallbackLib.h"
+#include "interface/dll/FrontendCallbackLib.h"
 
 #include "kodi/kodi_addon_callbacks.h"
 

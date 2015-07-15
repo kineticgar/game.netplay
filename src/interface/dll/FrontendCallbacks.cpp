@@ -31,10 +31,12 @@ using namespace NETPLAY;
 
 // --- CFrontendCallbacks ------------------------------------------------------
 
+IFrontend* CFrontendCallbacks::m_globalFrontend = NULL;
+
 CFrontendCallbacks::CFrontendCallbacks(IFrontend* frontend) :
   m_frontend(frontend)
 {
-  assert(m_frontend);
+  m_globalFrontend = m_frontend;
 }
 
 IFrontend* CFrontendCallbacks::GetFrontend(void* addonData)
@@ -83,9 +85,9 @@ CFrontendCallbacksAddon::CFrontendCallbacksAddon(IFrontend* frontend) :
 {
   m_callbacks.Log                = Log;
   m_callbacks.QueueNotification  = QueueNotification;
-  //m_callbacks.WakeOnLan          = WakeOnLan; // TODO
+  m_callbacks.WakeOnLan          = WakeOnLan;
   m_callbacks.GetSetting         = GetSetting;
-  //m_callbacks.UnknownToUTF8      = UnknownToUTF8; // TODO
+  m_callbacks.UnknownToUTF8      = UnknownToUTF8;
   m_callbacks.GetLocalizedString = GetLocalizedString;
   m_callbacks.GetDVDMenuLanguage = GetDVDMenuLanguage;
   m_callbacks.FreeString         = FreeString;
@@ -143,9 +145,9 @@ void CFrontendCallbacksAddon::QueueNotification(void* addonData, const ADDON::qu
   return frontend->QueueNotification(type, msg);
 }
 
-bool CFrontendCallbacksAddon::WakeOnLan(void* addonData, const char* mac)
+bool CFrontendCallbacksAddon::WakeOnLan(const char* mac)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetStaticFrontend();
   if (frontend == NULL)
     return false;
 
@@ -155,9 +157,9 @@ bool CFrontendCallbacksAddon::WakeOnLan(void* addonData, const char* mac)
   return frontend->WakeOnLan(mac);
 }
 
-char* CFrontendCallbacksAddon::UnknownToUTF8(void* addonData, const char* sourceDest)
+char* CFrontendCallbacksAddon::UnknownToUTF8(const char* sourceDest)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetStaticFrontend();
   if (frontend == NULL)
     return NULL;
 

@@ -18,7 +18,7 @@
  *
  */
 
-#include "interface/FrontendCallbackLib.h"
+#include "interface/dll/FrontendCallbackLib.h"
 
 #include "kodi/kodi_game_callbacks.h"
 

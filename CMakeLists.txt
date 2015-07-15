@@ -48,8 +48,8 @@ set(NETPLAY_SOURCES
     src/filesystem/Poller.cpp
     src/interface/dll/DLLFrontend.cpp
     src/interface/dll/DLLGame.cpp
-    src/interface/FrontendCallbackLib.cpp
-    src/interface/FrontendCallbacks.cpp
+    src/interface/dll/FrontendCallbackLib.cpp
+    src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
     src/interface/network/Client.cpp
     src/interface/network/Connection.cpp

@@ -32,15 +32,18 @@ namespace NETPLAY
   public:
     CFrontendCallbacks(IFrontend* frontend);
 
+  protected:
     IFrontend* GetFrontend(void) { return m_frontend; }
 
-  protected:
+    static IFrontend* GetStaticFrontend(void) { return m_globalFrontend; }
+
     static IFrontend* GetFrontend(void* addonData);
 
     static void TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64* buffer);
 
   private:
-    IFrontend* const m_frontend;
+    IFrontend* const  m_frontend;
+    static IFrontend* m_globalFrontend;
   };
 
   class CFrontendCallbacksAddon : public CFrontendCallbacks
@@ -56,8 +59,8 @@ namespace NETPLAY
     static void Log(void* addonData, const ADDON::addon_log_t loglevel, const char* msg);
     static bool GetSetting(void* addonData, const char* settingName, void* settingValue);
     static void QueueNotification(void* addonData, const ADDON::queue_msg_t type, const char* msg);
-    static bool WakeOnLan(void* addonData, const char* mac);
-    static char* UnknownToUTF8(void* addonData, const char* sourceDest);
+    static bool WakeOnLan(const char* mac);
+    static char* UnknownToUTF8(const char* sourceDest);
     static char* GetLocalizedString(void* addonData, long dwCode);
     static char* GetDVDMenuLanguage(void* addonData);
     static void FreeString(void* addonData, char* str);

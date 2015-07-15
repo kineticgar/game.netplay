@@ -19,7 +19,7 @@
  */
 
 #include "DLLGame.h"
-#include "interface/FrontendCallbackLib.h"
+#include "FrontendCallbackLib.h"
 #include "log/Log.h"
 
 #ifdef _WIN32

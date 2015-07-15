@@ -20,7 +20,7 @@
 
 #include "FrontendCallbackLib.h"
 #include "FrontendCallbacks.h"
-#include "IFrontend.h"
+#include "interface/IFrontend.h"
 #include "log/Log.h"
 
 #include "kodi/kodi_addon_callbacks.h"
