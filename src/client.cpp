@@ -67,6 +67,7 @@ namespace NETPLAY
   {
     if (properties.proxy_dll_count >= 1)
       return properties.proxy_dll_paths[0] ? properties.proxy_dll_paths[0] : "";
+
     return "";
   }
 
@@ -84,7 +85,11 @@ namespace NETPLAY
    */
   std::string GetParentDirectory(const std::string& strPath)
   {
-    return strPath; // TODO
+    size_t pos = strPath.find_last_of("/\\");
+    if (pos != std::string::npos)
+      return strPath.substr(0, pos);
+
+    return strPath;
   }
 
   /*!

@@ -25,7 +25,14 @@
 #include "utils/StringUtils.h"
 
 #include <iostream>
+#include <limits.h>
 #include <string>
+
+#if defined(_WIN32)
+  #include <winbase.h>
+#else
+  #include <unistd.h>
+#endif
 
 using namespace NETPLAY;
 
@@ -35,9 +42,20 @@ using namespace NETPLAY;
 
 namespace NETPLAY
 {
+  /*!
+   * \brief Get the path of the current process
+   */
   std::string GetProcessPath(void)
   {
-    return ""; // TODO
+    char buff[PATH_MAX] = { };
+
+#if defined(_WIN32)
+    GetModuleFileName(NULL, buff, MAX_PATH);
+#else
+    readlink("/proc/self/exe", buff, sizeof(buff) - 1);
+#endif
+
+    return buff;
   }
 
   /*!
@@ -45,7 +63,11 @@ namespace NETPLAY
    */
   std::string GetParentDirectory(const std::string& strPath)
   {
-    return strPath; // TODO
+    size_t pos = strPath.find_last_of("/\\");
+    if (pos != std::string::npos)
+      return strPath.substr(0, pos);
+
+    return strPath;
   }
 
   /*!
@@ -56,6 +78,8 @@ namespace NETPLAY
     return GetParentDirectory(GetProcessPath()) + "/" + HELPER_LIBRARY_DIR;
   }
 }
+
+// --- Entry point -------------------------------------------------------------
 
 enum OPTION
 {
