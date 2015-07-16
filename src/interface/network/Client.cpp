@@ -119,7 +119,7 @@ bool CClient::Send(RPC_METHOD method, const std::string& request)
 bool CClient::Send(RPC_METHOD method, const std::string& request, std::string& response)
 {
   if (!Send(method, request))
-    return false;;
+    return false;
 
   try
   {
