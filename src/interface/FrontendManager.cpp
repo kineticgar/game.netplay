@@ -48,13 +48,13 @@ IFrontend* CFrontendManager::GetMaster(void)
   return NULL;
 }
 
-void CFrontendManager::Log(const ADDON::addon_log_t loglevel, const std::string& msg)
+void CFrontendManager::Log(const ADDON::addon_log_t loglevel, const char* msg)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->Log(loglevel, msg);
 }
 
-bool CFrontendManager::GetSetting(const std::string& settingName, void* settingValue)
+bool CFrontendManager::GetSetting(const char* settingName, void* settingValue)
 {
   IFrontend* master = GetMaster();
   if (master)
@@ -63,13 +63,13 @@ bool CFrontendManager::GetSetting(const std::string& settingName, void* settingV
   return false;
 }
 
-void CFrontendManager::QueueNotification(const ADDON::queue_msg_t type, const std::string& msg)
+void CFrontendManager::QueueNotification(const ADDON::queue_msg_t type, const char* msg)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->QueueNotification(type, msg);
 }
 
-bool CFrontendManager::WakeOnLan(const std::string& mac)
+bool CFrontendManager::WakeOnLan(const char* mac)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -80,7 +80,7 @@ bool CFrontendManager::WakeOnLan(const std::string& mac)
   return false;
 }
 
-std::string CFrontendManager::UnknownToUTF8(const std::string& str)
+std::string CFrontendManager::UnknownToUTF8(const char* str)
 {
   IFrontend* master = GetMaster();
   if (master)
@@ -89,7 +89,7 @@ std::string CFrontendManager::UnknownToUTF8(const std::string& str)
   return "";
 }
 
-std::string CFrontendManager::GetLocalizedString(int dwCode, const std::string& strDefault /* = "" */)
+std::string CFrontendManager::GetLocalizedString(int dwCode, const char* strDefault /* = "" */)
 {
   IFrontend* master = GetMaster();
   if (master)
@@ -107,12 +107,12 @@ std::string CFrontendManager::GetDVDMenuLanguage(void)
   return "";
 }
 
-void* CFrontendManager::OpenFile(const std::string& strFileName, unsigned int flags)
+void* CFrontendManager::OpenFile(const char* strFileName, unsigned int flags)
 {
   return NULL; // TODO
 }
 
-void* CFrontendManager::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
+void* CFrontendManager::OpenFileForWrite(const char* strFileName, bool bOverWrite)
 {
   return NULL; // TODO
 }
@@ -167,7 +167,7 @@ int CFrontendManager::GetFileChunkSize(void* file)
   return -1; // TODO
 }
 
-bool CFrontendManager::FileExists(const std::string& strFileName, bool bUseCache)
+bool CFrontendManager::FileExists(const char* strFileName, bool bUseCache)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -178,7 +178,7 @@ bool CFrontendManager::FileExists(const std::string& strFileName, bool bUseCache
   return false;
 }
 
-bool CFrontendManager::StatFile(const std::string& strFileName, STAT_STRUCTURE& buffer)
+bool CFrontendManager::StatFile(const char* strFileName, STAT_STRUCTURE& buffer)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -189,7 +189,7 @@ bool CFrontendManager::StatFile(const std::string& strFileName, STAT_STRUCTURE& 
   return false;
 }
 
-bool CFrontendManager::DeleteFile(const std::string& strFileName)
+bool CFrontendManager::DeleteFile(const char* strFileName)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -200,7 +200,7 @@ bool CFrontendManager::DeleteFile(const std::string& strFileName)
   return false;
 }
 
-bool CFrontendManager::CanOpenDirectory(const std::string& strUrl)
+bool CFrontendManager::CanOpenDirectory(const char* strUrl)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -211,7 +211,7 @@ bool CFrontendManager::CanOpenDirectory(const std::string& strUrl)
   return false;
 }
 
-bool CFrontendManager::CreateDirectory(const std::string& strPath)
+bool CFrontendManager::CreateDirectory(const char* strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -222,7 +222,7 @@ bool CFrontendManager::CreateDirectory(const std::string& strPath)
   return false;
 }
 
-bool CFrontendManager::DirectoryExists(const std::string& strPath)
+bool CFrontendManager::DirectoryExists(const char* strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
@@ -233,7 +233,7 @@ bool CFrontendManager::DirectoryExists(const std::string& strPath)
   return false;
 }
 
-bool CFrontendManager::RemoveDirectory(const std::string& strPath)
+bool CFrontendManager::RemoveDirectory(const char* strPath)
 {
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {

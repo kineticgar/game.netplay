@@ -78,6 +78,18 @@ void CFrontendCallbacks::TranslateToStruct64(const STAT_STRUCTURE& output, struc
   }
 }
 
+char* CFrontendCallbacks::DuplicateString(const std::string& str)
+{
+  char* ret = new char[str.length() + 1];
+  std::strcpy(ret, str.c_str());
+  return ret;
+}
+
+void CFrontendCallbacks::UnduplicateString(char* str)
+{
+  delete[] str;
+}
+
 // --- CFrontendCallbacksAddon -------------------------------------------------
 
 CFrontendCallbacksAddon::CFrontendCallbacksAddon(IFrontend* frontend) :
@@ -166,11 +178,7 @@ char* CFrontendCallbacksAddon::UnknownToUTF8(const char* sourceDest)
   if (sourceDest == NULL)
     return NULL;
 
-  std::string strRet = frontend->UnknownToUTF8(sourceDest);
-
-  char* ret = new char[strRet.length() + 1];
-  std::strcpy(ret, strRet.c_str());
-  return ret;
+  return DuplicateString(frontend->UnknownToUTF8(sourceDest));
 }
 
 char* CFrontendCallbacksAddon::GetLocalizedString(void* addonData, long dwCode)
@@ -179,11 +187,7 @@ char* CFrontendCallbacksAddon::GetLocalizedString(void* addonData, long dwCode)
   if (frontend == NULL)
     return NULL;
 
-  std::string strRet = frontend->GetLocalizedString(dwCode);
-
-  char* ret = new char[strRet.length() + 1];
-  std::strcpy(ret, strRet.c_str());
-  return ret;
+  return DuplicateString(frontend->GetLocalizedString(dwCode));
 }
 
 char* CFrontendCallbacksAddon::GetDVDMenuLanguage(void* addonData)
@@ -192,16 +196,12 @@ char* CFrontendCallbacksAddon::GetDVDMenuLanguage(void* addonData)
   if (frontend == NULL)
     return NULL;
 
-  std::string strRet = frontend->GetDVDMenuLanguage();
-
-  char* ret = new char[strRet.length() + 1];
-  std::strcpy(ret, strRet.c_str());
-  return ret;
+  return DuplicateString(frontend->GetDVDMenuLanguage());
 }
 
 void CFrontendCallbacksAddon::FreeString(void* addonData, char* str)
 {
-  delete[] str;
+  return UnduplicateString(str);
 }
 
 void* CFrontendCallbacksAddon::OpenFile(void* addonData, const char* strFileName, unsigned int flags)

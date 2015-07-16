@@ -45,7 +45,7 @@ void CNetworkFrontend::Deinitialize(void)
 {
 }
 
-void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const std::string& msg)
+void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const char* msg)
 {
   addon::LogRequest request;
   request.set_level(loglevel);
@@ -58,12 +58,12 @@ void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const std::string&
   }
 }
 
-bool CNetworkFrontend::GetSetting(const std::string& settingName, void* settingValue)
+bool CNetworkFrontend::GetSetting(const char* settingName, void* settingValue)
 {
   return false; // TODO
 }
 
-void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const std::string& msg)
+void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const char* msg)
 {
   addon::QueueNotificationRequest request;
   request.set_type(type);
@@ -76,7 +76,7 @@ void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const st
   }
 }
 
-bool CNetworkFrontend::WakeOnLan(const std::string& mac)
+bool CNetworkFrontend::WakeOnLan(const char* mac)
 {
   addon::WakeOnLanRequest request;
   request.set_mac_address(mac);
@@ -95,7 +95,7 @@ bool CNetworkFrontend::WakeOnLan(const std::string& mac)
   return false;
 }
 
-std::string CNetworkFrontend::UnknownToUTF8(const std::string& str)
+std::string CNetworkFrontend::UnknownToUTF8(const char* str)
 {
   addon::UnknownToUTF8Request request;
   request.set_str(str);
@@ -114,7 +114,7 @@ std::string CNetworkFrontend::UnknownToUTF8(const std::string& str)
   return "";
 }
 
-std::string CNetworkFrontend::GetLocalizedString(int dwCode, const std::string& strDefault /* = "" */)
+std::string CNetworkFrontend::GetLocalizedString(int dwCode, const char* strDefault /* = "" */)
 {
   std::string result(strDefault);
 
@@ -153,12 +153,12 @@ std::string CNetworkFrontend::GetDVDMenuLanguage()
   return "";
 }
 
-void* CNetworkFrontend::OpenFile(const std::string& strFileName, unsigned int flags)
+void* CNetworkFrontend::OpenFile(const char* strFileName, unsigned int flags)
 {
   return NULL; // TODO
 }
 
-void* CNetworkFrontend::OpenFileForWrite(const std::string& strFileName, bool bOverWrite)
+void* CNetworkFrontend::OpenFileForWrite(const char* strFileName, bool bOverWrite)
 {
   return NULL; // TODO
 }
@@ -213,37 +213,37 @@ int CNetworkFrontend::GetFileChunkSize(void* file)
   return -1; // TODO
 }
 
-bool CNetworkFrontend::FileExists(const std::string& strFileName, bool bUseCache)
+bool CNetworkFrontend::FileExists(const char* strFileName, bool bUseCache)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::StatFile(const std::string& strFileName, STAT_STRUCTURE* buffer)
+bool CNetworkFrontend::StatFile(const char* strFileName, STAT_STRUCTURE* buffer)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::DeleteFile(const std::string& strFileName)
+bool CNetworkFrontend::DeleteFile(const char* strFileName)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::CanOpenDirectory(const std::string& strUrl)
+bool CNetworkFrontend::CanOpenDirectory(const char* strUrl)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::CreateDirectory(const std::string& strPath)
+bool CNetworkFrontend::CreateDirectory(const char* strPath)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::DirectoryExists(const std::string& strPath)
+bool CNetworkFrontend::DirectoryExists(const char* strPath)
 {
   return false; // TODO
 }
 
-bool CNetworkFrontend::RemoveDirectory(const std::string& strPath)
+bool CNetworkFrontend::RemoveDirectory(const char* strPath)
 {
   return false; // TODO
 }

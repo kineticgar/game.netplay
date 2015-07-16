@@ -35,11 +35,14 @@ namespace NETPLAY
   protected:
     IFrontend* GetFrontend(void) { return m_frontend; }
 
-    static IFrontend* GetStaticFrontend(void) { return m_globalFrontend; }
-
     static IFrontend* GetFrontend(void* addonData);
 
+    static IFrontend* GetStaticFrontend(void) { return m_globalFrontend; }
+
     static void TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64* buffer);
+
+    static char* DuplicateString(const std::string& str);
+    static void UnduplicateString(char* str); // FreeString() is taken
 
   private:
     IFrontend* const  m_frontend;
