@@ -98,24 +98,18 @@ int main(int argc, char** argv)
   {
     case OPTION_GAME_CLIENT:
     {
-      game_client_properties props = { };
+      GameClientProperties props;
       if (argc == 6)
       {
         props.game_client_dll_path = argv[2];
-        props.proxy_dll_count      = 0;
-        props.netplay_server       = "";
         props.system_directory     = argv[3];
         props.content_directory    = argv[4];
         props.save_directory       = argv[5];
       }
       else
       {
-        const char* proxyDll       = argv[2];
-        props.proxy_dll_paths      = &proxyDll;
-        props.proxy_dll_count      = 1;
+        props.proxy_dll_paths.push_back(argv[2]);
         props.game_client_dll_path = argv[3];
-        props.proxy_dll_count      = 0;
-        props.netplay_server       = "";
         props.system_directory     = argv[4];
         props.content_directory    = argv[5];
         props.save_directory       = argv[6];

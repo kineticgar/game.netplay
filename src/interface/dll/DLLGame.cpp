@@ -47,9 +47,9 @@ namespace NETPLAY
 
 // --- CDLLGame ----------------------------------------------------------------
 
-CDLLGame::CDLLGame(IFrontend* callbacks, const game_client_properties& properties, const std::string& strLibBasePath) :
+CDLLGame::CDLLGame(IFrontend* callbacks, const GameClientProperties& properties, const std::string& strLibBasePath) :
   m_callbacks(callbacks),
-  m_properties(TranslateProperties(properties)),
+  m_properties(properties),
   m_strLibBasePath(strLibBasePath),
   m_dll(NULL),
   m_pHelper(NULL),
@@ -322,7 +322,7 @@ GAME_ERROR CDLLGame::SetCheat(unsigned int index, bool enabled, const std::strin
   return m_SetCheat(index, enabled, code);
 }
 
-CDLLGame::GameClientProperties CDLLGame::TranslateProperties(const game_client_properties& props)
+GameClientProperties CDLLGame::TranslateProperties(const game_client_properties& props)
 {
   GameClientProperties properties = { };
 

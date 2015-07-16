@@ -33,10 +33,21 @@ namespace NETPLAY
   class IFrontend;
   class CFrontendCallbackLib;
 
+  struct GameClientProperties
+  {
+    std::string              game_client_dll_path;
+    std::vector<std::string> proxy_dll_paths;
+    std::string              netplay_server;
+    unsigned int             netplay_server_port;
+    std::string              system_directory;
+    std::string              content_directory;
+    std::string              save_directory;
+  };
+
   class CDLLGame : public IGame
   {
   public:
-    CDLLGame(IFrontend* frontend, const game_client_properties& properties, const std::string& strLibBasePath);
+    CDLLGame(IFrontend* frontend, const GameClientProperties& properties, const std::string& strLibBasePath);
     virtual ~CDLLGame(void) { Deinitialize(); }
 
     // implementation of IGame
@@ -70,20 +81,9 @@ namespace NETPLAY
     virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
-  private:
-    struct GameClientProperties
-    {
-      std::string              game_client_dll_path;
-      std::vector<std::string> proxy_dll_paths;
-      std::string              netplay_server;
-      unsigned int             netplay_server_port;
-      std::string              system_directory;
-      std::string              content_directory;
-      std::string              save_directory;
-    };
-
     static GameClientProperties TranslateProperties(const game_client_properties& props);
 
+  private:
     IFrontend* const           m_callbacks;
     const GameClientProperties m_properties;
     const std::string          m_strLibBasePath;

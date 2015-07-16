@@ -111,7 +111,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     {
       PopProxyDLL(gameProps);
       GAME = new CDLLGame(CALLBACKS,
-                          gameProps,
+                          CDLLGame::TranslateProperties(gameProps),
                           PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strDllPath)));
     }
     else
