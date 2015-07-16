@@ -171,6 +171,7 @@ bool CServer::Initialize(void)
 
 void CServer::Deinitialize(void)
 {
+  isyslog("Netplay server shutting down");
   StopThread();
 }
 
