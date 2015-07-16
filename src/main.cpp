@@ -144,15 +144,15 @@ int main(int argc, char* argv[])
 
     GAME = GetGame(option, argc, argv, CALLBACKS);
     if (!GAME)
-      throw "Server failed to connect to a game client. Call with no args for help.";
+      throw std::runtime_error("Server failed to connect to a game client. Call with no args for help.");
 
     ADDON_STATUS status = GAME->Initialize();
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
-      throw "Failed to initialize game client";
+      throw std::runtime_error("Failed to initialize game client");
 
     SERVER = new CAbortableServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
-      throw "Failed to initialize server";
+      throw std::runtime_error("Failed to initialize server");
   }
   catch (const std::runtime_error& error)
   {
