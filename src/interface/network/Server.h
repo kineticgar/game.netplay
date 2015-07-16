@@ -40,9 +40,6 @@ namespace NETPLAY
     bool Initialize(void);
     void Deinitialize(void);
 
-    void RegisterFrontend(IFrontend* frontend) { m_callbacks->RegisterFrontend(frontend); }
-    void UnregisterFrontend(IFrontend* frontend) { m_callbacks->UnregisterFrontend(frontend); }
-
     void WaitForExit(void) { Sleep(0); }
 
   protected:
