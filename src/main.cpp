@@ -22,6 +22,7 @@
 #include "interface/FrontendManager.h"
 #include "interface/network/AbortableServer.h"
 #include "interface/network/NetworkGame.h"
+#include "log/Log.h"
 #include "utils/PathUtils.h"
 #include "utils/StringUtils.h"
 
@@ -29,17 +30,10 @@
 
 #include <iostream>
 #include <signal.h>
+#include <stdexcept>
 #include <string>
 
 using namespace NETPLAY;
-
-// --- Helper functions --------------------------------------------------------
-
-namespace NETPLAY
-{
-}
-
-// --- Entry point -------------------------------------------------------------
 
 enum OPTION
 {
@@ -48,6 +42,60 @@ enum OPTION
   OPTION_REMOTE_GAME, // Load remote game client
   OPTION_DISCOVER,    // Discover servers on the network
 };
+
+// --- Helper function --------------------------------------------------------
+
+namespace NETPLAY
+{
+  IGame* GetGame(OPTION option, int argc, char* argv[], IFrontend* callbacks)
+  {
+    IGame* game = NULL;
+
+    switch (option)
+    {
+      case OPTION_GAME_CLIENT:
+      {
+        GameClientProperties props;
+        if (argc == 6)
+        {
+          props.game_client_dll_path = argv[2];
+          props.system_directory     = argv[3];
+          props.content_directory    = argv[4];
+          props.save_directory       = argv[5];
+        }
+        else
+        {
+          props.proxy_dll_paths.push_back(argv[2]);
+          props.game_client_dll_path = argv[3];
+          props.system_directory     = argv[4];
+          props.content_directory    = argv[5];
+          props.save_directory       = argv[6];
+        }
+
+        std::string strLibBasePath = PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(PathUtils::GetProcessPath()));
+        game = new CDLLGame(callbacks, props, strLibBasePath);
+        break;
+      }
+      case OPTION_REMOTE_GAME:
+      {
+        game = new CNetworkGame(argv[2], StringUtils::IntVal(argv[3]));
+        break;
+      }
+      case OPTION_DISCOVER:
+      {
+        // TODO
+        std::cout << "Network discovery is unimplemented" << std::endl;
+        break;
+      }
+      default:
+        break;
+    }
+
+    return game;
+  }
+}
+
+// --- Entry point -------------------------------------------------------------
 
 int main(int argc, char* argv[])
 {
@@ -88,71 +136,28 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  CALLBACKS = new CFrontendManager;
-  if (!CALLBACKS->Initialize())
+  try
   {
-    std::cerr << "Failed to initialize frontend" << std::endl;
-    return 2;
+    CALLBACKS = new CFrontendManager;
+    if (!CALLBACKS->Initialize())
+      throw "Failed to initialize frontend";
+
+    GAME = GetGame(option, argc, argv, CALLBACKS);
+    if (!GAME)
+      throw "Server failed to connect to a game client. Call with no args for help.";
+
+    ADDON_STATUS status = GAME->Initialize();
+    if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
+      throw "Failed to initialize game client";
+
+    SERVER = new CAbortableServer(GAME, CALLBACKS);
+    if (!SERVER->Initialize())
+      throw "Failed to initialize server";
   }
-
-  switch (option)
+  catch (const std::runtime_error& error)
   {
-    case OPTION_GAME_CLIENT:
-    {
-      GameClientProperties props;
-      if (argc == 6)
-      {
-        props.game_client_dll_path = argv[2];
-        props.system_directory     = argv[3];
-        props.content_directory    = argv[4];
-        props.save_directory       = argv[5];
-      }
-      else
-      {
-        props.proxy_dll_paths.push_back(argv[2]);
-        props.game_client_dll_path = argv[3];
-        props.system_directory     = argv[4];
-        props.content_directory    = argv[5];
-        props.save_directory       = argv[6];
-      }
-
-      std::string strLibBasePath = PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(PathUtils::GetProcessPath()));
-      GAME = new CDLLGame(CALLBACKS, props, strLibBasePath);
-      break;
-    }
-    case OPTION_REMOTE_GAME:
-    {
-      GAME = new CNetworkGame(argv[2], StringUtils::IntVal(argv[3]));
-      break;
-    }
-    case OPTION_DISCOVER:
-    {
-      // TODO
-      std::cout << "Network discovery is unimplemented" << std::endl;
-      return 3;
-    }
-    default:
-      break;
-  }
-
-  if (!GAME)
-  {
-    std::cout << "Server failed to connect to a game client. Call with no args for help." << std::endl;
-    return 4;
-  }
-
-  ADDON_STATUS status = GAME->Initialize();
-  if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
-  {
-    std::cerr << "Failed to load game add-on - return code: " << AddonUtils::TranslateAddonStatus(status) << std::endl;
-    return 5;
-  }
-
-  SERVER = new CAbortableServer(GAME, CALLBACKS);
-  if (!SERVER->Initialize())
-  {
-    std::cerr << "Failed to initialize server" << std::endl;
-    return 6;
+    esyslog("%s", error.what());
+    return 1;
   }
 
   CSignalHandler::Get().SetSignalReceiver(SIGHUP, SERVER);

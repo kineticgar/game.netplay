@@ -22,6 +22,7 @@
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
 #include "log/Log.h"
+#include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_dll.h"
 #include "kodi/xbmc_addon_dll.h"
@@ -47,35 +48,54 @@ namespace NETPLAY
 namespace NETPLAY
 {
   /*!
-   * \brief Get the path to the game client being loaded by this add-on
-   *
-   * \return The game client's DLL path, or empty if connecting to a remote server
-   */
-  std::string GetGameDllPath(const game_client_properties& properties)
-  {
-    return properties.game_client_dll_path ? properties.game_client_dll_path : "";
-  }
-
-  /*!
-   * \brief Get the path to this DLL from add-on properties
-   *
-   * \return The first item in the list of proxy DLLs, or empty if none were given
-   */
-  std::string GetNetplayDllPath(const game_client_properties& properties)
-  {
-    if (properties.proxy_dll_count >= 1)
-      return properties.proxy_dll_paths[0] ? properties.proxy_dll_paths[0] : "";
-
-    return "";
-  }
-
-  /*!
    * \brief Remove the first item from the list of proxy DLLs
    */
-  void PopProxyDLL(game_client_properties& properties)
+  void PopProxyDLL(GameClientProperties& properties)
   {
-    properties.proxy_dll_paths++;
-    properties.proxy_dll_count--;
+    properties.proxy_dll_paths.erase(properties.proxy_dll_paths.begin());
+  }
+
+  IGame* GetGame(const GameClientProperties& properties)
+  {
+    IGame* game = NULL;
+
+    std::string strNetplayDllPath;
+    if (!properties.proxy_dll_paths.empty())
+      strNetplayDllPath = properties.proxy_dll_paths[0];
+
+    if (strNetplayDllPath.empty())
+    {
+      esyslog("Can't find Netplay DLL: list of proxy DLLs is empty (netplay should be first)");
+    }
+    else
+    {
+      const bool bLoadGameClient = !properties.game_client_dll_path.empty();
+      if (bLoadGameClient)
+      {
+        // Remove netplay DLL from beginning of list
+        GameClientProperties copy(properties);
+        PopProxyDLL(copy);
+
+        GAME = new CDLLGame(CALLBACKS, copy, PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strNetplayDllPath)));
+      }
+      else
+      {
+        std::string address = properties.netplay_server;
+        unsigned int port = properties.netplay_server_port;
+
+        if (!address.empty())
+        {
+          GAME = new CNetworkGame(address, port);
+        }
+        else
+        {
+          // TODO
+          esyslog("Network discovery not implemented");
+        }
+      }
+    }
+
+    return game;
   }
 }
 
@@ -89,12 +109,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
   if (callbacks == NULL || props == NULL)
     return ADDON_STATUS_UNKNOWN;
 
-  game_client_properties gameProps(*static_cast<game_client_properties*>(props));
-
-  std::string strDllPath = GetNetplayDllPath(gameProps);
-  if (strDllPath.empty())
-    return ADDON_STATUS_UNKNOWN;
-
   ADDON_STATUS returnStatus(ADDON_STATUS_UNKNOWN);
 
   try
@@ -106,44 +120,17 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CALLBACKS = new CFrontendManager;
     CALLBACKS->RegisterFrontend(FRONTEND);
 
-    const bool bLoadGameClient = !GetGameDllPath(gameProps).empty();
-    if (bLoadGameClient)
-    {
-      PopProxyDLL(gameProps);
-      GAME = new CDLLGame(CALLBACKS,
-                          CDLLGame::TranslateProperties(gameProps),
-                          PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strDllPath)));
-    }
-    else
-    {
-      std::string address = gameProps.netplay_server;
-      unsigned int port = gameProps.netplay_server_port;
-
-      if (!address.empty())
-      {
-        GAME = new CNetworkGame(address, port);
-      }
-      else
-      {
-        // TODO
-        esyslog("Network discovery not implemented");
-      }
-    }
-
+    GAME = GetGame(CDLLGame::TranslateProperties(*static_cast<game_client_properties*>(props)));
     if (!GAME)
       throw ADDON_STATUS_UNKNOWN;
 
     ADDON_STATUS status = GAME->Initialize();
     if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
-    {
       throw status;
-    }
 
     SERVER = new CServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
-    {
       throw ADDON_STATUS_PERMANENT_FAILURE;
-    }
 
     returnStatus = ADDON_STATUS_OK;
   }
@@ -169,6 +156,7 @@ void ADDON_Destroy()
     SERVER->Deinitialize();
     GAME->Deinitialize();
     CALLBACKS->UnregisterFrontend(FRONTEND);
+    FRONTEND->Deinitialize();
   }
 
   SAFE_DELETE(SERVER);
