@@ -210,7 +210,10 @@ void ADDON_FreeSettings()
 void ADDON_Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
   if (GAME)
-    return GAME->Announce(flag, sender, message, data);
+    return GAME->Announce(flag    ? flag    : "",
+                          sender  ? sender  : "",
+                          message ? message : "",
+                          data    ? data    : NULL);
 }
 
 const char* GetGameAPIVersion(void)
@@ -312,12 +315,18 @@ GAME_ERROR HwContextDestroy()
 
 void UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
+  if (controller == NULL)
+    return;
+
   if (GAME)
     return GAME->UpdatePort(port, connected, controller);
 }
 
 bool InputEvent(unsigned int port, const game_input_event* event)
 {
+  if (event == NULL)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
   if (GAME)
     return GAME->InputEvent(port, event);
 
@@ -374,6 +383,9 @@ GAME_ERROR CameraDeinitialized(void)
 
 GAME_ERROR CameraFrameRawBuffer(const uint32_t* buffer, unsigned int width, unsigned int height, size_t stride)
 {
+  if (buffer == NULL || width == 0 || height == 0 || stride == 0)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
   return GAME_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -389,7 +401,7 @@ size_t SerializeSize(void)
 
 GAME_ERROR Serialize(uint8_t* data, size_t size)
 {
-  if (data == NULL)
+  if (data == NULL || size == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   if (GAME)
@@ -400,7 +412,7 @@ GAME_ERROR Serialize(uint8_t* data, size_t size)
 
 GAME_ERROR Deserialize(const uint8_t* data, size_t size)
 {
-  if (data == NULL)
+  if (data == NULL || size == 0)
     return GAME_ERROR_INVALID_PARAMETERS;
 
   if (GAME)
@@ -430,6 +442,9 @@ GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
 
 GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code)
 {
+  if (code == NULL)
+    return GAME_ERROR_INVALID_PARAMETERS;
+
   if (GAME)
     return GAME->SetCheat(index, enabled, code);
 
