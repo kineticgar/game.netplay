@@ -19,6 +19,7 @@
  */
 
 #include "interface/dll/DLLGame.h"
+#include "interface/FrontendManager.h"
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
 #include "log/Log.h"
