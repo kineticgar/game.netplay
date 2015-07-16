@@ -22,75 +22,27 @@
 #include "interface/FrontendManager.h"
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
+#include "utils/PathUtils.h"
 #include "utils/StringUtils.h"
 
 #include <iostream>
-#include <limits.h>
 #include <string>
 
-#if defined(_WIN32)
-  #include <winbase.h>
-#else
-  #include <unistd.h>
-#endif
-
 using namespace NETPLAY;
-
-#define HELPER_LIBRARY_DIR  "resources"
 
 // --- Helper functions --------------------------------------------------------
 
 namespace NETPLAY
 {
-  /*!
-   * \brief Get the path of the current process
-   */
-  std::string GetProcessPath(void)
-  {
-    char buff[PATH_MAX] = { };
-
-#if defined(_WIN32)
-    GetModuleFileName(NULL, buff, MAX_PATH);
-#else
-    readlink("/proc/self/exe", buff, sizeof(buff) - 1);
-#endif
-
-    return buff;
-  }
-
-  /*!
-   * \brief Get the name of the current process's executable
-   */
-  std::string GetProcessName(void)
-  {
-    std::string processPath = GetProcessPath();
-
-    size_t pos = processPath.find_last_of("/\\");
-    if (pos != std::string::npos)
-      return processPath.substr(pos + 1);
-
-    return processPath;
-  }
-
-  /*!
-   * \brief Get the parent directory for a given file/folder
-   */
-  std::string GetParentDirectory(const std::string& strPath)
-  {
-    size_t pos = strPath.find_last_of("/\\");
-    if (pos != std::string::npos)
-      return strPath.substr(0, pos);
-
-    return strPath;
-  }
-
-  /*!
-   * \brief Get the directory for helper libraries
-   */
-  std::string GetHelperLibraryDir(void)
-  {
-    return GetParentDirectory(GetProcessPath()) + "/" + HELPER_LIBRARY_DIR;
-  }
+  /*
+  ADDON_STATUS_OK,
+  ADDON_STATUS_LOST_CONNECTION,
+  ADDON_STATUS_NEED_RESTART,
+  ADDON_STATUS_NEED_SETTINGS,
+  ADDON_STATUS_UNKNOWN,
+  ADDON_STATUS_NEED_SAVEDSETTINGS,
+  ADDON_STATUS_PERMANENT_FAILURE,
+  */
 }
 
 // --- Entry point -------------------------------------------------------------
@@ -125,17 +77,19 @@ int main(int argc, char** argv)
 
   if (option == OPTION_INVALID)
   {
+    std::string strExe = PathUtils::GetFileName(PathUtils::GetProcessPath());
+
     std::cout << "Load game client:" << std::endl;
-    std::cout << "  " << GetProcessName() << " --game <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << "  " << strExe << " --game <DLL> <system dir> <content dir> <save dir>" << std::endl;
     std::cout << std::endl;
     std::cout << "Load game client via proxy DLL:" << std::endl;
-    std::cout << "  " << GetProcessName() << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
+    std::cout << "  " << strExe << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
     std::cout << std::endl;
     std::cout << "Load remote game client" << std::endl;
-    std::cout << "  " << GetProcessName() << " --remote <address> <port>" << std::endl;
+    std::cout << "  " << strExe << " --remote <address> <port>" << std::endl;
     std::cout << std::endl;
     std::cout << "Discover servers on the network:" << std::endl;
-    std::cout << "  " << GetProcessName() << " --discover" << std::endl;
+    std::cout << "  " << strExe << " --discover" << std::endl;
     std::cout << std::endl;
     return 1;
   }
@@ -174,7 +128,8 @@ int main(int argc, char** argv)
         props.save_directory       = argv[6];
       }
 
-      GAME = new CDLLGame(CALLBACKS, props, GetHelperLibraryDir());
+      std::string strLibBasePath = PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(PathUtils::GetProcessPath()));
+      GAME = new CDLLGame(CALLBACKS, props, strLibBasePath);
       break;
     }
     case OPTION_REMOTE_GAME:
@@ -192,7 +147,13 @@ int main(int argc, char** argv)
       break;
   }
 
-  if (!GAME || !GAME->Initialize())
+  if (!GAME)
+  {
+    std::cout << "Server failed to connect to a game client. Call with no args for help." << std::endl;
+    return 4;
+  }
+
+  ADDON_STATUS status = GAME->Initialize();
   {
     std::cerr << "Failed to load game add-on" << std::endl;
     return 4;

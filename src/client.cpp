@@ -30,8 +30,6 @@
 
 using namespace NETPLAY;
 
-#define HELPER_LIBRARY_DIR  "resources"
-
 #ifndef SAFE_DELETE
   #define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)
 #endif
@@ -79,26 +77,6 @@ namespace NETPLAY
     properties.proxy_dll_paths++;
     properties.proxy_dll_count--;
   }
-
-  /*!
-   * \brief Get the parent directory for a given file/folder
-   */
-  std::string GetParentDirectory(const std::string& strPath)
-  {
-    size_t pos = strPath.find_last_of("/\\");
-    if (pos != std::string::npos)
-      return strPath.substr(0, pos);
-
-    return strPath;
-  }
-
-  /*!
-   * \brief Get the directory for helper libraries
-   */
-  std::string GetHelperLibraryDir(const std::string& strBaseDir)
-  {
-    return strBaseDir + "/" + HELPER_LIBRARY_DIR;
-  }
 }
 
 // --- API functions -----------------------------------------------------------
@@ -134,7 +112,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
       PopProxyDLL(gameProps);
       GAME = new CDLLGame(CALLBACKS,
                           gameProps,
-                          GetHelperLibraryDir(GetParentDirectory(strDllPath)));
+                          PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strDllPath)));
     }
     else
     {

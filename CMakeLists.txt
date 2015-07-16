@@ -60,6 +60,7 @@ set(NETPLAY_SOURCES
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
+    src/utils/PathUtils.cpp
     src/utils/StringUtils.cpp
 )
 
