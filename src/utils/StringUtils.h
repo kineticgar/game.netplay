@@ -22,24 +22,23 @@
 
 namespace NETPLAY
 {
+  class StringUtils
+  {
+  public:
+    /*!
+     * \brief Convert a string to an integer
+     * \param str The string
+     * \param iDefault The value returned if parsing fails
+     * \return The integer value, or iDefault if parsing fails
+     */
+    static long IntVal(const std::string& str, long iDefault = 0);
 
-class StringUtils
-{
-public:
-  /*!
-   * \brief Convert a string to an integer
-   * \param str The string
-   * \param iDefault The value returned if parsing fails
-   * \return The integer value, or iDefault if parsing fails
-   */
-  static long IntVal(const std::string& str, long iDefault = 0);
-
-  /*!
-   * \brief Convert a string to a double
-   * \param str The string
-   * \param fDefault The value returned if parsing fails
-   * \return The double value, or fDefault if parsing fails
-   */
-  static double DoubleVal(const std::string& str, double fDefault = 0.0);
-};
+    /*!
+     * \brief Convert a string to a double
+     * \param str The string
+     * \param fDefault The value returned if parsing fails
+     * \return The double value, or fDefault if parsing fails
+     */
+    static double DoubleVal(const std::string& str, double fDefault = 0.0);
+  };
 }
