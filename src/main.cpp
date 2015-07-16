@@ -167,5 +167,5 @@ int main(int argc, char* argv[])
   delete CALLBACKS;
   delete GAME;
 
-  return 0;
+  return SERVER->GetReturnCode();
 }

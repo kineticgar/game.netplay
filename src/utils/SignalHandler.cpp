@@ -25,7 +25,7 @@
 
 using namespace NETPLAY;
 
-CSignalHandler& CSignalHandler::Get()
+CSignalHandler& CSignalHandler::Get(void)
 {
   static CSignalHandler instance;
   return instance;
@@ -55,7 +55,7 @@ void CSignalHandler::ResetSignalReceiver(int signum)
   }
 }
 
-void CSignalHandler::ResetSignalReceivers()
+void CSignalHandler::ResetSignalReceivers(void)
 {
   for (std::map<int, ISignalReceiver*>::iterator it = m_callbacks.begin(); it != m_callbacks.end(); ++it)
     signal(it->first, SIG_DFL);

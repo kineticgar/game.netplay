@@ -35,6 +35,7 @@ namespace NETPLAY
     virtual void OnSignal(int signum);
 
     int GetExitCode(void) { return m_exitCode; }
+    int GetReturnCode(void) { return m_exitCode - EXIT_CODE_OFFSET; } // TODO: Is this correct?
 
   private:
     int m_exitCode;
