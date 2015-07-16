@@ -25,6 +25,8 @@
 #include "utils/PathUtils.h"
 #include "utils/StringUtils.h"
 
+#include "kodi/kodi_addon_utils.hpp"
+
 #include <iostream>
 #include <string>
 
@@ -34,15 +36,6 @@ using namespace NETPLAY;
 
 namespace NETPLAY
 {
-  /*
-  ADDON_STATUS_OK,
-  ADDON_STATUS_LOST_CONNECTION,
-  ADDON_STATUS_NEED_RESTART,
-  ADDON_STATUS_NEED_SETTINGS,
-  ADDON_STATUS_UNKNOWN,
-  ADDON_STATUS_NEED_SAVEDSETTINGS,
-  ADDON_STATUS_PERMANENT_FAILURE,
-  */
 }
 
 // --- Entry point -------------------------------------------------------------
@@ -154,16 +147,17 @@ int main(int argc, char** argv)
   }
 
   ADDON_STATUS status = GAME->Initialize();
+  if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
   {
-    std::cerr << "Failed to load game add-on" << std::endl;
-    return 4;
+    std::cerr << "Failed to load game add-on - return code: " << AddonUtils::TranslateAddonStatus(status) << std::endl;
+    return 5;
   }
 
   SERVER = new CServer(GAME, CALLBACKS);
   if (!SERVER->Initialize())
   {
     std::cerr << "Failed to initialize server" << std::endl;
-    return 5;
+    return 6;
   }
 
   SERVER->WaitForExit();
