@@ -51,6 +51,7 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
+    src/interface/network/AbortableServer.cpp
     src/interface/network/Client.cpp
     src/interface/network/Connection.cpp
     src/interface/network/NetworkFrontend.cpp
@@ -61,6 +62,7 @@ set(NETPLAY_SOURCES
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
     src/utils/PathUtils.cpp
+    src/utils/SignalHandler.cpp
     src/utils/StringUtils.cpp
 )
 

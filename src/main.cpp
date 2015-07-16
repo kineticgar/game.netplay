@@ -20,14 +20,15 @@
 
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
+#include "interface/network/AbortableServer.h"
 #include "interface/network/NetworkGame.h"
-#include "interface/network/Server.h"
 #include "utils/PathUtils.h"
 #include "utils/StringUtils.h"
 
 #include "kodi/kodi_addon_utils.hpp"
 
 #include <iostream>
+#include <signal.h>
 #include <string>
 
 using namespace NETPLAY;
@@ -48,11 +49,11 @@ enum OPTION
   OPTION_DISCOVER,    // Discover servers on the network
 };
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
-  CServer*          SERVER    = NULL;
+  CAbortableServer* SERVER    = NULL;
 
   OPTION option(OPTION_INVALID);
 
@@ -147,12 +148,18 @@ int main(int argc, char** argv)
     return 5;
   }
 
-  SERVER = new CServer(GAME, CALLBACKS);
+  SERVER = new CAbortableServer(GAME, CALLBACKS);
   if (!SERVER->Initialize())
   {
     std::cerr << "Failed to initialize server" << std::endl;
     return 6;
   }
+
+  CSignalHandler::Get().SetSignalReceiver(SIGHUP, SERVER);
+  CSignalHandler::Get().SetSignalReceiver(SIGINT, SERVER);
+  CSignalHandler::Get().SetSignalReceiver(SIGKILL, SERVER);
+  CSignalHandler::Get().SetSignalReceiver(SIGTERM, SERVER);
+  CSignalHandler::Get().IgnoreSignal(SIGPIPE);
 
   SERVER->WaitForExit();
 
