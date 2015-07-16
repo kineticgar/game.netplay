@@ -134,20 +134,23 @@ build_addon(game.netplay NETPLAY ${ADDON_SROUCES} DEPLIBS)
 
 ################################################################################
 #
-#  Helper libraries
+#  Helper libraries (TODO: Fix platform suffix for helper libraries)
 #
 ################################################################################
 
-add_library(XBMC_addon ${ADDON_HELPER_LIB_SOURCES})
-add_library(KODI_game ${GAME_HELPER_LIB_SOURCES})
+set(ADDON_HELPER_ARCH x86_64-linux) # TODO
 
-set_target_properties(XBMC_addon
+add_library(XBMC_addon-${ADDON_HELPER_ARCH} ${ADDON_HELPER_LIB_SOURCES})
+add_library(KODI_game-${ADDON_HELPER_ARCH} ${GAME_HELPER_LIB_SOURCES})
+
+set_target_properties(XBMC_addon-${ADDON_HELPER_ARCH}
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xmbc.addon"
 )
-set_target_properties(KODI_game
+
+set_target_properties(KODI_game-${ADDON_HELPER_ARCH}
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
