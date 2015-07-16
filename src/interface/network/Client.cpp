@@ -94,55 +94,6 @@ void CClient::Close(void)
   }
 }
 
-/*
-bool CClient::Login(void)
-{
-  std::string strRequest;
-  std::string strResponse;
-  if (Send(RPC_METHOD::Login, strRequest, strResponse))
-  {
-    try
-    {
-      // TODO
-      uint32_t    version       = vresp->extract_U32();
-      uint32_t    vdrTime       = vresp->extract_U32();
-      int32_t     vdrTimeOffset = vresp->extract_S32();
-      std::string ServerName    = vresp->extract_String();
-      std::string ServerVersion = vresp->extract_String();
-
-      std::string strVersion;
-      uint32_t    vdrTime;
-      int32_t     vdrTimeOffset;
-      std::string ServerName;
-      std::string ServerVersion;
-
-      m_server    = ServerName;
-      m_version   = ServerVersion;
-      m_protocol  = protocol;
-
-      if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-        throw "Protocol versions do not match";
-
-      isyslog("Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol);
-      throw "Not implemented";
-    }
-    catch (const char* strError)
-    {
-      esyslog("%s - %s", __FUNCTION__, strError);
-      if (m_socket)
-      {
-        m_socket->Close();
-        delete m_socket;
-        m_socket = NULL;
-      }
-      return false;
-    }
-  }
-
-  return true;
-}
-*/
-
 bool CClient::Send(RPC_METHOD method, const std::string& request)
 {
   if (!IsOpen())

@@ -42,7 +42,6 @@ namespace NETPLAY
     bool IsOpen(void);
     void Close(void);
 
-    //bool Login(void);
     bool Send(RPC_METHOD method, const std::string& request);
     bool Send(RPC_METHOD method, const std::string& request, std::string& response);
 
