@@ -46,71 +46,77 @@ namespace NETPLAY
   struct Version
   {
   public:
-    Version(const std::string& strVersion)
+    Version(const std::string& strVersion) :
+      version_major(0),
+      version_minor(0),
+      version_point(0)
     {
-      major = 0; // TODO
-      minor = 0; // TODO
-      point = 0; // TODO
+      version_major = 0; // TODO
+      version_minor = 0; // TODO
+      version_point = 0; // TODO
     }
 
     bool operator<(const Version& rhs) const
     {
-      if (major < rhs.major) return true;
-      if (major > rhs.major) return false;
+      if (version_major < rhs.version_major) return true;
+      if (version_major > rhs.version_major) return false;
 
-      if (minor < rhs.minor) return true;
-      if (minor > rhs.minor) return false;
+      if (version_minor < rhs.version_minor) return true;
+      if (version_minor > rhs.version_minor) return false;
 
-      if (point < rhs.point) return true;
-      if (point > rhs.point) return false;
+      if (version_point < rhs.version_point) return true;
+      if (version_point > rhs.version_point) return false;
 
       return false;
     }
 
     bool operator==(const Version& rhs) const
     {
-      return major == rhs.major &&
-             minor == rhs.minor &&
-             point == rhs.point;
+      return version_major == rhs.version_major &&
+             version_minor == rhs.version_minor &&
+             version_point == rhs.version_point;
     }
 
     bool operator<=(const Version& rhs) const { return  operator<(rhs) ||  operator==(rhs); }
     bool operator>(const Version& rhs) const  { return !operator<(rhs) && !operator==(rhs); }
     bool operator>=(const Version& rhs) const { return !operator<(rhs); }
 
-    unsigned int major;
-    unsigned int minor;
-    unsigned int point;
+    unsigned int version_major;
+    unsigned int version_minor;
+    unsigned int version_point;
   };
 }
 
 // --- ip2txt ------------------------------------------------------------------
 
-std::string ip2txt(uint32_t ip, unsigned int port)
+namespace NETPLAY
 {
-  // inet_ntoa is not thread-safe (?)
-  unsigned int iph = static_cast<unsigned int>(ntohl(ip));
-  unsigned int porth = static_cast<unsigned int>(ntohs(port));
-
-  char str[64];
-
-  if (porth == 0)
+  std::string ip2txt(uint32_t ip, unsigned int port)
   {
-    std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
-                                     ((iph >> 16) & 0xff),
-                                     ((iph >> 8)  & 0xff),
-                                     ((iph)       & 0xff));
-  }
-  else
-  {
-    std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
-                                        ((iph >> 16) & 0xff),
-                                        ((iph >> 8)  & 0xff),
-                                        ((iph)       & 0xff),
-                                        porth);
-  }
+    // inet_ntoa is not thread-safe (?)
+    unsigned int iph = static_cast<unsigned int>(ntohl(ip));
+    unsigned int porth = static_cast<unsigned int>(ntohs(port));
 
-  return str;
+    char str[64];
+
+    if (porth == 0)
+    {
+      std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
+                                       ((iph >> 16) & 0xff),
+                                       ((iph >> 8)  & 0xff),
+                                       ((iph)       & 0xff));
+    }
+    else
+    {
+      std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
+                                          ((iph >> 16) & 0xff),
+                                          ((iph >> 8)  & 0xff),
+                                          ((iph)       & 0xff),
+                                          porth);
+    }
+
+    return str;
+  }
 }
 
 // --- CServer -----------------------------------------------------------------
