@@ -194,7 +194,7 @@ void* CServer::Process(void)
     }
     else if (r == 0)
     {
-      PLATFORM::CLockObject lock(m_mutex);
+      PLATFORM::CLockObject lock(m_clientMutex);
 
       // Remove disconnected clients
       for (std::vector<CConnection*>::iterator it = m_clients.begin(); it != m_clients.end(); )
@@ -268,7 +268,7 @@ void CServer::NewClientConnected(int fd)
   isyslog("Client connected: %s", connection->Name().c_str());
 
   {
-    PLATFORM::CLockObject lock(m_mutex);
+    PLATFORM::CLockObject lock(m_clientMutex);
     m_clients.push_back(connection);
   }
 }

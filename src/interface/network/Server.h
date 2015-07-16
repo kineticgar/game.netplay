@@ -55,6 +55,6 @@ namespace NETPLAY
     CFrontendManager* const   m_callbacks;
     int                       m_socketFd;
     std::vector<CConnection*> m_clients;
-    PLATFORM::CMutex          m_mutex;
+    PLATFORM::CMutex          m_clientMutex;
   };
 }
