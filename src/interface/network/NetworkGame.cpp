@@ -93,8 +93,8 @@ ADDON_STATUS CNetworkGame::Initialize(void)
 
   addon::LoginRequest request;
   request.set_game_version_major(gameApiVersion.version_major);
-  request.set_game_version_minor(gameApiVersion.version_major);
-  request.set_game_version_point(gameApiVersion.version_major);
+  request.set_game_version_minor(gameApiVersion.version_minor);
+  request.set_game_version_point(gameApiVersion.version_point);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
