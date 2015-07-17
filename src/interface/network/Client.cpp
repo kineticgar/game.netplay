@@ -186,7 +186,7 @@ bool CClient::ReadMessage(RPC_METHOD method,
 bool CClient::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
 {
   std::string header;
-  if (ReadData(header, 2, timeoutMs))
+  if (ReadData(header, 5, timeoutMs))
   {
     method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
     length = header[2] << 16 | header[3] << 8 | header[4];
@@ -198,21 +198,25 @@ bool CClient::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeou
 
 bool CClient::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
 {
-  unsigned int bytesRead = 0;
+  if (totalBytes == 0)
+    return false;
 
   buffer.resize(totalBytes);
-  bytesRead += m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, timeoutMs);
 
-  if (bytesRead != totalBytes)
+  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, timeoutMs);
+
+  if (m_socket->GetErrorNumber() == ETIMEDOUT)
   {
-    if (m_socket->GetErrorNumber() == ETIMEDOUT && bytesRead > 0)
+    if (0 < bytesRead && bytesRead < totalBytes)
     {
       // We read something, so try to finish the read
-      bytesRead += m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
-                                  totalBytes - bytesRead,
-                                  timeoutMs);
+      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
+                                          totalBytes - bytesRead,
+                                          timeoutMs);
+      if (bytes > 0)
+        bytesRead += bytes;
     }
-    else if (m_socket->GetErrorNumber() == ETIMEDOUT)
+    else
     {
       SignalConnectionLost();
     }

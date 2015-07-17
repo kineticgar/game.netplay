@@ -35,42 +35,33 @@ namespace NETPLAY
   {
   public:
     CLinuxConnection(int fd);
-    virtual ~CLinuxConnection(void) { Close(); }
+    virtual ~CLinuxConnection(void);
 
     // implementation of IConnection
-    virtual bool Open(void);
-    virtual void Close(void);
     virtual std::string Address(void) const { return m_strClientAddress; }
+    virtual bool Open(void);
     virtual bool IsOpen(void) { return IsRunning(); }
+    virtual void Close(void);
     virtual bool Send(RPC_METHOD method, const std::string& request) { return false; } // TODO
     virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response) { return false; } // TODO
-
-  private:
-    bool SendHeader(RPC_METHOD method, size_t msgLength);
-    bool SendData(const std::string& request);
-
-    bool ReadMessage(RPC_METHOD method,
-                     std::string& response,
-                     unsigned int iInitialTimeoutMs = 10000,
-                     unsigned int iDatapacketTimeoutMs = 10000);
-    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
-    bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
-
-    void OnDisconnect(void) { }
-    void OnReconnect(void) { }
-
-    void SignalConnectionLost(void);
-    bool IsConnectionLost(void) const { return m_bConnectionLost; }
 
   protected:
     // implementation of PLATFORM::CThread
     virtual void* Process(void);
 
   private:
+    void ProcessMessage(RPC_METHOD method, const std::string& message);
+
+    bool SendHeader(RPC_METHOD method, size_t msgLength) { return false; } // TODO
+    bool SendData(const std::string& request) { return false; } // TODO
+
+    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
+    bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
+
+  private:
     int               m_fd;
     std::string       m_strClientAddress;
-    CLinuxSocket      m_socket;
+    CLinuxSocket*     m_socket; // TODO: Convert to PLATFORM::CTcpConnection
     PLATFORM::CMutex  m_readMutex;
-    bool              m_bConnectionLost;
   };
 }

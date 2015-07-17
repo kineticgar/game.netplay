@@ -29,6 +29,9 @@
 #include <stdint.h>
 
 using namespace NETPLAY;
+using namespace PLATFORM;
+
+#define MAX_MESSAGE_LENGTH     (16 * 1024 * 1024) // 16 MB
 
 // --- ip2txt ------------------------------------------------------------------
 
@@ -66,9 +69,15 @@ namespace NETPLAY
 
 CLinuxConnection::CLinuxConnection(int fd) :
   m_fd(fd),
-  m_bConnectionLost(true)
+  m_socket(new CLinuxSocket)
 {
-  m_socket.SetHandle(m_fd);
+  m_socket->SetHandle(m_fd);
+}
+
+CLinuxConnection::~CLinuxConnection(void)
+{
+  Close();
+  delete m_socket;
 }
 
 bool CLinuxConnection::Open(void)
@@ -115,115 +124,107 @@ void CLinuxConnection::Close(void)
 {
   StopThread(0);
 
-  m_socket.Close();
+  m_socket->Close();
 }
 
 void* CLinuxConnection::Process(void)
 {
-  uint32_t channelID;
-  uint32_t dataLength;
-  uint8_t* data;
-
   while (!IsStopped())
   {
-    if (!m_socket.Read(reinterpret_cast<uint8_t*>(&channelID), sizeof(uint32_t)))
+    RPC_METHOD msgMethod = RPC_METHOD::Invalid;
+    size_t msgLength = 0;
+
+    CLockObject lock(m_readMutex);
+
+    if (!ReadHeader(msgMethod, msgLength, 10000))
       break;
 
-    channelID = ntohl(channelID);
-
-    if (channelID == 1)
+    // Validate input
+    if (msgLength > MAX_MESSAGE_LENGTH)
     {
-      if (!m_socket.Read((uint8_t*)&dataLength, sizeof(uint32_t), 10000))
-        break;
-
-      dataLength = ntohl(dataLength);
-
-      if (dataLength > 200000) // a random sanity limit
-      {
-        esyslog("%s - dataLength > 200000!", __FUNCTION__);
-        break;
-      }
-
-      if (dataLength)
-      {
-        data = new uint8_t[dataLength];
-        if (!data)
-        {
-          esyslog("%s - Extra data buffer malloc error", __FUNCTION__);
-          break;
-        }
-
-        if (!m_socket.Read(data, dataLength, 10000))
-        {
-          esyslog("%s - Could not read data", __FUNCTION__);
-          delete[] data;
-          break;
-        }
-      }
-      else
-      {
-        data = NULL;
-      }
-
-      /*
-      if (!m_loggedIn && (opcode != VNSI_LOGIN))
-      {
-        esyslog("%s - Clients must be logged in before sending commands! Aborting", __FUNCTION__);
-        if (data) free(data);
-        break;
-      }
-      */
-
-      /* TODO
-      cRequestPacket* req = new cRequestPacket(requestID, opcode, data, dataLength);
-
-      processRequest(req);
-
-      try
-      {
-        // TODO
-        uint32_t    version       = vresp->extract_U32();
-        uint32_t    vdrTime       = vresp->extract_U32();
-        int32_t     vdrTimeOffset = vresp->extract_S32();
-        std::string ServerName    = vresp->extract_String();
-        std::string ServerVersion = vresp->extract_String();
-
-        std::string strVersion;
-        uint32_t    vdrTime;
-        int32_t     vdrTimeOffset;
-        std::string ServerName;
-        std::string ServerVersion;
-
-        m_server    = ServerName;
-        m_version   = ServerVersion;
-        m_protocol  = protocol;
-
-        if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-          throw "Protocol versions do not match";
-
-        isyslog("Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol);
-        throw "Not implemented";
-      }
-      catch (const char* strError)
-      {
-        esyslog("%s - %s", __FUNCTION__, strError);
-        if (m_socket)
-        {
-          m_socket->Close();
-          delete m_socket;
-          m_socket = NULL;
-        }
-        return false;
-      }
-
-      */
-    }
-    else
-    {
-      esyslog("%s - Incoming channel number unknown", __FUNCTION__);
+      esyslog("Terminating connection - invalid message length: %d", msgLength);
       break;
     }
+
+    std::string message;
+    message.resize(msgLength);
+    if (!ReadData(message, msgLength, 10000))
+      break;
+
+    // TODO: process message
+    ProcessMessage(msgMethod, message);
+
+    /* TODO
+    try
+    {
+      // TODO
+      uint32_t    version       = vresp->extract_U32();
+      uint32_t    vdrTime       = vresp->extract_U32();
+      int32_t     vdrTimeOffset = vresp->extract_S32();
+      std::string ServerName    = vresp->extract_String();
+      std::string ServerVersion = vresp->extract_String();
+
+      std::string strVersion;
+      uint32_t    vdrTime;
+      int32_t     vdrTimeOffset;
+      std::string ServerName;
+      std::string ServerVersion;
+
+      m_server    = ServerName;
+      m_version   = ServerVersion;
+      m_protocol  = protocol;
+
+      if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
+        throw "Protocol versions do not match";
+
+      isyslog("Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol);
+      throw "Not implemented";
+    }
+    catch (const char* strError)
+    {
+      esyslog("%s - %s", __FUNCTION__, strError);
+      if (m_socket)
+      {
+        m_socket->Close();
+        delete m_socket;
+        m_socket = NULL;
+      }
+      return false;
+    }
+    */
   }
 
   return NULL;
+}
+
+void CLinuxConnection::ProcessMessage(RPC_METHOD method, const std::string& message)
+{
+  // TODO
+}
+
+
+bool CLinuxConnection::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
+{
+  std::string header;
+  if (ReadData(header, 5, timeoutMs))
+  {
+    method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
+    length = header[2] << 16 | header[3] << 8 | header[4];
+    return true;
+  }
+
+  return false;
+}
+
+bool CLinuxConnection::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
+{
+  if (totalBytes == 0)
+    return false;
+
+  buffer.resize(totalBytes);
+  uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.c_str()));
+
+  unsigned int bytesRead = m_socket->Read(data, totalBytes, timeoutMs);
+
+  return bytesRead == totalBytes;
 }
