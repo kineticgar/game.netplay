@@ -21,6 +21,8 @@
 
 #include "IFrontend.h"
 
+#include <vector>
+
 namespace NETPLAY
 {
   class IFrontend;
