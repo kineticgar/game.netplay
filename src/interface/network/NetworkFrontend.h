@@ -23,13 +23,13 @@
 
 namespace NETPLAY
 {
-  class CClient;
+  class IConnection;
 
   class CNetworkFrontend : public IFrontend
   {
   public:
-    CNetworkFrontend(CClient* rpc);
-    virtual ~CNetworkFrontend(void) { Deinitialize(); }
+    CNetworkFrontend(int fd);
+    virtual ~CNetworkFrontend(void);
 
     virtual bool Initialize(void);
     virtual void Deinitialize(void);
@@ -55,7 +55,7 @@ namespace NETPLAY
     virtual void CloseFile(void* file);
     virtual int GetFileChunkSize(void* file);
     virtual bool FileExists(const char* strFileName, bool bUseCache);
-    virtual bool StatFile(const char* strFileName, STAT_STRUCTURE* buffer);
+    virtual bool StatFile(const char* strFileName, STAT_STRUCTURE& buffer);
     virtual bool DeleteFile(const char* strFileName);
     virtual bool CanOpenDirectory(const char* strUrl);
     virtual bool CreateDirectory(const char* strPath);
@@ -79,6 +79,6 @@ namespace NETPLAY
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
-    CClient* const m_rpc;
+    IConnection* const m_rpc;
   };
 }

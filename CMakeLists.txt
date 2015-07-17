@@ -52,6 +52,7 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
     src/interface/network/Client.cpp
+    src/interface/network/ConnectionFactory.cpp
     src/interface/network/linux/LinuxConnection.cpp
     src/interface/network/linux/LinuxServer.cpp
     src/interface/network/linux/LinuxSocket.cpp

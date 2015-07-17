@@ -21,22 +21,106 @@
 #include "LinuxConnection.h"
 #include "log/Log.h"
 
+#include <cstdio>
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 #include <stdint.h>
 
 using namespace NETPLAY;
 
-CLinuxConnection::CLinuxConnection(int fd, const std::string& strClientAdr) :
-  m_strClientAddress(strClientAdr)
+// --- ip2txt ------------------------------------------------------------------
+
+namespace NETPLAY
 {
-  m_socket.SetHandle(fd);
+  std::string ip2txt(uint32_t ip, unsigned int port)
+  {
+    // inet_ntoa is not thread-safe (?)
+    unsigned int iph = static_cast<unsigned int>(ntohl(ip));
+    unsigned int porth = static_cast<unsigned int>(ntohs(port));
+
+    char str[64];
+
+    if (porth == 0)
+    {
+      std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
+                                       ((iph >> 16) & 0xff),
+                                       ((iph >> 8)  & 0xff),
+                                       ((iph)       & 0xff));
+    }
+    else
+    {
+      std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
+                                          ((iph >> 16) & 0xff),
+                                          ((iph >> 8)  & 0xff),
+                                          ((iph)       & 0xff),
+                                          porth);
+    }
+
+    return str;
+  }
+}
+
+// --- CLinuxConnection --------------------------------------------------------
+
+CLinuxConnection::CLinuxConnection(int fd) :
+  m_fd(fd),
+  m_bConnectionLost(true)
+{
+  m_socket.SetHandle(m_fd);
+}
+
+bool CLinuxConnection::Open(void)
+{
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+
+  if (getpeername(m_fd, reinterpret_cast<struct sockaddr*>(&sin), &len))
+  {
+    esyslog("%s - getpeername() failed, dropping new incoming connection", __FUNCTION__);
+    close(m_fd);
+    return false;
+  }
+
+  if (fcntl(m_fd, F_SETFL, fcntl (m_fd, F_GETFL) | O_NONBLOCK) == -1)
+  {
+    esyslog("%s - Error setting control socket to nonblocking mode", __FUNCTION__);
+    return false;
+  }
+
+  int val = 1;
+  setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
+
+  val = 30;
+  setsockopt(m_fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+
+  val = 15;
+  setsockopt(m_fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+
+  val = 5;
+  setsockopt(m_fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+
+  val = 1;
+  setsockopt(m_fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+
+  m_strClientAddress = ip2txt(sin.sin_addr.s_addr, sin.sin_port);
+
+  isyslog("Client connected: %s", m_strClientAddress.c_str());
+
+  return CreateThread();
+}
+
+void CLinuxConnection::Close(void)
+{
+  StopThread(0);
+
+  m_socket.Close();
 }
 
 void* CLinuxConnection::Process(void)
 {
   uint32_t channelID;
-  uint32_t requestID;
-  uint32_t opcode;
   uint32_t dataLength;
   uint8_t* data;
 
@@ -49,16 +133,6 @@ void* CLinuxConnection::Process(void)
 
     if (channelID == 1)
     {
-      if (!m_socket.Read(reinterpret_cast<uint8_t*>(&requestID), sizeof(uint32_t), 10000))
-        break;
-
-      requestID = ntohl(requestID);
-
-      if (!m_socket.Read((uint8_t*)&opcode, sizeof(uint32_t), 10000))
-        break;
-
-      opcode = ntohl(opcode);
-
       if (!m_socket.Read((uint8_t*)&dataLength, sizeof(uint32_t), 10000))
         break;
 

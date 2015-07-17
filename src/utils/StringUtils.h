@@ -25,6 +25,8 @@ namespace NETPLAY
   class StringUtils
   {
   public:
+    static std::string Format(const char* format, ...);
+
     /*!
      * \brief Convert a string to an integer
      * \param str The string

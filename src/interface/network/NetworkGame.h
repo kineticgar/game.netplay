@@ -19,7 +19,6 @@
  */
 #pragma once
 
-#include "Client.h"
 #include "interface/IGame.h"
 
 #include <map>
@@ -27,11 +26,13 @@
 
 namespace NETPLAY
 {
+  class IConnection;
+
   class CNetworkGame : public IGame
   {
   public:
     CNetworkGame(const std::string& strAddress, unsigned int port);
-    virtual ~CNetworkGame(void) { Deinitialize(); }
+    virtual ~CNetworkGame(void);
 
     // implementation of IGame
     virtual ADDON_STATUS Initialize(void);
@@ -65,7 +66,7 @@ namespace NETPLAY
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
-    CClient m_rpc;
+    IConnection* const m_rpc;
 
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
   };

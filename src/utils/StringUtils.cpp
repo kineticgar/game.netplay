@@ -20,9 +20,23 @@
 #include "StringUtils.h"
 
 #include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 using namespace NETPLAY;
+
+std::string StringUtils::Format(const char* format, ...)
+{
+  char buffer[16384];
+
+  va_list args;
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  va_end(args);
+
+  return buffer;
+}
 
 long StringUtils::IntVal(const std::string& str, long iDefault /* = 0 */)
 {

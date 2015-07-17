@@ -19,7 +19,8 @@
  */
 
 #include "NetworkFrontend.h"
-#include "Client.h"
+#include "ConnectionFactory.h"
+#include "IConnection.h"
 #include "filesystem/StatStructure.h"
 
 #include "addon.pb.h"
@@ -30,19 +31,26 @@
 
 using namespace NETPLAY;
 
-CNetworkFrontend::CNetworkFrontend(CClient* rpc) :
-  m_rpc(rpc)
+CNetworkFrontend::CNetworkFrontend(int fd) :
+  m_rpc(CConnectionFactory::CreateConnection(fd))
 {
   assert(m_rpc);
 }
 
+CNetworkFrontend::~CNetworkFrontend(void)
+{
+  Deinitialize();
+  delete m_rpc;
+}
+
 bool CNetworkFrontend::Initialize(void)
 {
-  return true;
+  return m_rpc->Open();
 }
 
 void CNetworkFrontend::Deinitialize(void)
 {
+  m_rpc->Close();
 }
 
 void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const char* msg)
@@ -218,7 +226,7 @@ bool CNetworkFrontend::FileExists(const char* strFileName, bool bUseCache)
   return false; // TODO
 }
 
-bool CNetworkFrontend::StatFile(const char* strFileName, STAT_STRUCTURE* buffer)
+bool CNetworkFrontend::StatFile(const char* strFileName, STAT_STRUCTURE& buffer)
 {
   return false; // TODO
 }

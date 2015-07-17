@@ -20,6 +20,7 @@
 
 #include "Client.h"
 #include "log/Log.h"
+#include "utils/StringUtils.h"
 
 #include "platform/sockets/tcp.h"
 #include "platform/threads/mutex.h"
@@ -231,4 +232,9 @@ void CClient::SignalConnectionLost(void)
   Close();
 
   OnDisconnect();
+}
+
+std::string CClient::Address(void) const
+{
+  return StringUtils::Format("%s:d", m_strAddress.c_str(), m_port);
 }

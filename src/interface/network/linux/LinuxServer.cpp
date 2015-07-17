@@ -19,18 +19,15 @@
  */
 
 #include "LinuxServer.h"
-#include "LinuxConnection.h"
 #include "interface/FrontendManager.h"
 #include "interface/IGame.h"
-#include "interface/network/Client.h"
+#include "interface/network/NetworkFrontend.h"
 #include "log/Log.h"
 
 #include <assert.h>
-#include <cstdio>
 #include <cstring>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -39,40 +36,6 @@ using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define LISTEN_PORT   34890
-
-// --- ip2txt ------------------------------------------------------------------
-
-namespace NETPLAY
-{
-  std::string ip2txt(uint32_t ip, unsigned int port)
-  {
-    // inet_ntoa is not thread-safe (?)
-    unsigned int iph = static_cast<unsigned int>(ntohl(ip));
-    unsigned int porth = static_cast<unsigned int>(ntohs(port));
-
-    char str[64];
-
-    if (porth == 0)
-    {
-      std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
-                                       ((iph >> 16) & 0xff),
-                                       ((iph >> 8)  & 0xff),
-                                       ((iph)       & 0xff));
-    }
-    else
-    {
-      std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
-                                          ((iph >> 16) & 0xff),
-                                          ((iph >> 8)  & 0xff),
-                                          ((iph)       & 0xff),
-                                          porth);
-    }
-
-    return str;
-  }
-}
-
-// --- CLinuxServer ------------------------------------------------------------
 
 CLinuxServer::CLinuxServer(IGame* game, CFrontendManager* callbacks) :
   m_game(game),
@@ -88,7 +51,7 @@ bool CLinuxServer::Initialize(void)
   uint16_t port = LISTEN_PORT;
 
   m_socketFd = socket(AF_INET, SOCK_STREAM, 0);
-  if(m_socketFd == -1)
+  if (m_socketFd == -1)
     return false;
 
   fcntl(m_socketFd, F_SETFD, fcntl(m_socketFd, F_GETFD) | FD_CLOEXEC);
@@ -151,7 +114,8 @@ void* CLinuxServer::Process(void)
       PLATFORM::CLockObject lock(m_clientMutex);
 
       // Remove disconnected clients
-      for (std::vector<CLinuxConnection*>::iterator it = m_clients.begin(); it != m_clients.end(); )
+      /* TODO
+      for (std::vector<IFrontend*>::iterator it = m_clients.begin(); it != m_clients.end(); )
       {
         if (!(*it)->IsOpen())
         {
@@ -164,6 +128,7 @@ void* CLinuxServer::Process(void)
           it++;
         }
       }
+      */
     }
     else
     {
@@ -185,44 +150,10 @@ void* CLinuxServer::Process(void)
 
 void CLinuxServer::NewClientConnected(int fd)
 {
-  struct sockaddr_in sin;
-  socklen_t len = sizeof(sin);
-
-  if (getpeername(fd, reinterpret_cast<struct sockaddr*>(&sin), &len))
-  {
-    esyslog("%s - getpeername() failed, dropping new incoming connection", __FUNCTION__);
-    close(fd);
-    return;
-  }
-
-  if (fcntl(fd, F_SETFL, fcntl (fd, F_GETFL) | O_NONBLOCK) == -1)
-  {
-    esyslog("%s - Error setting control socket to nonblocking mode", __FUNCTION__);
-    close(fd);
-    return;
-  }
-
-  int val = 1;
-  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
-
-  val = 30;
-  setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
-
-  val = 15;
-  setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
-
-  val = 5;
-  setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
-
-  val = 1;
-  setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-
-  CLinuxConnection* connection = new CLinuxConnection(fd, ip2txt(sin.sin_addr.s_addr, sin.sin_port).c_str());
-
-  isyslog("Client connected: %s", connection->Name().c_str());
-
+  IFrontend* frontend = new CNetworkFrontend(fd);
+  if (frontend->Initialize())
   {
     PLATFORM::CLockObject lock(m_clientMutex);
-    m_clients.push_back(connection);
+    m_clients.push_back(frontend);
   }
 }

@@ -28,8 +28,8 @@
 
 namespace NETPLAY
 {
-  class CLinuxConnection;
   class CFrontendManager;
+  class IFrontend;
   class IGame;
 
   class CLinuxServer : public IServer,
@@ -54,7 +54,7 @@ namespace NETPLAY
     IGame* const              m_game;
     CFrontendManager* const   m_callbacks;
     int                       m_socketFd;
-    std::vector<CLinuxConnection*> m_clients;
+    std::vector<IFrontend*>   m_clients;
     PLATFORM::CMutex          m_clientMutex;
   };
 }

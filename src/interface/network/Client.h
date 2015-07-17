@@ -20,6 +20,7 @@
 #pragma once
 
 #include "RPCMethods.h"
+#include "IConnection.h"
 
 #include <stddef.h>
 #include <string>
@@ -32,18 +33,20 @@ namespace PLATFORM
 
 namespace NETPLAY
 {
-  class CClient
+  class CClient : public IConnection
   {
   public:
     CClient(const std::string& strAddress, unsigned int port);
     virtual ~CClient(void);
 
     bool Open(void);
-    bool IsOpen(void);
     void Close(void);
 
-    bool Send(RPC_METHOD method, const std::string& request);
-    bool Send(RPC_METHOD method, const std::string& request, std::string& response);
+    // implementation of IConnection
+    virtual std::string Address(void) const;
+    virtual bool IsOpen(void);
+    virtual bool Send(RPC_METHOD method, const std::string& request);
+    virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response);
 
   private:
     bool SendHeader(RPC_METHOD method, size_t msgLength);
