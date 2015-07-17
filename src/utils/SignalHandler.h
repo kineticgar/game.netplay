@@ -21,10 +21,6 @@
 
 #include <map>
 
-// Mask the signals with this offset to get the appropriate exit codes
-// E.g. SIGINT (0x02) should return 0x82 from main()
-#define EXIT_CODE_OFFSET  0x80
-
 namespace NETPLAY
 {
   // --- ISignalReceiver -------------------------------------------------------

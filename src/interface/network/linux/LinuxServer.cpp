@@ -18,10 +18,11 @@
  *
  */
 
-#include "Server.h"
-#include "Client.h"
-#include "Connection.h"
+#include "LinuxServer.h"
+#include "interface/FrontendManager.h"
 #include "interface/IGame.h"
+#include "interface/network/Client.h"
+#include "interface/network/Connection.h"
 #include "log/Log.h"
 
 #include <assert.h>
@@ -71,9 +72,9 @@ namespace NETPLAY
   }
 }
 
-// --- CServer -----------------------------------------------------------------
+// --- CLinuxServer ------------------------------------------------------------
 
-CServer::CServer(IGame* game, CFrontendManager* callbacks) :
+CLinuxServer::CLinuxServer(IGame* game, CFrontendManager* callbacks) :
   m_game(game),
   m_callbacks(callbacks),
   m_socketFd(-1)
@@ -82,7 +83,7 @@ CServer::CServer(IGame* game, CFrontendManager* callbacks) :
   assert(m_callbacks);
 }
 
-bool CServer::Initialize(void)
+bool CLinuxServer::Initialize(void)
 {
   uint16_t port = LISTEN_PORT;
 
@@ -121,13 +122,13 @@ bool CServer::Initialize(void)
   return false;
 }
 
-void CServer::Deinitialize(void)
+void CLinuxServer::Deinitialize(void)
 {
   isyslog("Netplay server shutting down");
   StopThread();
 }
 
-void* CServer::Process(void)
+void* CLinuxServer::Process(void)
 {
   fd_set fds;
   struct timeval tv;
@@ -182,7 +183,7 @@ void* CServer::Process(void)
   return NULL;
 }
 
-void CServer::NewClientConnected(int fd)
+void CLinuxServer::NewClientConnected(int fd)
 {
   struct sockaddr_in sin;
   socklen_t len = sizeof(sin);

@@ -17,31 +17,22 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
-#include "AbortableServer.h"
-
-#include <signal.h>
-
-using namespace NETPLAY;
-
-CAbortableServer::CAbortableServer(IGame* game, CFrontendManager* callbacks) :
-  CServer(game, callbacks),
-  m_exitCode(0)
+namespace NETPLAY
 {
-}
+  class CFrontendManager;
+  class IGame;
+  class IServer;
 
-void CAbortableServer::OnSignal(int signum)
-{
-  switch (signum)
+  class CServerFactory
   {
-  case SIGHUP:
-  case SIGKILL:
-  case SIGINT:
-  case SIGTERM:
-    m_exitCode = EXIT_CODE_OFFSET + signum;
-    Deinitialize();
-    break;
-  default:
-    break;
-  }
+  private:
+    CServerFactory(void) { }
+
+  public:
+    static CServerFactory& Get(void);
+
+    IServer* CreateServer(IGame* game, CFrontendManager* callbacks);
+  };
 }

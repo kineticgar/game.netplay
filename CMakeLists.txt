@@ -51,16 +51,17 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
-    src/interface/network/AbortableServer.cpp
     src/interface/network/Client.cpp
     src/interface/network/Connection.cpp
+    src/interface/network/linux/LinuxServer.cpp
     src/interface/network/NetworkFrontend.cpp
     src/interface/network/NetworkGame.cpp
-    src/interface/network/Server.cpp
+    src/interface/network/ServerFactory.cpp
     src/interface/network/Socket.cpp
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
+    src/utils/AbortableTask.cpp
     src/utils/PathUtils.cpp
     src/utils/SignalHandler.cpp
     src/utils/StringUtils.cpp

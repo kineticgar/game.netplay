@@ -20,8 +20,9 @@
 
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
+#include "interface/network/IServer.h"
 #include "interface/network/NetworkGame.h"
-#include "interface/network/Server.h"
+#include "interface/network/ServerFactory.h"
 #include "log/Log.h"
 #include "utils/PathUtils.h"
 
@@ -41,7 +42,7 @@ namespace NETPLAY
   IFrontend*        FRONTEND  = NULL;
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
-  CServer*          SERVER    = NULL;
+  IServer*          SERVER    = NULL;
 }
 
 // --- Helper functions --------------------------------------------------------
@@ -129,7 +130,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
       throw status;
 
-    SERVER = new CServer(GAME, CALLBACKS);
+    SERVER = CServerFactory::Get().CreateServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
 

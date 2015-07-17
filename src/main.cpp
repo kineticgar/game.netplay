@@ -20,9 +20,11 @@
 
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
-#include "interface/network/AbortableServer.h"
+#include "interface/network/IServer.h"
 #include "interface/network/NetworkGame.h"
+#include "interface/network/ServerFactory.h"
 #include "log/Log.h"
+#include "utils/AbortableTask.h"
 #include "utils/PathUtils.h"
 #include "utils/StringUtils.h"
 
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
 {
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
-  CAbortableServer* SERVER    = NULL;
+  IServer*          SERVER    = NULL;
 
   OPTION option(OPTION_INVALID);
 
@@ -150,7 +152,7 @@ int main(int argc, char* argv[])
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
       throw std::runtime_error("Failed to initialize game client");
 
-    SERVER = new CAbortableServer(GAME, CALLBACKS);
+    SERVER = CServerFactory::Get().CreateServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
       throw std::runtime_error("Failed to initialize server");
   }
@@ -160,17 +162,15 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  CSignalHandler::Get().SetSignalReceiver(SIGHUP, SERVER);
-  CSignalHandler::Get().SetSignalReceiver(SIGINT, SERVER);
-  CSignalHandler::Get().SetSignalReceiver(SIGKILL, SERVER);
-  CSignalHandler::Get().SetSignalReceiver(SIGTERM, SERVER);
-  CSignalHandler::Get().IgnoreSignal(SIGPIPE);
+  CAbortableTask task(SERVER);
 
   SERVER->WaitForExit();
+
+  int exitCode = task.GetExitCode();
 
   delete SERVER;
   delete CALLBACKS;
   delete GAME;
 
-  return SERVER->GetReturnCode();
+  return exitCode;
 }

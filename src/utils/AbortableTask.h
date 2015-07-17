@@ -19,25 +19,24 @@
  */
 #pragma once
 
-#include "Server.h"
-#include "utils/SignalHandler.h"
+#include "IAbortable.h"
+#include "SignalHandler.h"
 
 namespace NETPLAY
 {
-  class CAbortableServer : public CServer,
-                           public ISignalReceiver
+  class CAbortableTask : public ISignalReceiver
   {
   public:
-    CAbortableServer(IGame* game, CFrontendManager* callbacks);
-    virtual ~CAbortableServer(void) { }
+    CAbortableTask(IAbortable* callback);
+    virtual ~CAbortableTask(void);
 
     // implementation of ISignalReceiver
     virtual void OnSignal(int signum);
 
     int GetExitCode(void) { return m_exitCode; }
-    int GetReturnCode(void) { return m_exitCode - EXIT_CODE_OFFSET; } // TODO: Is this correct?
 
   private:
-    int m_exitCode;
+    IAbortable* const m_callback;
+    int               m_exitCode;
   };
 }

@@ -19,39 +19,28 @@
  */
 #pragma once
 
-#include "interface/FrontendManager.h"
-
-#include "platform/threads/mutex.h"
-#include "platform/threads/threads.h"
-
-#include <vector>
+#include "utils/IAbortable.h"
 
 namespace NETPLAY
 {
-  class CConnection;
-  class IGame;
-
-  class CServer : protected PLATFORM::CThread
+  class IServer : public IAbortable
   {
   public:
-    CServer(IGame* game, CFrontendManager* callbacks);
-    virtual ~CServer(void) { }
+    virtual ~IServer(void) { }
 
-    bool Initialize(void);
-    void Deinitialize(void);
+    /*!
+     * \brief Initialize this server instance
+     */
+    virtual bool Initialize(void) = 0;
 
-    void WaitForExit(void) { Sleep(0); }
+    /*!
+     * \brief Deinitialize this service instance
+     */
+    virtual void Deinitialize(void) = 0;
 
-  protected:
-    virtual void* Process(void);
-
-  private:
-    void NewClientConnected(int fd);
-
-    IGame* const              m_game;
-    CFrontendManager* const   m_callbacks;
-    int                       m_socketFd;
-    std::vector<CConnection*> m_clients;
-    PLATFORM::CMutex          m_clientMutex;
+    /*!
+     * \brief Block until the server has exited
+     */
+    virtual void WaitForExit(void) = 0;
   };
 }
