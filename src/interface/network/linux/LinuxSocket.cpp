@@ -69,7 +69,7 @@ void CLinuxSocket::Close(void)
 
   if (m_fd >= 0)
   {
-    ::close(m_fd);
+    close(m_fd);
 
     m_fd = -1;
 
@@ -87,7 +87,7 @@ void CLinuxSocket::Shutdown(void)
 
   if (m_fd >= 0)
   {
-    ::shutdown(m_fd, SHUT_RD);
+    shutdown(m_fd, SHUT_RD);
   }
 }
 
@@ -121,7 +121,7 @@ ssize_t CLinuxSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /
       return written-size;
     }
 
-    ssize_t p = ::send(m_fd, ptr, size, (more_data ? MSG_MORE : 0));
+    ssize_t p = send(m_fd, ptr, size, (more_data ? MSG_MORE : 0));
 
     if (p <= 0)
     {
@@ -163,7 +163,7 @@ ssize_t CLinuxSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
       return size-missing;
     }
 
-    ssize_t p = ::read(m_fd, ptr, missing);
+    ssize_t p = read(m_fd, ptr, missing);
 
     if (p < 0)
     {

@@ -231,7 +231,7 @@ DLLEXPORT bool XBMC_file_exists(AddonCB* handle, CB_AddOnLib* cbTable, const cha
   return cbTable->FileExists(handle->addonData, strFileName, bUseCache);
 }
 
-DLLEXPORT int XBMC_stat_file(AddonCB* handle, CB_AddOnLib* cbTable, const char* strFileName, struct ::__stat64* buffer)
+DLLEXPORT int XBMC_stat_file(AddonCB* handle, CB_AddOnLib* cbTable, const char* strFileName, struct __stat64* buffer)
 {
   if (handle == NULL || cbTable == NULL)
     return -1;
