@@ -21,12 +21,12 @@
  *
  */
 
-#include "Poller.h"
+#include "LinuxPoller.h"
 #include "log/Log.h"
 
 using namespace NETPLAY;
 
-CPoller::CPoller(int  fileHandle    /* = -1    */,
+CLinuxPoller::CLinuxPoller(int  fileHandle    /* = -1    */,
                  bool bOut          /* = false */,
                  bool bPriorityOnly /* = false */) :
   m_numFileHandles(0)
@@ -34,7 +34,7 @@ CPoller::CPoller(int  fileHandle    /* = -1    */,
   Add(fileHandle, bOut, bPriorityOnly);
 }
 
-bool CPoller::Add(int fileHandle, bool bOut, bool bPriorityOnly /* = false */)
+bool CLinuxPoller::Add(int fileHandle, bool bOut, bool bPriorityOnly /* = false */)
 {
   if (fileHandle >= 0)
   {
@@ -57,12 +57,12 @@ bool CPoller::Add(int fileHandle, bool bOut, bool bPriorityOnly /* = false */)
       return true;
     }
 
-    esyslog("ERROR: too many file handles in CPoller");
+    esyslog("ERROR: too many file handles in CLinuxPoller");
   }
   return false;
 }
 
-bool CPoller::Poll(int timeoutMs /* = 0 */)
+bool CLinuxPoller::Poll(int timeoutMs /* = 0 */)
 {
   if (m_numFileHandles)
   {

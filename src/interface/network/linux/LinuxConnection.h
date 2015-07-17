@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "Socket.h"
+#include "LinuxSocket.h"
 
 #include "platform/threads/threads.h"
 
@@ -27,11 +27,11 @@
 
 namespace NETPLAY
 {
-  class CConnection : protected PLATFORM::CThread
+  class CLinuxConnection : protected PLATFORM::CThread
   {
   public:
-    CConnection(int fd, const std::string& strClientAdr);
-    virtual ~CConnection(void) { }
+    CLinuxConnection(int fd, const std::string& strClientAdr);
+    virtual ~CLinuxConnection(void) { }
 
     bool IsOpen(void) { return IsRunning(); }
 
@@ -42,6 +42,6 @@ namespace NETPLAY
 
   private:
     const std::string m_strClientAddress;
-    CSocket           m_socket;
+    CLinuxSocket      m_socket;
   };
 }

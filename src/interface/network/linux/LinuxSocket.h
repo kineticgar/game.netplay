@@ -33,13 +33,13 @@
 
 namespace NETPLAY
 {
-  class CPoller;
+  class CLinuxPoller;
 
-  class CSocket
+  class CLinuxSocket
   {
    public:
-    CSocket(void);
-    ~CSocket(void);
+    CLinuxSocket(void);
+    ~CLinuxSocket(void);
 
     void SetHandle(int h);
 
@@ -58,7 +58,7 @@ namespace NETPLAY
    private:
     int              m_fd;
     PLATFORM::CMutex m_MutexWrite;
-    CPoller*         m_pollerRead;
-    CPoller*         m_pollerWrite;
+    CLinuxPoller*    m_pollerRead;
+    CLinuxPoller*    m_pollerWrite;
   };
 }

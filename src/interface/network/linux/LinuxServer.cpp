@@ -19,10 +19,10 @@
  */
 
 #include "LinuxServer.h"
+#include "LinuxConnection.h"
 #include "interface/FrontendManager.h"
 #include "interface/IGame.h"
 #include "interface/network/Client.h"
-#include "interface/network/Connection.h"
 #include "log/Log.h"
 
 #include <assert.h>
@@ -151,7 +151,7 @@ void* CLinuxServer::Process(void)
       PLATFORM::CLockObject lock(m_clientMutex);
 
       // Remove disconnected clients
-      for (std::vector<CConnection*>::iterator it = m_clients.begin(); it != m_clients.end(); )
+      for (std::vector<CLinuxConnection*>::iterator it = m_clients.begin(); it != m_clients.end(); )
       {
         if (!(*it)->IsOpen())
         {
@@ -217,7 +217,7 @@ void CLinuxServer::NewClientConnected(int fd)
   val = 1;
   setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
 
-  CConnection* connection = new CConnection(fd, ip2txt(sin.sin_addr.s_addr, sin.sin_port).c_str());
+  CLinuxConnection* connection = new CLinuxConnection(fd, ip2txt(sin.sin_addr.s_addr, sin.sin_port).c_str());
 
   isyslog("Client connected: %s", connection->Name().c_str());
 

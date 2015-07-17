@@ -18,7 +18,7 @@
  *
  */
 
-#include "Connection.h"
+#include "LinuxConnection.h"
 #include "log/Log.h"
 
 #include <netinet/in.h>
@@ -26,13 +26,13 @@
 
 using namespace NETPLAY;
 
-CConnection::CConnection(int fd, const std::string& strClientAdr) :
+CLinuxConnection::CLinuxConnection(int fd, const std::string& strClientAdr) :
   m_strClientAddress(strClientAdr)
 {
   m_socket.SetHandle(fd);
 }
 
-void* CConnection::Process(void)
+void* CLinuxConnection::Process(void)
 {
   uint32_t channelID;
   uint32_t requestID;

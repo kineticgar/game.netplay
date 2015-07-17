@@ -30,8 +30,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include "Socket.h"
-#include "filesystem/Poller.h"
+#include "LinuxSocket.h"
+#include "filesystem/linux/LinuxPoller.h"
 #include "log/Log.h"
 
 #include <cstdio>
@@ -48,14 +48,14 @@
 using namespace PLATFORM;
 using namespace NETPLAY;
 
-CSocket::CSocket(void) :
+CLinuxSocket::CLinuxSocket(void) :
   m_fd(-1),
   m_pollerRead(NULL),
   m_pollerWrite(NULL)
 {
 }
 
-CSocket::~CSocket(void)
+CLinuxSocket::~CLinuxSocket(void)
 {
   Close();
 
@@ -63,7 +63,7 @@ CSocket::~CSocket(void)
   delete m_pollerWrite;
 }
 
-void CSocket::Close(void)
+void CLinuxSocket::Close(void)
 {
   CLockObject lock(m_MutexWrite);
 
@@ -81,7 +81,7 @@ void CSocket::Close(void)
   }
 }
 
-void CSocket::Shutdown(void)
+void CLinuxSocket::Shutdown(void)
 {
   CLockObject lock(m_MutexWrite);
 
@@ -91,17 +91,17 @@ void CSocket::Shutdown(void)
   }
 }
 
-void CSocket::LockWrite(void)
+void CLinuxSocket::LockWrite(void)
 {
   m_MutexWrite.Lock();
 }
 
-void CSocket::UnlockWrite(void)
+void CLinuxSocket::UnlockWrite(void)
 {
   m_MutexWrite.Unlock();
 }
 
-ssize_t CSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -1 */,
+ssize_t CLinuxSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -1 */,
                                                            bool more_data /* = false */)
 {
   CLockObject lock(m_MutexWrite);
@@ -117,7 +117,7 @@ ssize_t CSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -
   {
     if (!m_pollerWrite->Poll(timeout_ms))
     {
-      esyslog("CSocket::write: poll() failed");
+      esyslog("CLinuxSocket::write: poll() failed");
       return written-size;
     }
 
@@ -127,12 +127,12 @@ ssize_t CSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -
     {
       if (errno == EINTR || errno == EAGAIN)
       {
-        dsyslog("CSocket::write: EINTR during write(), retrying");
+        dsyslog("CLinuxSocket::write: EINTR during write(), retrying");
         continue;
       }
       else if (errno != EPIPE)
       {
-        esyslog("CSocket::write: write() error");
+        esyslog("CLinuxSocket::write: write() error");
       }
       return p;
     }
@@ -144,7 +144,7 @@ ssize_t CSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -
   return written;
 }
 
-ssize_t CSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
+ssize_t CLinuxSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
 {
   int retryCounter = 0;
 
@@ -159,7 +159,7 @@ ssize_t CSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
   {
     if (!m_pollerRead->Poll(timeout_ms))
     {
-      esyslog("CSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
+      esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
       return size-missing;
     }
 
@@ -169,17 +169,17 @@ ssize_t CSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
     {
       if (retryCounter < 10 && (errno == EINTR || errno == EAGAIN))
       {
-        dsyslog("CSocket::read: EINTR/EAGAIN during read(), retrying");
+        dsyslog("CLinuxSocket::read: EINTR/EAGAIN during read(), retrying");
         retryCounter++;
         continue;
       }
 
-      esyslog("CSocket::read: read() error at %d/%d", (int)(size-missing), (int)size);
+      esyslog("CLinuxSocket::read: read() error at %d/%d", (int)(size-missing), (int)size);
       return 0;
     }
     else if (p == 0)
     {
-      isyslog("CSocket::read: eof, connection closed"); // TODO
+      isyslog("CLinuxSocket::read: eof, connection closed"); // TODO
       Close();
       return 0;
     }
@@ -192,7 +192,7 @@ ssize_t CSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
   return size;
 }
 
-void CSocket::SetHandle(int h)
+void CLinuxSocket::SetHandle(int h)
 {
   CLockObject lock(m_MutexWrite);
 
@@ -201,7 +201,7 @@ void CSocket::SetHandle(int h)
     Close();
 
     m_fd          = h;
-    m_pollerRead  = new CPoller(m_fd);
-    m_pollerWrite = new CPoller(m_fd, true);
+    m_pollerRead  = new CLinuxPoller(m_fd);
+    m_pollerWrite = new CLinuxPoller(m_fd, true);
   }
 }

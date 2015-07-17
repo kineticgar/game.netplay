@@ -26,10 +26,10 @@
 
 namespace NETPLAY
 {
-  class CPoller
+  class CLinuxPoller
   {
   public:
-    CPoller(int fileHandle = -1, bool bOut = false, bool bPriorityOnly = false);
+    CLinuxPoller(int fileHandle = -1, bool bOut = false, bool bPriorityOnly = false);
 
     bool Add(int fileHandle, bool bOut, bool bPriorityOnly = false);
 

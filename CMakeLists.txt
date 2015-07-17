@@ -45,19 +45,19 @@ include_directories(
 
 set(NETPLAY_SOURCES
     ${PROTO_SRCS}
-    src/filesystem/Poller.cpp
+    src/filesystem/linux/LinuxPoller.cpp
     src/interface/dll/DLLFrontend.cpp
     src/interface/dll/DLLGame.cpp
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
     src/interface/network/Client.cpp
-    src/interface/network/Connection.cpp
+    src/interface/network/linux/LinuxConnection.cpp
     src/interface/network/linux/LinuxServer.cpp
+    src/interface/network/linux/LinuxSocket.cpp
     src/interface/network/NetworkFrontend.cpp
     src/interface/network/NetworkGame.cpp
     src/interface/network/ServerFactory.cpp
-    src/interface/network/Socket.cpp
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
