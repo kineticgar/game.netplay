@@ -19,19 +19,15 @@
  */
 #pragma once
 
-#include "LinuxSocket.h"
-#include "interface/network/IConnection.h"
-#include "interface/network/RPCMethods.h"
-
-#include "platform/threads/mutex.h"
-#include "platform/threads/threads.h"
+#include "interface/network/Connection.h"
 
 #include <string>
 
 namespace NETPLAY
 {
-  class CLinuxConnection : public IConnection,
-                           protected PLATFORM::CThread
+  class CLinuxSocket;
+
+  class CLinuxConnection : public CConnection
   {
   public:
     CLinuxConnection(int fd);
@@ -42,26 +38,14 @@ namespace NETPLAY
     virtual bool Open(void);
     virtual bool IsOpen(void) { return IsRunning(); }
     virtual void Close(void);
-    virtual bool Send(RPC_METHOD method, const std::string& request) { return false; } // TODO
-    virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response) { return false; } // TODO
 
   protected:
-    // implementation of PLATFORM::CThread
-    virtual void* Process(void);
-
-  private:
-    void ProcessMessage(RPC_METHOD method, const std::string& message);
-
-    bool SendHeader(RPC_METHOD method, size_t msgLength) { return false; } // TODO
-    bool SendData(const std::string& request) { return false; } // TODO
-
-    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
-    bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
+    virtual bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
+    virtual bool SendData(const std::string& request);
 
   private:
     int               m_fd;
     std::string       m_strClientAddress;
     CLinuxSocket*     m_socket; // TODO: Convert to PLATFORM::CTcpConnection
-    PLATFORM::CMutex  m_readMutex;
   };
 }

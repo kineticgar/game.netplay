@@ -132,7 +132,6 @@ void* CLinuxServer::Process(void)
     }
     else
     {
-
       int fd = accept(m_socketFd, 0, 0);
       if (fd >= 0)
       {

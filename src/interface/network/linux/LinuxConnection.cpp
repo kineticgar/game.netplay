@@ -19,6 +19,7 @@
  */
 
 #include "LinuxConnection.h"
+#include "LinuxSocket.h"
 #include "log/Log.h"
 
 #include <cstdio>
@@ -30,8 +31,6 @@
 
 using namespace NETPLAY;
 using namespace PLATFORM;
-
-#define MAX_MESSAGE_LENGTH     (16 * 1024 * 1024) // 16 MB
 
 // --- ip2txt ------------------------------------------------------------------
 
@@ -127,95 +126,6 @@ void CLinuxConnection::Close(void)
   m_socket->Close();
 }
 
-void* CLinuxConnection::Process(void)
-{
-  while (!IsStopped())
-  {
-    RPC_METHOD msgMethod = RPC_METHOD::Invalid;
-    size_t msgLength = 0;
-
-    CLockObject lock(m_readMutex);
-
-    if (!ReadHeader(msgMethod, msgLength, 10000))
-      break;
-
-    // Validate input
-    if (msgLength > MAX_MESSAGE_LENGTH)
-    {
-      esyslog("Terminating connection - invalid message length: %d", msgLength);
-      break;
-    }
-
-    std::string message;
-    message.resize(msgLength);
-    if (!ReadData(message, msgLength, 10000))
-      break;
-
-    // TODO: process message
-    ProcessMessage(msgMethod, message);
-
-    /* TODO
-    try
-    {
-      // TODO
-      uint32_t    version       = vresp->extract_U32();
-      uint32_t    vdrTime       = vresp->extract_U32();
-      int32_t     vdrTimeOffset = vresp->extract_S32();
-      std::string ServerName    = vresp->extract_String();
-      std::string ServerVersion = vresp->extract_String();
-
-      std::string strVersion;
-      uint32_t    vdrTime;
-      int32_t     vdrTimeOffset;
-      std::string ServerName;
-      std::string ServerVersion;
-
-      m_server    = ServerName;
-      m_version   = ServerVersion;
-      m_protocol  = protocol;
-
-      if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-        throw "Protocol versions do not match";
-
-      isyslog("Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol);
-      throw "Not implemented";
-    }
-    catch (const char* strError)
-    {
-      esyslog("%s - %s", __FUNCTION__, strError);
-      if (m_socket)
-      {
-        m_socket->Close();
-        delete m_socket;
-        m_socket = NULL;
-      }
-      return false;
-    }
-    */
-  }
-
-  return NULL;
-}
-
-void CLinuxConnection::ProcessMessage(RPC_METHOD method, const std::string& message)
-{
-  // TODO
-}
-
-
-bool CLinuxConnection::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
-{
-  std::string header;
-  if (ReadData(header, 5, timeoutMs))
-  {
-    method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
-    length = header[2] << 16 | header[3] << 8 | header[4];
-    return true;
-  }
-
-  return false;
-}
-
 bool CLinuxConnection::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
 {
   if (totalBytes == 0)
@@ -227,4 +137,14 @@ bool CLinuxConnection::ReadData(std::string& buffer, size_t totalBytes, unsigned
   unsigned int bytesRead = m_socket->Read(data, totalBytes, timeoutMs);
 
   return bytesRead == totalBytes;
+}
+
+bool CLinuxConnection::SendData(const std::string& request)
+{
+  if (request.empty())
+    return false;
+
+  m_socket->Write(reinterpret_cast<const uint8_t*>(request.c_str()), request.size());
+
+  return true;
 }

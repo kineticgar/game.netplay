@@ -19,56 +19,40 @@
  */
 #pragma once
 
-#include "RPCMethods.h"
-#include "IConnection.h"
+#include "interface/network/Connection.h"
+
+#include "platform/threads/mutex.h"
 
 #include <stddef.h>
 #include <string>
 
 namespace PLATFORM
 {
-  class CMutex;
   class CTcpConnection;
 }
 
 namespace NETPLAY
 {
-  class CClient : public IConnection
+  class CClient : public CConnection
   {
   public:
     CClient(const std::string& strAddress, unsigned int port);
     virtual ~CClient(void);
 
-    bool Open(void);
-    void Close(void);
-
     // implementation of IConnection
     virtual std::string Address(void) const;
+    virtual bool Open(void);
     virtual bool IsOpen(void);
-    virtual bool Send(RPC_METHOD method, const std::string& request);
-    virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response);
+    virtual void Close(void);
+
+  protected:
+    virtual bool SendData(const std::string& request);
+    virtual bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
 
   private:
-    bool SendHeader(RPC_METHOD method, size_t msgLength);
-    bool SendData(const std::string& request);
-
-    bool ReadMessage(RPC_METHOD method,
-                     std::string& response,
-                     unsigned int iInitialTimeoutMs = 10000,
-                     unsigned int iDatapacketTimeoutMs = 10000);
-    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
-    bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
-
-    void OnDisconnect(void) { }
-    void OnReconnect(void) { }
-
-    void SignalConnectionLost(void);
-    bool IsConnectionLost(void) const { return m_bConnectionLost; }
-
     const std::string         m_strAddress;
     const unsigned int        m_port;
     PLATFORM::CTcpConnection* m_socket;
-    PLATFORM::CMutex*         m_readMutex;
-    bool                      m_bConnectionLost;
+    PLATFORM::CMutex          m_readMutex;
   };
 }

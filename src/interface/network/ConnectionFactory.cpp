@@ -19,8 +19,8 @@
  */
 
 #include "ConnectionFactory.h"
-#include "interface/network/Client.h"
 #include "interface/network/linux/LinuxConnection.h"
+#include "interface/network/platform/Client.h"
 
 using namespace NETPLAY;
 

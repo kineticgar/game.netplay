@@ -23,27 +23,22 @@
 #include "utils/StringUtils.h"
 
 #include "platform/sockets/tcp.h"
-#include "platform/threads/mutex.h"
 
 using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define CONNECTION_TIMEOUT_MS  2000
-#define MAX_MESSAGE_LENGTH     (16 * 1024 * 1024) // 16 MB
 
 CClient::CClient(const std::string& strAddress, unsigned int port) :
   m_strAddress(strAddress),
   m_port(port),
-  m_socket(NULL),
-  m_readMutex(new CMutex),
-  m_bConnectionLost(true)
+  m_socket(NULL)
 {
 }
 
 CClient::~CClient(void)
 {
   Close();
-  delete m_readMutex;
 }
 
 bool CClient::Open(void)
@@ -95,59 +90,6 @@ void CClient::Close(void)
   }
 }
 
-bool CClient::Send(RPC_METHOD method, const std::string& request)
-{
-  if (!IsOpen())
-    return false;
-
-  try
-  {
-    if (!SendHeader(method, request.length()))
-      throw false;
-
-    if (!SendData(request))
-      throw false;
-  }
-  catch (bool bSuccess)
-  {
-    SignalConnectionLost();
-    return bSuccess;
-  }
-
-  return true;
-}
-
-bool CClient::Send(RPC_METHOD method, const std::string& request, std::string& response)
-{
-  if (!Send(method, request))
-    return false;
-
-  try
-  {
-    if (!ReadMessage(method, response))
-      throw false;
-  }
-  catch (bool bSuccess)
-  {
-    SignalConnectionLost();
-    return bSuccess;
-  }
-
-  return true;
-}
-
-bool CClient::SendHeader(RPC_METHOD method, size_t msgLength)
-{
-  std::string header;
-  header.resize(5);
-  header[0] = static_cast<uint16_t>(method) >> 8;
-  header[1] = static_cast<uint16_t>(method) & 0xff;
-  header[2] = msgLength >> 16;
-  header[3] = (msgLength >> 8) & 0xff;
-  header[4] = msgLength & 0xff;
-  return SendData(header);
-}
-
 bool CClient::SendData(const std::string& request)
 {
   ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.c_str()), request.length());
@@ -157,43 +99,6 @@ bool CClient::SendData(const std::string& request)
     return false;
   }
   return true;
-}
-
-bool CClient::ReadMessage(RPC_METHOD method,
-                          std::string& response,
-                          unsigned int iInitialTimeoutMs /* = 10000 */,
-                          unsigned int iDatapacketTimeoutMs /* = 10000 */)
-{
-  RPC_METHOD msgMethod = RPC_METHOD::Invalid;
-  size_t msgLength = 0;
-
-  CLockObject lock(*m_readMutex);
-
-  while (msgMethod != method)
-  {
-    if (!ReadHeader(msgMethod, msgLength, iInitialTimeoutMs))
-      return false;
-  }
-
-  // Validate input
-  if (msgLength > MAX_MESSAGE_LENGTH)
-    return false;
-
-  response.resize(msgLength);
-  return ReadData(response, msgLength, iDatapacketTimeoutMs);
-}
-
-bool CClient::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
-{
-  std::string header;
-  if (ReadData(header, 5, timeoutMs))
-  {
-    method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
-    length = header[2] << 16 | header[3] << 8 | header[4];
-    return true;
-  }
-
-  return false;
 }
 
 bool CClient::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
@@ -223,19 +128,6 @@ bool CClient::ReadData(std::string& buffer, size_t totalBytes, unsigned int time
   }
 
   return bytesRead == totalBytes;
-}
-
-void CClient::SignalConnectionLost(void)
-{
-  if (m_bConnectionLost)
-    return;
-
-  esyslog("%s - connection lost !!!", __FUNCTION__);
-
-  m_bConnectionLost = true;
-  Close();
-
-  OnDisconnect();
 }
 
 std::string CClient::Address(void) const
