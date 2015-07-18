@@ -25,6 +25,7 @@
 #include "platform/threads/threads.h"
 
 #include <string>
+#include <vector>
 
 namespace NETPLAY
 {
@@ -51,16 +52,31 @@ namespace NETPLAY
     bool IsConnectionLost(void) const { return m_bConnectionLost; }
 
   private:
-    void ReceiveMessage(RPC_METHOD method, const std::string& message);
-    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
-    bool ReadMessage(RPC_METHOD   method,
+    struct Invocation
+    {
+      RPC_METHOD        method;
+      std::string*      result;
+      PLATFORM::CEvent* finished_event;
+    };
+
+    bool GetResponse(RPC_METHOD   method,
                      std::string& response,
                      unsigned int iInitialTimeoutMs    = 10000,
                      unsigned int iDatapacketTimeoutMs = 10000);
 
     bool SendHeader(RPC_METHOD method, size_t msgLength);
 
-    PLATFORM::CMutex  m_readMutex;
-    bool              m_bConnectionLost;
+    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
+    bool ReadMessage(RPC_METHOD method, size_t length, unsigned int timeoutMs);
+
+    bool FormatHeader(std::string& header, RPC_METHOD method, size_t length);
+    bool ParseHeader(const std::string& header, RPC_METHOD& method, size_t& length);
+
+    Invocation Invoke(RPC_METHOD method);
+    void FreeInvocation(Invocation& invocation) const;
+
+    std::vector<Invocation> m_invocations;
+    PLATFORM::CMutex        m_invocationMutex;
+    bool                    m_bConnectionLost;
   };
 }

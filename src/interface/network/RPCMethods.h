@@ -76,5 +76,7 @@ namespace NETPLAY
     StopLocation,
     GetLocation,
     SetLocationInterval,
+
+    RPC_METHOD_COUNT,
   };
 }
