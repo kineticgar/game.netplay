@@ -36,6 +36,8 @@ namespace NETPLAY
     CConnection(void);
     virtual ~CConnection(void) { }
 
+    virtual bool Open(void) { return CreateThread(); }
+    virtual void Close(void) { StopThread(); }
     virtual bool Send(RPC_METHOD method, const std::string& request);
     virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response);
 

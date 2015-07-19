@@ -20,6 +20,7 @@
 #pragma once
 
 #include "filesystem/StatStructure.h"
+#include "utils/Observer.h"
 
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
@@ -29,7 +30,7 @@
 
 namespace NETPLAY
 {
-  class IFrontend
+  class IFrontend : public Observable
   {
   public:
     virtual ~IFrontend(void) { }

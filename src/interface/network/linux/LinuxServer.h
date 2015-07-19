@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include "utils/Observer.h"
 #include "interface/network/IServer.h"
 
 #include "platform/threads/mutex.h"
@@ -33,6 +34,7 @@ namespace NETPLAY
   class IGame;
 
   class CLinuxServer : public IServer,
+                       public Observer,
                        protected PLATFORM::CThread
   {
   public:
@@ -43,6 +45,9 @@ namespace NETPLAY
     virtual bool Initialize(void);
     virtual void Deinitialize(void);
     virtual void WaitForExit(void) { Sleep(0); }
+
+    // implementation of Observer
+    virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   protected:
     // implementation of PLATFORM::CThread
@@ -55,6 +60,7 @@ namespace NETPLAY
     CFrontendManager* const   m_callbacks;
     int                       m_socketFd;
     std::vector<IFrontend*>   m_clients;
+    std::vector<IFrontend*>   m_disconnectedClients;
     PLATFORM::CMutex          m_clientMutex;
   };
 }

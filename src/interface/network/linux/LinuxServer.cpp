@@ -111,24 +111,28 @@ void* CLinuxServer::Process(void)
     }
     else if (r == 0)
     {
-      PLATFORM::CLockObject lock(m_clientMutex);
+      CLockObject lock(m_clientMutex);
 
       // Remove disconnected clients
-      /* TODO
-      for (std::vector<IFrontend*>::iterator it = m_clients.begin(); it != m_clients.end(); )
+      for (std::vector<IFrontend*>::iterator it = m_disconnectedClients.begin(); it != m_disconnectedClients.end(); ++it)
       {
-        if (!(*it)->IsOpen())
+        for (std::vector<IFrontend*>::iterator it2 = m_clients.begin(); it2 != m_clients.end(); ++it2)
         {
-          isyslog("Client seems to be disconnected, removing client");
-          delete (*it);
-          it = m_clients.erase(it);
-        }
-        else
-        {
-          it++;
+          if (*it == *it2)
+          {
+            isyslog("Client seems to be disconnected, removing client");
+
+            IFrontend* frontend = *it2;
+            frontend->UnregisterObserver(this);
+            delete frontend;
+            m_clients.erase(it2);
+
+            break;
+          }
         }
       }
-      */
+
+      m_disconnectedClients.clear();
     }
     else
     {
@@ -152,7 +156,30 @@ void CLinuxServer::NewClientConnected(int fd)
   IFrontend* frontend = new CNetworkFrontend(fd);
   if (frontend->Initialize())
   {
-    PLATFORM::CLockObject lock(m_clientMutex);
+    frontend->RegisterObserver(this);
+    CLockObject lock(m_clientMutex);
     m_clients.push_back(frontend);
+  }
+}
+
+void CLinuxServer::Notify(const Observable& obs, const ObservableMessage msg)
+{
+  switch (msg)
+  {
+    case ObservableMessageConnectionLost:
+    {
+      CLockObject lock(m_clientMutex);
+      for (std::vector<IFrontend*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+      {
+        if (*it == reinterpret_cast<const IFrontend*>(&obs))
+        {
+          m_disconnectedClients.push_back(*it);
+          break;
+        }
+      }
+      break;
+    }
+    default:
+      break;
   }
 }

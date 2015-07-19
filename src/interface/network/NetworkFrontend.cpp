@@ -23,6 +23,11 @@
 #include "IConnection.h"
 #include "filesystem/StatStructure.h"
 
+// clash between platform lib and protobuf
+#if defined(MutexLock)
+  #undef MutexLock
+#endif
+
 #include "addon.pb.h"
 #include "game.pb.h"
 
@@ -35,11 +40,13 @@ CNetworkFrontend::CNetworkFrontend(int fd) :
   m_rpc(CConnectionFactory::CreateConnection(fd))
 {
   assert(m_rpc);
+  m_rpc->RegisterObserver(this);
 }
 
 CNetworkFrontend::~CNetworkFrontend(void)
 {
   Deinitialize();
+  m_rpc->UnregisterObserver(this);
   delete m_rpc;
 }
 
@@ -471,5 +478,20 @@ void CNetworkFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int
   {
     std::string strResponse;
     m_rpc->Send(RPC_METHOD::SetLocationInterval, strRequest, strResponse);
+  }
+}
+
+void CNetworkFrontend::Notify(const Observable& obs, const ObservableMessage msg)
+{
+  switch (msg)
+  {
+    case ObservableMessageConnectionLost:
+    {
+      SetChanged();
+      NotifyObservers(msg);
+      break;
+    }
+    default:
+      break;
   }
 }

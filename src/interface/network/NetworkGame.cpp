@@ -22,9 +22,13 @@
 #include "interface/network/ConnectionFactory.h"
 #include "interface/network/IConnection.h"
 
+// clash between platform lib and protobuf
+#if defined(MutexLock)
+  #undef MutexLock
+#endif
+
 #include "addon.pb.h"
 #include "game.pb.h"
-#include "kodi/kodi_game_types.h"
 
 #include <cstring>
 

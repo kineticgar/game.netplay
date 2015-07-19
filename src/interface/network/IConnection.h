@@ -20,12 +20,13 @@
 #pragma once
 
 #include "RPCMethods.h"
+#include "utils/Observer.h"
 
 #include <string>
 
 namespace NETPLAY
 {
-  class IConnection
+  class IConnection : public Observable
   {
   public:
     virtual ~IConnection(void) { }

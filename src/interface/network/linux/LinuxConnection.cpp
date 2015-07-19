@@ -21,6 +21,7 @@
 #include "LinuxConnection.h"
 #include "LinuxSocket.h"
 #include "log/Log.h"
+#include "utils/Observer.h"
 
 #include <cstdio>
 #include <fcntl.h>
@@ -116,12 +117,12 @@ bool CLinuxConnection::Open(void)
 
   isyslog("Client connected: %s", m_strClientAddress.c_str());
 
-  return CreateThread();
+  return CConnection::Open();
 }
 
 void CLinuxConnection::Close(void)
 {
-  StopThread(0);
+  CConnection::Close();
 
   m_socket->Close();
 }

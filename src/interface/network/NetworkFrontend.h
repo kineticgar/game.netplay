@@ -20,12 +20,15 @@
 #pragma once
 
 #include "interface/IFrontend.h"
+#include "utils/Observer.h"
 
 namespace NETPLAY
 {
   class IConnection;
 
-  class CNetworkFrontend : public IFrontend
+  class CNetworkFrontend : public IFrontend,
+                           public Observer
+
   {
   public:
     CNetworkFrontend(int fd);
@@ -77,6 +80,9 @@ namespace NETPLAY
     virtual void StopLocation(void);
     virtual bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy);
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
+
+    // implementation of Observer
+    virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   private:
     IConnection* const m_rpc;

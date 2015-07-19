@@ -64,6 +64,7 @@ set(NETPLAY_SOURCES
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp
     src/utils/AbortableTask.cpp
+    src/utils/Observer.cpp
     src/utils/PathUtils.cpp
     src/utils/SignalHandler.cpp
     src/utils/StringUtils.cpp
