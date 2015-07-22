@@ -91,16 +91,6 @@ void CLinuxSocket::Shutdown(void)
   }
 }
 
-void CLinuxSocket::LockWrite(void)
-{
-  m_MutexWrite.Lock();
-}
-
-void CLinuxSocket::UnlockWrite(void)
-{
-  m_MutexWrite.Unlock();
-}
-
 ssize_t CLinuxSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -1 */,
                                                            bool more_data /* = false */)
 {

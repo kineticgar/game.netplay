@@ -47,10 +47,6 @@ namespace NETPLAY
 
     void Shutdown(void);
 
-    void LockWrite(void);
-
-    void UnlockWrite(void);
-
     ssize_t Read(uint8_t* buffer, size_t size, int timeout_ms = -1);
 
     ssize_t Write(const uint8_t* buffer, size_t size, int timeout_ms = -1, bool more_data = false);
