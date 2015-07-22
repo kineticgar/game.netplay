@@ -36,7 +36,6 @@ namespace NETPLAY
     // implementation of IConnection
     virtual std::string Address(void) const { return m_strClientAddress; }
     virtual bool Open(void);
-    virtual bool IsOpen(void) { return IsRunning(); }
     virtual void Close(void);
 
   protected:

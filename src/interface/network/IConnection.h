@@ -34,7 +34,6 @@ namespace NETPLAY
     virtual std::string Address(void) const = 0;
 
     virtual bool Open(void) = 0;
-    virtual bool IsOpen(void) = 0;
     virtual void Close(void) = 0;
 
     virtual bool Send(RPC_METHOD method, const std::string& request) = 0;

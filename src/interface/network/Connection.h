@@ -36,16 +36,15 @@ namespace NETPLAY
     CConnection(void);
     virtual ~CConnection(void) { }
 
+    // partial implementation of IConnection
     virtual bool Open(void) { return CreateThread(); }
     virtual void Close(void) { StopThread(); }
     virtual bool Send(RPC_METHOD method, const std::string& request);
     virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response);
 
   protected:
+    // implementation of CThread
     virtual void* Process(void);
-
-    virtual void OnDisconnect(void) { }
-    virtual void OnReconnect(void) { }
 
     virtual bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs) = 0;
     virtual bool SendData(const std::string& request) = 0;

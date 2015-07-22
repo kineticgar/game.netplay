@@ -34,9 +34,6 @@ CConnection::CConnection(void) :
 
 bool CConnection::Send(RPC_METHOD method, const std::string& request)
 {
-  if (!IsOpen())
-    return false;
-
   if (!SendHeader(method, request.size()))
   {
     SignalConnectionLost();
@@ -197,8 +194,6 @@ void CConnection::SignalConnectionLost(void)
 
   m_bConnectionLost = true;
   Close();
-
-  OnDisconnect();
 }
 
 bool CConnection::FormatHeader(std::string& header, RPC_METHOD method, size_t length)

@@ -66,22 +66,14 @@ bool CClient::Open(void)
     return false;
   }
 
-  return true;
-}
-
-bool CClient::IsOpen(void)
-{
-  bool bReturn(false);
-
-  if (m_socket && m_socket->IsOpen())
-    bReturn = true;
-
-  return bReturn;
+  return CConnection::Open();
 }
 
 void CClient::Close(void)
 {
-  if (IsOpen())
+  CConnection::Close();
+
+  if (m_socket && m_socket->IsOpen())
   {
     isyslog("Closing connection to %s", Address().c_str());
     m_socket->Close();
