@@ -124,6 +124,7 @@ void* CLinuxServer::Process(void)
 
             IFrontend* frontend = *it2;
             frontend->UnregisterObserver(this);
+            m_callbacks->UnregisterFrontend(frontend);
             delete frontend;
             m_clients.erase(it2);
 
@@ -159,6 +160,7 @@ void CLinuxServer::NewClientConnected(int fd)
     frontend->RegisterObserver(this);
     CLockObject lock(m_clientMutex);
     m_clients.push_back(frontend);
+    m_callbacks->RegisterFrontend(frontend);
   }
 }
 
