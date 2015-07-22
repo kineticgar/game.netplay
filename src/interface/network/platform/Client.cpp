@@ -45,11 +45,12 @@ bool CClient::Open(void)
 {
   Close();
 
+  isyslog("Connecting to %s", Address().c_str());
+
   uint64_t iNow = GetTimeMs();
   uint64_t iTarget = iNow + CONNECTION_TIMEOUT_MS;
 
-  if (!m_socket)
-    m_socket = new CTcpConnection(m_strAddress.c_str(), m_port);
+  m_socket = new CTcpConnection(m_strAddress.c_str(), m_port);
 
   while (!m_socket->IsOpen() && iNow < iTarget)
   {
@@ -81,7 +82,10 @@ bool CClient::IsOpen(void)
 void CClient::Close(void)
 {
   if (IsOpen())
+  {
+    isyslog("Closing connection to %s", Address().c_str());
     m_socket->Close();
+  }
 
   if (m_socket)
   {
@@ -132,5 +136,5 @@ bool CClient::ReadData(std::string& buffer, size_t totalBytes, unsigned int time
 
 std::string CClient::Address(void) const
 {
-  return StringUtils::Format("%s:d", m_strAddress.c_str(), m_port);
+  return StringUtils::Format("%s:%d", m_strAddress.c_str(), m_port);
 }
