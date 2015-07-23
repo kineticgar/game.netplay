@@ -52,9 +52,8 @@ CFrontendCallbackLib::~CFrontendCallbackLib(void)
   delete   m_callbacks;
 }
 
-CB_AddOnLib* CFrontendCallbackLib::RegisterAddonLib(void* addonData)
+CB_AddOnLib* CFrontendCallbackLib::RegisterAddonLib(CFrontendCallbackLib* addon)
 {
-  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
   if (addon == NULL)
   {
     esyslog("%s - called with a null pointer", __FUNCTION__);
@@ -66,9 +65,8 @@ CB_AddOnLib* CFrontendCallbackLib::RegisterAddonLib(void* addonData)
   return addon->m_helperAddon->GetCallbacks();
 }
 
-void CFrontendCallbackLib::UnregisterAddonLib(void* addonData, CB_AddOnLib* cbTable)
+void CFrontendCallbackLib::UnregisterAddonLib(CFrontendCallbackLib* addon, CB_AddOnLib* cbTable)
 {
-  CFrontendCallbackLib* addon = (CFrontendCallbackLib*) addonData;
   if (addon == NULL)
   {
     esyslog("%s - called with a null pointer", __FUNCTION__);
@@ -79,9 +77,8 @@ void CFrontendCallbackLib::UnregisterAddonLib(void* addonData, CB_AddOnLib* cbTa
   addon->m_helperAddon = NULL;
 }
 
-CB_GameLib* CFrontendCallbackLib::RegisterGameLib(void* addonData)
+CB_GameLib* CFrontendCallbackLib::RegisterGameLib(CFrontendCallbackLib* addon)
 {
-  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
   if (addon == NULL)
   {
     esyslog("%s - called with a null pointer", __FUNCTION__);
@@ -92,9 +89,8 @@ CB_GameLib* CFrontendCallbackLib::RegisterGameLib(void* addonData)
   return addon->m_helperGame->GetCallbacks();
 }
 
-void CFrontendCallbackLib::UnregisterGameLib(void* addonData, CB_GameLib *cbTable)
+void CFrontendCallbackLib::UnregisterGameLib(CFrontendCallbackLib* addon, CB_GameLib *cbTable)
 {
-  CFrontendCallbackLib* addon = static_cast<CFrontendCallbackLib*>(addonData);
   if (addon == NULL)
   {
     esyslog("%s - called with a null pointer", __FUNCTION__);

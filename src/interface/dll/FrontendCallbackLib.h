@@ -27,15 +27,17 @@ struct CB_GameLib;
 
 namespace NETPLAY
 {
+  class CFrontendCallbackLib;
+
   struct AddonCB
   {
-    char* libBasePath;  ///> Never, never change this!!!
-    void* addonData;
+    char*                 libBasePath;  ///> Never, never change this!!!
+    CFrontendCallbackLib* addonData;
 
-    CB_AddOnLib* (*RegisterAddonLib)(void* addonData);
-    void         (*UnregisterAddonLib)(void* addonData, CB_AddOnLib* cbTable);
-    CB_GameLib*  (*RegisterGameLib)(void* addonData);
-    void         (*UnregisterGameLib)(void* addonData, CB_GameLib* cbTable);
+    CB_AddOnLib* (*RegisterAddonLib)(CFrontendCallbackLib* addon);
+    void         (*UnregisterAddonLib)(CFrontendCallbackLib* addon, CB_AddOnLib* cbTable);
+    CB_GameLib*  (*RegisterGameLib)(CFrontendCallbackLib* addon);
+    void         (*UnregisterGameLib)(CFrontendCallbackLib* addon, CB_GameLib* cbTable);
   };
 
   class CFrontendCallbacksAddon;
@@ -50,11 +52,11 @@ namespace NETPLAY
 
     AddonCB* GetCallbacks(void) { return m_callbacks; }
 
-    static CB_AddOnLib* RegisterAddonLib(void* addonData);
-    static void         UnregisterAddonLib(void* addonData, CB_AddOnLib* cbTable);
+    static CB_AddOnLib* RegisterAddonLib(CFrontendCallbackLib* addon);
+    static void         UnregisterAddonLib(CFrontendCallbackLib* addon, CB_AddOnLib* cbTable);
 
-    static CB_GameLib* RegisterGameLib(void* addonData);
-    static void        UnregisterGameLib(void* addonData, CB_GameLib* cbTable);
+    static CB_GameLib* RegisterGameLib(CFrontendCallbackLib* addon);
+    static void        UnregisterGameLib(CFrontendCallbackLib* addon, CB_GameLib* cbTable);
 
     CFrontendCallbacksAddon* GetHelperAddon(void) { return m_helperAddon; }
     CFrontendCallbacksGame*  GetHelperGame(void)  { return m_helperGame; }
