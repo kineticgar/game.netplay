@@ -51,6 +51,7 @@ CDLLGame::CDLLGame(IFrontend* callbacks, const GameClientProperties& properties,
   m_callbacks(callbacks),
   m_properties(properties),
   m_strLibBasePath(strLibBasePath),
+  m_bInitialized(false),
   m_dll(NULL),
   m_pHelper(NULL),
   m_ADDON_Create(NULL),
@@ -87,6 +88,9 @@ CDLLGame::CDLLGame(IFrontend* callbacks, const GameClientProperties& properties,
 
 ADDON_STATUS CDLLGame::Initialize(void)
 {
+  if (m_bInitialized)
+    return ADDON_STATUS_OK;
+
   std::string strDllPath;
 
   if (!m_properties.proxy_dll_paths.empty())
@@ -141,8 +145,13 @@ ADDON_STATUS CDLLGame::Initialize(void)
 
   m_pHelper = new CFrontendCallbackLib(m_callbacks, m_strLibBasePath);
 
-  GameClientProperties propsCopy(m_properties);
-  return m_ADDON_Create(m_pHelper->GetCallbacks(), &propsCopy);
+  GameClientProperties props(m_properties);
+  ADDON_STATUS status = m_ADDON_Create(m_pHelper->GetCallbacks(), &props);
+
+  if (status != ADDON_STATUS_UNKNOWN || status != ADDON_STATUS_PERMANENT_FAILURE)
+    m_bInitialized = true;
+
+  return status;
 }
 
 void CDLLGame::Deinitialize(void)
@@ -158,6 +167,8 @@ void CDLLGame::Deinitialize(void)
     dlclose(m_dll);
     m_dll = NULL;
   }
+
+  m_bInitialized = false;
 }
 
 void CDLLGame::Stop(void)

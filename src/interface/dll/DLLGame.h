@@ -52,6 +52,7 @@ namespace NETPLAY
 
     // implementation of IGame
     virtual ADDON_STATUS Initialize(void);
+    virtual bool IsInitialized(void) { return m_bInitialized; }
     virtual void Deinitialize(void);
     virtual void         Stop(void);
     virtual ADDON_STATUS GetStatus(void);
@@ -87,6 +88,7 @@ namespace NETPLAY
     IFrontend* const           m_callbacks;
     const GameClientProperties m_properties;
     const std::string          m_strLibBasePath;
+    bool                       m_bInitialized;
     void*                      m_dll;
     CFrontendCallbackLib*      m_pHelper;
     PLATFORM::CMutex           m_mutex;

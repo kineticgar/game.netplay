@@ -21,6 +21,7 @@
 #include "NetworkGame.h"
 #include "interface/network/ConnectionFactory.h"
 #include "interface/network/IConnection.h"
+#include "utils/Version.h"
 
 // clash between platform lib and protobuf
 #if defined(MutexLock)
@@ -33,56 +34,6 @@
 #include <cstring>
 
 using namespace NETPLAY;
-
-// --- Version -----------------------------------------------------------------
-
-namespace NETPLAY
-{
-  struct Version
-  {
-  public:
-    Version(const std::string& strVersion) :
-      version_major(0),
-      version_minor(0),
-      version_point(0)
-    {
-      version_major = 0; // TODO
-      version_minor = 0; // TODO
-      version_point = 0; // TODO
-    }
-
-    bool operator<(const Version& rhs) const
-    {
-      if (version_major < rhs.version_major) return true;
-      if (version_major > rhs.version_major) return false;
-
-      if (version_major < rhs.version_minor) return true;
-      if (version_minor > rhs.version_minor) return false;
-
-      if (version_point < rhs.version_point) return true;
-      if (version_point > rhs.version_point) return false;
-
-      return false;
-    }
-
-    bool operator==(const Version& rhs) const
-    {
-      return version_major == rhs.version_major &&
-             version_minor == rhs.version_minor &&
-             version_point == rhs.version_point;
-    }
-
-    bool operator<=(const Version& rhs) const { return  operator<(rhs) ||  operator==(rhs); }
-    bool operator>(const Version& rhs) const  { return !operator<(rhs) && !operator==(rhs); }
-    bool operator>=(const Version& rhs) const { return !operator<(rhs); }
-
-    unsigned int version_major;
-    unsigned int version_minor;
-    unsigned int version_point;
-  };
-}
-
-// --- CNetworkGame ------------------------------------------------------------
 
 CNetworkGame::CNetworkGame(IFrontend* frontend, const std::string& strAddress, unsigned int port) :
   m_rpc(CConnectionFactory::CreateGameConnection(frontend, strAddress, port))
@@ -108,6 +59,9 @@ ADDON_STATUS CNetworkGame::Initialize(void)
   request.set_game_version_major(gameApiVersion.version_major);
   request.set_game_version_minor(gameApiVersion.version_minor);
   request.set_game_version_point(gameApiVersion.version_point);
+  request.set_min_version_major(gameMinApiVersion.version_major);
+  request.set_min_version_minor(gameMinApiVersion.version_minor);
+  request.set_min_version_point(gameMinApiVersion.version_point);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {

@@ -22,6 +22,9 @@
 #include "IConnection.h"
 #include "interface/IGame.h"
 #include "log/Log.h"
+#include "utils/Version.h"
+
+#include "kodi/kodi_game_types.h"
 
 // clash between platform lib and protobuf
 #if defined(MutexLock)
@@ -56,15 +59,30 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
       addon::LoginRequest request;
       if (request.ParseFromString(strRequest))
       {
-        unsigned int versionMajor = request.game_version_major();
-        unsigned int versionMinor = request.game_version_minor();
-        unsigned int versionPoint = request.game_version_point();
+        ADDON_STATUS result(ADDON_STATUS_PERMANENT_FAILURE);
 
-        // TODO: Check version
-        //if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-        //  throw "Protocol versions do not match";
+        Version networkVersion(request.game_version_major(),
+                               request.game_version_minor(),
+                               request.game_version_point());
+        Version networkMinVersion(request.min_version_major(),
+                                  request.min_version_minor(),
+                                  request.min_version_point());
 
-        ADDON_STATUS result = m_game->Initialize();
+        static const Version myMinVersion(GAME_MIN_API_VERSION);
+        static const Version myVersion(GAME_API_VERSION);
+
+        const bool bCompatible = (myMinVersion <= networkVersion && networkMinVersion <= myVersion);
+        if (!bCompatible)
+        {
+          esyslog("Client login rejected: incompatible version: %s", networkVersion.ToString().c_str());
+        }
+        else
+        {
+          if (m_game->IsInitialized())
+            result = ADDON_STATUS_OK;
+          else
+            result = m_game->Initialize();
+        }
 
         addon::LoginResponse response;
         response.set_result(result);

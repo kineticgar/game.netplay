@@ -70,6 +70,7 @@ set(NETPLAY_SOURCES
     src/utils/PathUtils.cpp
     src/utils/SignalHandler.cpp
     src/utils/StringUtils.cpp
+    src/utils/Version.cpp
 )
 
 set(STANDALONE_SOURCES

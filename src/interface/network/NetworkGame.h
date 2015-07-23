@@ -37,6 +37,7 @@ namespace NETPLAY
 
     // implementation of IGame
     virtual ADDON_STATUS Initialize(void);
+    virtual bool         IsInitialized(void) { return false; } // Always attempt to initialize network games
     virtual void         Deinitialize(void);
     virtual void         Stop(void);
     virtual ADDON_STATUS GetStatus(void);
