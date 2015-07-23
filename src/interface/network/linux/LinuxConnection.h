@@ -30,10 +30,10 @@ namespace NETPLAY
   class CLinuxConnection : public CConnection
   {
   public:
-    CLinuxConnection(int fd);
+    CLinuxConnection(IGame* game, int fd);
     virtual ~CLinuxConnection(void);
 
-    // implementation of IConnection
+    // partial implementation of IConnection
     virtual std::string Address(void) const { return m_strClientAddress; }
     virtual bool Open(void);
     virtual void Close(void);

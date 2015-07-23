@@ -19,28 +19,46 @@
  */
 
 #include "Connection.h"
+#include "FrontendHandler.h"
+#include "GameHandler.h"
 #include "log/Log.h"
+
+#include <assert.h>
 
 using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define MAX_MESSAGE_LENGTH     (5 * 1024 * 1024) // 5 MB
-#define READ_TIMEOUT_MS        (5 * 1000) // 5 seconds
+#define RESPONSE_TIMEOUT_MS    (5 * 1000) // 5 seconds
+#define READ_TIMEOUT_MS        (10 * 1000) // 10 seconds
+#define REQUEST_MASK           0x80 // MSB
 
-CConnection::CConnection(void) :
-    m_bConnectionLost(false)
+CConnection::CConnection(IFrontend* frontend) :
+  m_requestHandler(new CFrontendHandler(frontend)),
+  m_bConnectionLost(false)
 {
 }
 
-bool CConnection::Send(RPC_METHOD method, const std::string& request)
+CConnection::CConnection(IGame* game) :
+  m_requestHandler(new CGameHandler(game)),
+  m_bConnectionLost(false)
 {
-  if (!SendHeader(method, request.size()))
+}
+
+CConnection::~CConnection(void)
+{
+  delete m_requestHandler;
+}
+
+bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest)
+{
+  if (!SendHeader(true, method, strRequest.size()))
   {
     SignalConnectionLost();
     return false;
   }
 
-  if (!SendData(request))
+  if (!SendData(strRequest))
   {
     SignalConnectionLost();
     return false;
@@ -49,12 +67,12 @@ bool CConnection::Send(RPC_METHOD method, const std::string& request)
   return true;
 }
 
-bool CConnection::Send(RPC_METHOD method, const std::string& request, std::string& response)
+bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse)
 {
-  if (!Send(method, request))
+  if (!SendRequest(method, strRequest))
     return false;
 
-  if (!GetResponse(method, response))
+  if (!GetResponse(method, strResponse))
   {
     SignalConnectionLost();
     return false;
@@ -63,10 +81,27 @@ bool CConnection::Send(RPC_METHOD method, const std::string& request, std::strin
   return true;
 }
 
-bool CConnection::SendHeader(RPC_METHOD method, size_t msgLength)
+bool CConnection::SendResponse(RPC_METHOD method, const std::string& strResponse)
+{
+  if (!SendHeader(false, method, strResponse.size()))
+  {
+    SignalConnectionLost();
+    return false;
+  }
+
+  if (!SendData(strResponse))
+  {
+    SignalConnectionLost();
+    return false;
+  }
+
+  return true;
+}
+
+bool CConnection::SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength)
 {
   std::string header;
-  if (!FormatHeader(header, method, msgLength))
+  if (!FormatHeader(header, bRequest, method, msgLength))
     return false;
 
   if (!SendData(header))
@@ -79,23 +114,41 @@ void* CConnection::Process(void)
 {
   while (!IsStopped())
   {
+    bool bRequest;
     RPC_METHOD msgMethod;
     size_t msgLength;
 
-    if (!ReadHeader(msgMethod, msgLength, 10000))
+    if (!ReadHeader(bRequest, msgMethod, msgLength))
       break;
 
-    if (!ReadMessage(msgMethod, msgLength, 10000))
-      break;
+    if (bRequest)
+    {
+      if (!ReadRequest(msgMethod, msgLength))
+        break;
+    }
+    else
+    {
+      if (!ReadResponse(msgMethod, msgLength))
+        break;
+    }
   }
 
   return NULL;
 }
 
-bool CConnection::ReadMessage(RPC_METHOD method, size_t length, unsigned int timeoutMs)
+bool CConnection::ReadRequest(RPC_METHOD method, size_t length)
+{
+  std::string strRequest;
+  if (!ReadData(strRequest, length, READ_TIMEOUT_MS))
+    return false;
+
+  return m_requestHandler->HandleRequest(method, strRequest, this);
+}
+
+bool CConnection::ReadResponse(RPC_METHOD method, size_t length)
 {
 
-  bool bFound = false;
+  bool bInvocationFound = false;
   Invocation invocation;
 
   {
@@ -105,7 +158,7 @@ bool CConnection::ReadMessage(RPC_METHOD method, size_t length, unsigned int tim
     {
       if (it->method == method)
       {
-        bFound = true;
+        bInvocationFound = true;
         invocation = *it;
         m_invocations.erase(it);
         break;
@@ -113,11 +166,11 @@ bool CConnection::ReadMessage(RPC_METHOD method, size_t length, unsigned int tim
     }
   }
 
-  if (bFound)
+  if (bInvocationFound)
   {
     invocation.result->reserve(length);
 
-    if (!ReadData(*invocation.result, length, timeoutMs))
+    if (!ReadData(*invocation.result, length, READ_TIMEOUT_MS))
       return false;
 
     invocation.finished_event->Signal();
@@ -125,7 +178,8 @@ bool CConnection::ReadMessage(RPC_METHOD method, size_t length, unsigned int tim
   else
   {
     std::string dummy;
-    ReadData(dummy, length, timeoutMs);
+    if (!ReadData(dummy, length, READ_TIMEOUT_MS))
+      return false;
   }
 
   return true;
@@ -145,7 +199,7 @@ bool CConnection::GetResponse(RPC_METHOD   method,
     m_invocations.push_back(invocation);
   }
 
-  if (invocation.finished_event->Wait(READ_TIMEOUT_MS))
+  if (invocation.finished_event->Wait(RESPONSE_TIMEOUT_MS))
   {
     // Event was signaled and invocation was removed from array
     response = *invocation.result;
@@ -173,16 +227,16 @@ bool CConnection::GetResponse(RPC_METHOD   method,
   return bSuccess;
 }
 
-bool CConnection::ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs)
+bool CConnection::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
 {
   std::string header;
   header.resize(5);
 
   std::string message;
-  if (!ReadData(message, 5, timeoutMs))
+  if (!ReadData(message, 5, READ_TIMEOUT_MS))
     return false;
 
-  return ParseHeader(message, method, length);
+  return ParseHeader(message, bRequest, method, length);
 }
 
 void CConnection::SignalConnectionLost(void)
@@ -193,14 +247,18 @@ void CConnection::SignalConnectionLost(void)
   esyslog("%s - connection lost !!!", __FUNCTION__);
 
   m_bConnectionLost = true;
+
+  SetChanged();
+  NotifyObservers(ObservableMessageConnectionLost);
+
   Close();
 }
 
-bool CConnection::FormatHeader(std::string& header, RPC_METHOD method, size_t length)
+bool CConnection::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length)
 {
   header.resize(5);
 
-  header[0] = static_cast<uint16_t>(method) >> 8;
+  header[0] = (static_cast<uint16_t>(method) >> 8) | (bRequest ? REQUEST_MASK : 0);
   header[1] = static_cast<uint16_t>(method) & 0xff;
   header[2] = length >> 16;
   header[3] = (length >> 8) & 0xff;
@@ -209,10 +267,12 @@ bool CConnection::FormatHeader(std::string& header, RPC_METHOD method, size_t le
   return true;
 }
 
-bool CConnection::ParseHeader(const std::string& header, RPC_METHOD& method, size_t& length)
+bool CConnection::ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length)
 {
   if (header.size() != 5)
     return false;
+
+  bRequest = (header[0] & REQUEST_MASK) ? true : false;
 
   method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
   if (static_cast<int>(method) >= static_cast<int>(RPC_METHOD::RPC_METHOD_COUNT))
@@ -250,43 +310,3 @@ void CConnection::FreeInvocation(Invocation& invocation) const
   delete invocation.result;
   invocation.result = NULL;
 }
-
-
-/* TODO
-try
-{
-  // TODO
-  uint32_t    version       = vresp->extract_U32();
-  uint32_t    vdrTime       = vresp->extract_U32();
-  int32_t     vdrTimeOffset = vresp->extract_S32();
-  std::string ServerName    = vresp->extract_String();
-  std::string ServerVersion = vresp->extract_String();
-
-  std::string strVersion;
-  uint32_t    vdrTime;
-  int32_t     vdrTimeOffset;
-  std::string ServerName;
-  std::string ServerVersion;
-
-  m_server    = ServerName;
-  m_version   = ServerVersion;
-  m_protocol  = protocol;
-
-  if (m_protocol < VNSI_MIN_PROTOCOLVERSION)
-    throw "Protocol versions do not match";
-
-  isyslog("Logged in at '%lu + %i' to '%s' Version: '%s' with protocol version '%d'", vdrTime, vdrTimeOffset, ServerName, ServerVersion, protocol);
-  throw "Not implemented";
-}
-catch (const char* strError)
-{
-  esyslog("%s - %s", __FUNCTION__, strError);
-  if (m_socket)
-  {
-    m_socket->Close();
-    delete m_socket;
-    m_socket = NULL;
-  }
-  return false;
-}
-*/

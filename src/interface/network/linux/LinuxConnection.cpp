@@ -67,7 +67,8 @@ namespace NETPLAY
 
 // --- CLinuxConnection --------------------------------------------------------
 
-CLinuxConnection::CLinuxConnection(int fd) :
+CLinuxConnection::CLinuxConnection(IGame* game, int fd) :
+  CConnection(game),
   m_fd(fd),
   m_socket(new CLinuxSocket)
 {

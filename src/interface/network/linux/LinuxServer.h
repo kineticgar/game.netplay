@@ -19,8 +19,8 @@
  */
 #pragma once
 
-#include "utils/Observer.h"
 #include "interface/network/IServer.h"
+#include "utils/Observer.h"
 
 #include "platform/threads/mutex.h"
 #include "platform/threads/threads.h"

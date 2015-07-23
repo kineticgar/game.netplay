@@ -24,13 +24,15 @@
 namespace NETPLAY
 {
   class IConnection;
+  class IFrontend;
+  class IGame;
 
   class CConnectionFactory
   {
   public:
     virtual ~CConnectionFactory(void) { }
 
-    static IConnection* CreateConnection(int fd);
-    static IConnection* CreateConnection(const std::string& strAddress, unsigned int port);
+    static IConnection* CreateFrontendConnection(IGame* gameCallback, int fd);
+    static IConnection* CreateGameConnection(IFrontend* frontendCallback, const std::string& strAddress, unsigned int port);
   };
 }

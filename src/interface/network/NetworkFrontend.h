@@ -25,13 +25,14 @@
 namespace NETPLAY
 {
   class IConnection;
+  class IGame;
 
   class CNetworkFrontend : public IFrontend,
                            public Observer
 
   {
   public:
-    CNetworkFrontend(int fd);
+    CNetworkFrontend(IGame* game, int fd);
     virtual ~CNetworkFrontend(void);
 
     virtual bool Initialize(void);

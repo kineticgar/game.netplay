@@ -27,11 +27,12 @@
 namespace NETPLAY
 {
   class IConnection;
+  class IFrontend;
 
   class CNetworkGame : public IGame
   {
   public:
-    CNetworkGame(const std::string& strAddress, unsigned int port);
+    CNetworkGame(IFrontend* frontend, const std::string& strAddress, unsigned int port);
     virtual ~CNetworkGame(void);
 
     // implementation of IGame

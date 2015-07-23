@@ -36,7 +36,7 @@ namespace NETPLAY
   class CClient : public CConnection
   {
   public:
-    CClient(const std::string& strAddress, unsigned int port);
+    CClient(IFrontend* frontend, const std::string& strAddress, unsigned int port);
     virtual ~CClient(void);
 
     // implementation of IConnection

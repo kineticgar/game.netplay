@@ -29,7 +29,8 @@ using namespace PLATFORM;
 
 #define CONNECTION_TIMEOUT_MS  2000
 
-CClient::CClient(const std::string& strAddress, unsigned int port) :
+CClient::CClient(IFrontend* frontend, const std::string& strAddress, unsigned int port) :
+  CConnection(frontend),
   m_strAddress(strAddress),
   m_port(port),
   m_socket(NULL)

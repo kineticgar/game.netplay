@@ -53,6 +53,8 @@ set(NETPLAY_SOURCES
     src/interface/FrontendManager.cpp
     src/interface/network/Connection.cpp
     src/interface/network/ConnectionFactory.cpp
+    src/interface/network/FrontendHandler.cpp
+    src/interface/network/GameHandler.cpp
     src/interface/network/linux/LinuxConnection.cpp
     src/interface/network/linux/LinuxServer.cpp
     src/interface/network/linux/LinuxSocket.cpp

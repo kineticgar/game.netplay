@@ -29,18 +29,24 @@
 
 namespace NETPLAY
 {
+  class IFrontend;
+  class IGame;
+  class IRequestHandler;
+
   class CConnection : public IConnection,
                       protected PLATFORM::CThread
   {
   public:
-    CConnection(void);
-    virtual ~CConnection(void) { }
+    CConnection(IFrontend* frontend);
+    CConnection(IGame* game);
+    virtual ~CConnection(void);
 
     // partial implementation of IConnection
     virtual bool Open(void) { return CreateThread(); }
     virtual void Close(void) { StopThread(); }
-    virtual bool Send(RPC_METHOD method, const std::string& request);
-    virtual bool Send(RPC_METHOD method, const std::string& request, std::string& response);
+    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest);
+    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse);
+    virtual bool SendResponse(RPC_METHOD method, const std::string& strResponse);
 
   protected:
     // implementation of CThread
@@ -65,19 +71,22 @@ namespace NETPLAY
                      unsigned int iInitialTimeoutMs    = 10000,
                      unsigned int iDatapacketTimeoutMs = 10000);
 
-    bool SendHeader(RPC_METHOD method, size_t msgLength);
+    bool SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength);
 
-    bool ReadHeader(RPC_METHOD& method, size_t& length, unsigned int timeoutMs);
-    bool ReadMessage(RPC_METHOD method, size_t length, unsigned int timeoutMs);
+    bool ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length);
+    bool ReadRequest(RPC_METHOD method, size_t length);
+    bool ReadResponse(RPC_METHOD method, size_t length);
 
-    bool FormatHeader(std::string& header, RPC_METHOD method, size_t length);
-    bool ParseHeader(const std::string& header, RPC_METHOD& method, size_t& length);
+    bool FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length);
+    bool ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length);
 
     Invocation Invoke(RPC_METHOD method);
     void FreeInvocation(Invocation& invocation) const;
 
+    IRequestHandler* const  m_requestHandler;
     std::vector<Invocation> m_invocations;
     PLATFORM::CMutex        m_invocationMutex;
     bool                    m_bConnectionLost;
+    // TODO: write mutex
   };
 }

@@ -36,8 +36,8 @@
 
 using namespace NETPLAY;
 
-CNetworkFrontend::CNetworkFrontend(int fd) :
-  m_rpc(CConnectionFactory::CreateConnection(fd))
+CNetworkFrontend::CNetworkFrontend(IGame* game, int fd) :
+  m_rpc(CConnectionFactory::CreateFrontendConnection(game, fd))
 {
   assert(m_rpc);
   m_rpc->RegisterObserver(this);
@@ -69,7 +69,7 @@ void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const char* msg)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::Log, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::Log, strRequest, strResponse);
   }
 }
 
@@ -87,7 +87,7 @@ void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const ch
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::QueueNotification, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::QueueNotification, strRequest, strResponse);
   }
 }
 
@@ -99,7 +99,7 @@ bool CNetworkFrontend::WakeOnLan(const char* mac)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::WakeOnLan, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::WakeOnLan, strRequest, strResponse))
     {
       addon::WakeOnLanResponse response;
       if (response.ParseFromString(strResponse))
@@ -118,7 +118,7 @@ std::string CNetworkFrontend::UnknownToUTF8(const char* str)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
     {
       addon::UnknownToUTF8Response response;
       if (response.ParseFromString(strResponse))
@@ -139,7 +139,7 @@ std::string CNetworkFrontend::GetLocalizedString(int dwCode, const char* strDefa
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
     {
       addon::GetLocalizedStringResponse response;
       if (response.ParseFromString(strResponse))
@@ -157,7 +157,7 @@ std::string CNetworkFrontend::GetDVDMenuLanguage()
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
     {
       addon::GetDVDMenuLanguageResponse response;
       if (response.ParseFromString(strResponse))
@@ -270,7 +270,7 @@ void CNetworkFrontend::CloseGame(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::CloseGame, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::CloseGame, strRequest, strResponse);
   }
 }
 
@@ -305,7 +305,7 @@ void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsig
     if (request.SerializeToString(&strRequest))
     {
       std::string strResponse;
-      m_rpc->Send(RPC_METHOD::VideoFrame, strRequest, strResponse);
+      m_rpc->SendRequest(RPC_METHOD::VideoFrame, strRequest, strResponse);
     }
   }
 }
@@ -336,7 +336,7 @@ void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAM
     if (request.SerializeToString(&strRequest))
     {
       std::string strResponse;
-      m_rpc->Send(RPC_METHOD::AudioFrames, strRequest, strResponse);
+      m_rpc->SendRequest(RPC_METHOD::AudioFrames, strRequest, strResponse);
     }
   }
 }
@@ -363,7 +363,7 @@ bool CNetworkFrontend::OpenPort(unsigned int port)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::OpenPort, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::OpenPort, strRequest, strResponse))
     {
       game::OpenPortResponse response;
       if (response.ParseFromString(strResponse))
@@ -382,7 +382,7 @@ void CNetworkFrontend::ClosePort(unsigned int port)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::ClosePort, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::ClosePort, strRequest, strResponse);
   }
 }
 
@@ -396,7 +396,7 @@ void CNetworkFrontend::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effe
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::RumbleSetState, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::RumbleSetState, strRequest, strResponse);
   }
 }
 
@@ -422,7 +422,7 @@ bool CNetworkFrontend::StartLocation(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::StartLocation, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::StartLocation, strRequest, strResponse))
     {
       game::StartLocationResponse response;
       if (response.ParseFromString(strResponse))
@@ -440,7 +440,7 @@ void CNetworkFrontend::StopLocation(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::StopLocation, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::StopLocation, strRequest, strResponse);
   }
 }
 
@@ -451,7 +451,7 @@ bool CNetworkFrontend::GetLocation(double* lat, double* lon, double* horizAccura
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetLocation, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetLocation, strRequest, strResponse))
     {
       game::GetLocationResponse response;
       if (response.ParseFromString(strResponse))
@@ -477,7 +477,7 @@ void CNetworkFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::SetLocationInterval, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::SetLocationInterval, strRequest, strResponse);
   }
 }
 

@@ -17,19 +17,23 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
-#include "ConnectionFactory.h"
-#include "interface/network/linux/LinuxConnection.h"
-#include "interface/network/platform/Client.h"
+#include "IRequestHandler.h"
 
-using namespace NETPLAY;
-
-IConnection* CConnectionFactory::CreateFrontendConnection(IGame* gameCallback, int fd)
+namespace NETPLAY
 {
-  return new CLinuxConnection(gameCallback, fd);
-}
+  class IGame;
 
-IConnection* CConnectionFactory::CreateGameConnection(IFrontend* frontendCallback, const std::string& strAddress, unsigned int port)
-{
-  return new CClient(frontendCallback, strAddress, port);
+  class CGameHandler : public IRequestHandler
+  {
+  public:
+    CGameHandler(IGame* gameCallback);
+    virtual ~CGameHandler(void) { }
+
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, IConnection* connection);
+
+  private:
+    IGame* const m_game;
+  };
 }

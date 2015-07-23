@@ -84,8 +84,8 @@ namespace NETPLAY
 
 // --- CNetworkGame ------------------------------------------------------------
 
-CNetworkGame::CNetworkGame(const std::string& strAddress, unsigned int port) :
-  m_rpc(CConnectionFactory::CreateConnection(strAddress, port))
+CNetworkGame::CNetworkGame(IFrontend* frontend, const std::string& strAddress, unsigned int port) :
+  m_rpc(CConnectionFactory::CreateGameConnection(frontend, strAddress, port))
 {
 }
 
@@ -112,7 +112,7 @@ ADDON_STATUS CNetworkGame::Initialize(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::Login, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::Login, strRequest, strResponse))
     {
       addon::LoginResponse response;
       if (response.ParseFromString(strResponse))
@@ -130,7 +130,7 @@ void CNetworkGame::Deinitialize(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::Logout, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::Logout, strRequest, strResponse);
   }
 
   m_rpc->Close();
@@ -148,7 +148,7 @@ ADDON_STATUS CNetworkGame::GetStatus(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetStatus, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetStatus, strRequest, strResponse))
     {
       addon::GetStatusResponse response;
       if (response.ParseFromString(strResponse))
@@ -171,7 +171,7 @@ unsigned int CNetworkGame::GetSettings(ADDON_StructSetting*** sSet)
 
 ADDON_STATUS CNetworkGame::SetSetting(const std::string& settingName, const void* settingValue)
 {
-  return ADDON_STATUS_UNKNOWN;
+  return ADDON_STATUS_UNKNOWN; // TODO
 }
 
 void CNetworkGame::FreeSettings(void)
@@ -188,7 +188,7 @@ void CNetworkGame::Announce(const std::string& flag, const std::string& sender, 
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::Announce, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::Announce, strRequest, strResponse);
   }
 }
 
@@ -199,7 +199,7 @@ std::string CNetworkGame::GetGameAPIVersion(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetGameAPIVersion, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetGameAPIVersion, strRequest, strResponse))
     {
       game::GetGameAPIVersionResponse response;
       if (response.ParseFromString(strResponse))
@@ -217,7 +217,7 @@ std::string CNetworkGame::GetMininumGameAPIVersion(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetMininumGameAPIVersion, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetMininumGameAPIVersion, strRequest, strResponse))
     {
       game::GetMininumGameAPIVersionResponse response;
       if (response.ParseFromString(strResponse))
@@ -235,7 +235,7 @@ GAME_ERROR CNetworkGame::LoadGame(const std::string& url)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::LoadGame, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::LoadGame, strRequest, strResponse))
     {
       game::LoadGameResponse response;
       if (response.ParseFromString(strResponse))
@@ -256,7 +256,7 @@ GAME_ERROR CNetworkGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** ur
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::LoadGameSpecial, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::LoadGameSpecial, strRequest, strResponse))
     {
       game::LoadGameSpecialResponse response;
       if (response.ParseFromString(strResponse))
@@ -274,7 +274,7 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::LoadStandalone, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::LoadStandalone, strRequest, strResponse))
     {
       game::LoadStandaloneResponse response;
       if (response.ParseFromString(strResponse))
@@ -292,7 +292,7 @@ GAME_ERROR CNetworkGame::UnloadGame(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::UnloadGame, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::UnloadGame, strRequest, strResponse))
     {
       game::UnloadGameResponse response;
       if (response.ParseFromString(strResponse))
@@ -312,7 +312,7 @@ GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetGameInfo, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetGameInfo, strRequest, strResponse))
     {
       game::GetGameInfoResponse response;
       if (response.ParseFromString(strResponse))
@@ -341,7 +341,7 @@ GAME_REGION CNetworkGame::GetRegion(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetRegion, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetRegion, strRequest, strResponse))
     {
       game::GetRegionResponse response;
       if (response.ParseFromString(strResponse))
@@ -359,7 +359,7 @@ void CNetworkGame::FrameEvent(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::FrameEvent, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::FrameEvent, strRequest, strResponse);
   }
 }
 
@@ -370,7 +370,7 @@ GAME_ERROR CNetworkGame::Reset(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::Reset, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::Reset, strRequest, strResponse))
     {
       game::ResetResponse response;
       if (response.ParseFromString(strResponse))
@@ -408,7 +408,7 @@ void CNetworkGame::UpdatePort(unsigned int port, bool connected, const game_cont
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    m_rpc->Send(RPC_METHOD::UpdatePort, strRequest, strResponse);
+    m_rpc->SendRequest(RPC_METHOD::UpdatePort, strRequest, strResponse);
   }
 }
 
@@ -458,7 +458,7 @@ bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::InputEvent, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::InputEvent, strRequest, strResponse))
     {
       game::InputEventResponse response;
       if (response.ParseFromString(strResponse))
@@ -476,7 +476,7 @@ size_t CNetworkGame::SerializeSize(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::SerializeSize, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::SerializeSize, strRequest, strResponse))
     {
       game::SerializeSizeResponse response;
       if (response.ParseFromString(strResponse))
@@ -496,7 +496,7 @@ GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::Serialize, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::Serialize, strRequest, strResponse))
     {
       game::SerializeResponse response;
       if (response.ParseFromString(strResponse))
@@ -523,7 +523,7 @@ GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::Deserialize, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::Deserialize, strRequest, strResponse))
     {
       game::DeserializeResponse response;
       if (response.ParseFromString(strResponse))
@@ -541,7 +541,7 @@ GAME_ERROR CNetworkGame::CheatReset(void)
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::CheatReset, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::CheatReset, strRequest, strResponse))
     {
       game::CheatResetResponse response;
       if (response.ParseFromString(strResponse))
@@ -562,7 +562,7 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::GetMemory, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::GetMemory, strRequest, strResponse))
     {
       game::GetMemoryResponse response;
       if (response.ParseFromString(strResponse))
@@ -593,7 +593,7 @@ GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const std::s
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->Send(RPC_METHOD::SetCheat, strRequest, strResponse))
+    if (m_rpc->SendRequest(RPC_METHOD::SetCheat, strRequest, strResponse))
     {
       game::SetCheatResponse response;
       if (response.ParseFromString(strResponse))

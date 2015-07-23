@@ -154,7 +154,7 @@ void* CLinuxServer::Process(void)
 
 void CLinuxServer::NewClientConnected(int fd)
 {
-  IFrontend* frontend = new CNetworkFrontend(fd);
+  IFrontend* frontend = new CNetworkFrontend(m_game, fd);
   if (frontend->Initialize())
   {
     frontend->RegisterObserver(this);

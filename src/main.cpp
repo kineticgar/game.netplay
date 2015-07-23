@@ -80,7 +80,7 @@ namespace NETPLAY
       }
       case OPTION_REMOTE_GAME:
       {
-        game = new CNetworkGame(argv[2], StringUtils::IntVal(argv[3]));
+        game = new CNetworkGame(callbacks, argv[2], StringUtils::IntVal(argv[3]));
         break;
       }
       case OPTION_DISCOVER:

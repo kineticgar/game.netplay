@@ -57,7 +57,7 @@ namespace NETPLAY
     properties.proxy_dll_paths.erase(properties.proxy_dll_paths.begin());
   }
 
-  IGame* GetGame(const GameClientProperties& properties)
+  IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks)
   {
     IGame* game = NULL;
 
@@ -78,7 +78,7 @@ namespace NETPLAY
         GameClientProperties copy(properties);
         PopProxyDLL(copy);
 
-        GAME = new CDLLGame(CALLBACKS, copy, PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strNetplayDllPath)));
+        GAME = new CDLLGame(callbacks, copy, PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strNetplayDllPath)));
       }
       else
       {
@@ -87,7 +87,7 @@ namespace NETPLAY
 
         if (!address.empty())
         {
-          GAME = new CNetworkGame(address, port);
+          GAME = new CNetworkGame(callbacks, address, port);
         }
         else
         {
@@ -120,9 +120,13 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
     CALLBACKS = new CFrontendManager;
+    if (!CALLBACKS->Initialize())
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+
     CALLBACKS->RegisterFrontend(FRONTEND);
 
-    GAME = GetGame(CDLLGame::TranslateProperties(*static_cast<game_client_properties*>(props)));
+    const game_client_properties& gameProps = *static_cast<game_client_properties*>(props);
+    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS);
     if (!GAME)
       throw ADDON_STATUS_UNKNOWN;
 
@@ -158,6 +162,7 @@ void ADDON_Destroy()
     SERVER->Deinitialize();
     GAME->Deinitialize();
     CALLBACKS->UnregisterFrontend(FRONTEND);
+    CALLBACKS->Deinitialize();
     FRONTEND->Deinitialize();
   }
 

@@ -316,7 +316,7 @@ message GetLocationRequest {
 }
 
 message GetLocationResponse {
-  required uint32 result = 1;
+  required bool result = 1;
   required double lat = 2;
   required double lon = 3;
   required double horizAccuracy = 4;
