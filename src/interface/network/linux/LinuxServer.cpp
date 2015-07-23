@@ -35,7 +35,7 @@
 using namespace NETPLAY;
 using namespace PLATFORM;
 
-#define LISTEN_PORT   34890
+#define LISTEN_PORT   35890
 
 CLinuxServer::CLinuxServer(IGame* game, CFrontendManager* callbacks) :
   m_game(game),
