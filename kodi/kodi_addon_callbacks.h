@@ -19,6 +19,14 @@
  */
 #pragma once
 
+/*!
+ * \brief Callback table for Kodi's add-on callbacks
+ *
+ * This struct is imported from xbmc/addons/AddonCallbacks.h. The struct should
+ * be relocated into kodi_addon_callbacks.h so that it may be available to
+ * binary add-ons, similar to kodi_game_callbacks.h from the Game API.
+ */
+
 #include "kodi/libXBMC_addon.h"
 
 #include <stddef.h>
