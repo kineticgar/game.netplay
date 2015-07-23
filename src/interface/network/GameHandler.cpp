@@ -24,6 +24,7 @@
 #include "log/Log.h"
 #include "utils/Version.h"
 
+#include "kodi/kodi_addon_utils.hpp"
 #include "kodi/kodi_game_types.h"
 
 // clash between platform lib and protobuf
@@ -79,9 +80,15 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         else
         {
           if (m_game->IsInitialized())
+          {
             result = ADDON_STATUS_OK;
+            dsyslog("Client logged in and game is initialized");
+          }
           else
+          {
             result = m_game->Initialize();
+            dsyslog("Client logging in... result: %s", AddonUtils::TranslateAddonStatus(result));
+          }
         }
 
         addon::LoginResponse response;

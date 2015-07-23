@@ -30,7 +30,8 @@ using namespace PLATFORM;
 
 #define MAX_MESSAGE_LENGTH     (5 * 1024 * 1024) // 5 MB
 #define RESPONSE_TIMEOUT_MS    (5 * 1000) // 5 seconds
-#define READ_TIMEOUT_MS        (10 * 1000) // 10 seconds
+#define READ_TIMEOUT_MS        1
+#define READ_DELAY_MS          16
 #define REQUEST_MASK           0x80 // MSB
 
 CConnection::CConnection(IFrontend* frontend) :
@@ -64,6 +65,8 @@ bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest)
     return false;
   }
 
+  dsyslog("Sent request: method=%d, length=%u", method, strRequest.length());
+
   return true;
 }
 
@@ -74,6 +77,7 @@ bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest, 
 
   if (!GetResponse(method, strResponse))
   {
+    esyslog("Server failed to respond, method=%d", method);
     SignalConnectionLost();
     return false;
   }
@@ -114,12 +118,24 @@ void* CConnection::Process(void)
 {
   while (!IsStopped())
   {
+    bool bInvoking;
+
+    {
+      CLockObject lock(m_invocationMutex);
+      bInvoking = !m_invocations.empty();
+    }
+
+    if (!bInvoking)
+      Sleep(READ_DELAY_MS);
+
     bool bRequest;
     RPC_METHOD msgMethod;
     size_t msgLength;
 
     if (!ReadHeader(bRequest, msgMethod, msgLength))
-      break;
+      continue;
+
+    dsyslog("Received %s: method=%d, length=%u", bRequest ? "request" : "response", msgMethod, msgLength);
 
     if (bRequest)
     {
@@ -272,16 +288,18 @@ bool CConnection::ParseHeader(const std::string& header, bool& bRequest, RPC_MET
   if (header.size() != 5)
     return false;
 
-  bRequest = (header[0] & REQUEST_MASK) ? true : false;
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(header.c_str());
 
-  method = static_cast<RPC_METHOD>(header[0] << 8  | header[1]);
+  bRequest = (data[0] & REQUEST_MASK) ? true : false;
+
+  method = static_cast<RPC_METHOD>(((data[0] & ~REQUEST_MASK) << 8)  | data[1]);
   if (static_cast<int>(method) >= static_cast<int>(RPC_METHOD::RPC_METHOD_COUNT))
   {
     esyslog("Terminating connection - invalid method: %d", method);
     return false;
   }
 
-  length = header[2] << 16 | header[3] << 8 | header[4];
+  length = data[2] << 16 | data[3] << 8 | data[4];
   if (length > MAX_MESSAGE_LENGTH)
   {
     esyslog("Terminating connection - invalid message length: %d", length);

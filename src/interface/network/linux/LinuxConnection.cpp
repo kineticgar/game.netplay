@@ -126,6 +126,8 @@ void CLinuxConnection::Close(void)
   CConnection::Close();
 
   m_socket->Close();
+
+  isyslog("Client %s disconnected", m_strClientAddress.c_str());
 }
 
 bool CLinuxConnection::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)

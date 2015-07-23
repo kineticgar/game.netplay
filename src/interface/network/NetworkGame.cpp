@@ -21,7 +21,10 @@
 #include "NetworkGame.h"
 #include "interface/network/ConnectionFactory.h"
 #include "interface/network/IConnection.h"
+#include "log/Log.h"
 #include "utils/Version.h"
+
+#include "kodi/kodi_addon_utils.hpp"
 
 // clash between platform lib and protobuf
 #if defined(MutexLock)
@@ -52,6 +55,8 @@ ADDON_STATUS CNetworkGame::Initialize(void)
   if (!m_rpc->Open())
     return ADDON_STATUS_UNKNOWN;
 
+  dsyslog("Connected to network game. Logging in...");
+
   static const Version gameApiVersion(GAME_API_VERSION);
   static const Version gameMinApiVersion(GAME_MIN_API_VERSION);
 
@@ -70,7 +75,11 @@ ADDON_STATUS CNetworkGame::Initialize(void)
     {
       addon::LoginResponse response;
       if (response.ParseFromString(strResponse))
-        return static_cast<ADDON_STATUS>(response.result());
+      {
+        ADDON_STATUS status = static_cast<ADDON_STATUS>(response.result());
+        isyslog("Logging into network game... result: %s", AddonUtils::TranslateAddonStatus(status));
+        return status;
+      }
     }
   }
 
