@@ -22,6 +22,8 @@
 #include <stdint.h>
 #include <time.h>
 
+struct stat64;
+
 namespace NETPLAY
 {
   struct STAT_STRUCTURE
@@ -40,5 +42,11 @@ namespace NETPLAY
     bool        isDirectory;      // The stat url is a directory
     bool        isSymLink;        // The stat url is a symbolic link
     bool        isHidden;         // The file is hidden
+  };
+
+  class StatTranslator
+  {
+  public:
+    static void TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64& buffer);
   };
 }

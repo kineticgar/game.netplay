@@ -25,7 +25,6 @@
 
 #include <assert.h>
 #include <cstdio>
-#include <sys/stat.h>
 
 using namespace NETPLAY;
 
@@ -46,36 +45,6 @@ IFrontend* CFrontendCallbacks::GetFrontend(void* addonData)
     return NULL;
 
   return callbackLib->GetHelperAddon()->GetFrontend();
-}
-
-void CFrontendCallbacks::TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64* buffer)
-{
-  if (buffer)
-  {
-    buffer->st_dev          = output.deviceId;
-    buffer->st_size         = output.size;
-  #if defined(_WIN32)
-    buffer->st_atime        = output.accessTime;
-    buffer->st_mtime        = output.modificationTime;
-    buffer->st_ctime        = output.statusTime;
-  #elif defined(__APPLE__)
-    buffer->st_atimespec    = output.accessTime;
-    buffer->st_mtimespec    = output.modificationTime;
-    buffer->st_ctimespec    = output.statusTime;
-  #else
-    buffer->st_atim         = output.accessTime;
-    buffer->st_mtim         = output.modificationTime;
-    buffer->st_ctim         = output.statusTime;
-  #endif
-    buffer->st_mode = 0;
-    if (output.isDirectory)
-      buffer->st_mode       |= __S_IFDIR;
-    if (output.isSymLink)
-      buffer->st_mode       |= __S_IFLNK;
-    // TODO
-    //if (output.isHidden)
-    //  buffer->st_mode |= __S_IFDIR;
-  }
 }
 
 char* CFrontendCallbacks::DuplicateString(const std::string& str)
@@ -372,7 +341,7 @@ int CFrontendCallbacksAddon::StatFile(void* addonData, const char* strFileName, 
   STAT_STRUCTURE statStruct;
   if (frontend->StatFile(strFileName, statStruct))
   {
-    TranslateToStruct64(statStruct, buffer);
+    StatTranslator::TranslateToStruct64(statStruct, *buffer);
     return 0;
   }
 
