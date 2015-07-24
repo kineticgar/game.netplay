@@ -20,6 +20,7 @@
 
 #include "StatStructure.h"
 
+#include <fcntl.h>
 #include <sys/stat.h>
 
 using namespace NETPLAY;
@@ -43,9 +44,9 @@ void StatTranslator::TranslateToStruct64(const STAT_STRUCTURE& output, struct st
 #endif
   buffer.st_mode = 0;
   if (output.isDirectory)
-    buffer.st_mode       |= __S_IFDIR;
+    buffer.st_mode       |= S_IFDIR;
   if (output.isSymLink)
-    buffer.st_mode       |= __S_IFLNK;
+    buffer.st_mode       |= S_IFLNK;
   // TODO
   //if (output.isHidden)
   //  buffer.st_mode |= __S_IFDIR;
