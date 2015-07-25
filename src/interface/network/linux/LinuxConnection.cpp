@@ -102,8 +102,11 @@ bool CLinuxConnection::Open(void)
   int val = 1;
   setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 
+  // Not portable
+#if defined(TCP_KEEPIDLE)
   val = 30;
   setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+#endif
 
   val = 15;
   setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val));
