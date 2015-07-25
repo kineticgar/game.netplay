@@ -23,13 +23,7 @@
 #include "interface/IFrontend.h"
 #include "log/Log.h"
 
-// clash between platform lib and protobuf
-#if defined(MutexLock)
-  #undef MutexLock
-#endif
-
-#include "addon.pb.h"
-#include "game.pb.h"
+#include "MessageIncludes.h"
 
 #include <assert.h>
 #include <cstring>

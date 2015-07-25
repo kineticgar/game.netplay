@@ -27,13 +27,7 @@
 #include "kodi/kodi_addon_utils.hpp"
 #include "kodi/kodi_game_types.h"
 
-// clash between platform lib and protobuf
-#if defined(MutexLock)
-  #undef MutexLock
-#endif
-
-#include "addon.pb.h"
-#include "game.pb.h"
+#include "MessageIncludes.h"
 
 #include <assert.h>
 #include <cstring>
