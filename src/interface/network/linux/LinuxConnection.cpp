@@ -103,16 +103,16 @@ bool CLinuxConnection::Open(void)
   setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 
   val = 30;
-  setsockopt(m_fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
 
   val = 15;
-  setsockopt(m_fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val));
 
   val = 5;
-  setsockopt(m_fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val));
 
   val = 1;
-  setsockopt(m_fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+  setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 
   m_strClientAddress = ip2txt(sin.sin_addr.s_addr, sin.sin_port);
 
