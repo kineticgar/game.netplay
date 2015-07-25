@@ -48,6 +48,10 @@
 using namespace PLATFORM;
 using namespace NETPLAY;
 
+#ifndef MSG_MORE
+  #define MSG_MORE 0
+#endif
+
 CLinuxSocket::CLinuxSocket(void) :
   m_fd(-1),
   m_pollerRead(NULL),
