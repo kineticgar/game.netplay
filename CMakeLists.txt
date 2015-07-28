@@ -1,4 +1,4 @@
-project(game.netpaly)
+project(game.netplay)
 cmake_minimum_required(VERSION 2.8)
 
 enable_language(CXX)
@@ -141,7 +141,7 @@ target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
 #
 ################################################################################
 
-build_addon(game.netplay NETPLAY ${ADDON_SROUCES} DEPLIBS)
+build_addon(${PROJECT_NAME} NETPLAY ${ADDON_SROUCES} DEPLIBS)
 
 ################################################################################
 #
