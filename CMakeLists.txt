@@ -75,10 +75,12 @@ set(NETPLAY_SOURCES
 )
 
 set(STANDALONE_SOURCES
+    ${NETPLAY_SOURCES}
     src/main.cpp
 )
 
 set(ADDON_SOURCES
+    ${NETPLAY_SOURCES}
     src/client.cpp
 )
 
@@ -131,7 +133,7 @@ endif()
 #
 ################################################################################
 
-add_executable(netplay_server ${NETPLAY_SOURCES} ${STANDALONE_SOURCES})
+add_executable(netplay_server ${STANDALONE_SOURCES})
 
 target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
 
@@ -141,7 +143,7 @@ target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
 #
 ################################################################################
 
-build_addon(${PROJECT_NAME} NETPLAY ${ADDON_SOURCES} DEPLIBS)
+build_addon(${PROJECT_NAME} ADDON DEPLIBS)
 
 ################################################################################
 #
