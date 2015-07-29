@@ -78,7 +78,7 @@ set(STANDALONE_SOURCES
     src/main.cpp
 )
 
-set(ADDON_SROUCES
+set(ADDON_SOURCES
     src/client.cpp
 )
 
@@ -141,7 +141,7 @@ target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
 #
 ################################################################################
 
-build_addon(${PROJECT_NAME} NETPLAY ${ADDON_SROUCES} DEPLIBS)
+build_addon(${PROJECT_NAME} NETPLAY ${ADDON_SOURCES} DEPLIBS)
 
 ################################################################################
 #
