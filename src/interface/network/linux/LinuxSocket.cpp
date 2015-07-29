@@ -151,10 +151,10 @@ ssize_t CLinuxSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
 
   while (missing > 0)
   {
-    if (!m_pollerRead->Poll(timeout_ms))
+    if (m_pollerRead->Poll(timeout_ms) == 0)
     {
-      esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
-      return size-missing;
+      //esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
+      return size - missing;
     }
 
     ssize_t p = read(m_fd, ptr, missing);
@@ -163,17 +163,17 @@ ssize_t CLinuxSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
     {
       if (retryCounter < 10 && (errno == EINTR || errno == EAGAIN))
       {
-        dsyslog("CLinuxSocket::read: EINTR/EAGAIN during read(), retrying");
+        dsyslog("CLinuxSocket::Read - EINTR/EAGAIN during read(), retrying");
         retryCounter++;
         continue;
       }
 
-      esyslog("CLinuxSocket::read: read() error at %d/%d", (int)(size-missing), (int)size);
+      esyslog("CLinuxSocket::Read - read() error at %d/%d", (int)(size - missing), (int)size);
       return 0;
     }
     else if (p == 0)
     {
-      isyslog("CLinuxSocket::read: eof, connection closed"); // TODO
+      dsyslog("CLinuxSocket::Read - end of stream, connection closed");
       Close();
       return 0;
     }
