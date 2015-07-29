@@ -79,8 +79,11 @@ cmake -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_PREFIX_PATH=$HOME/kodi \
       -DCMAKE_INSTALL_PREFIX=$HOME/workspace/xbmc/addons \
       -DPACKAGE_ZIP=1 \
+      -DKODI_LIB_DIR=$HOME/workspace/xbmc \
       ..
 ```
+
+If you omit the line `-DKODI_LIB_DIR=$HOME/workspace/xbmc`, the helper libraries will be installed to the CMake prefix instead of the correct destination.
 
 # Building in-tree (cross-compiling)
 
