@@ -18,6 +18,7 @@
  *
  */
 
+#include "interface/dll/DLLFrontend.h"
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
 #include "interface/network/IServer.h"
