@@ -24,13 +24,33 @@
 #include "LinuxPoller.h"
 #include "log/Log.h"
 
+#include <fcntl.h>
+#include <sys/poll.h>
+#include <unistd.h>
+
 using namespace NETPLAY;
+using namespace PLATFORM;
 
 CLinuxPoller::CLinuxPoller(int  fileHandle    /* = -1    */,
-                 bool bOut          /* = false */,
-                 bool bPriorityOnly /* = false */) :
+                           bool bOut          /* = false */,
+                           bool bPriorityOnly /* = false */) :
   m_numFileHandles(0)
 {
+  m_selfPipe[0] = -1;
+  m_selfPipe[1] = -1;
+
+  if (pipe(m_selfPipe) != -1)
+  {
+    fcntl(m_selfPipe[0], F_SETFL, fcntl(m_selfPipe[0], F_GETFL) | O_NONBLOCK);
+    fcntl(m_selfPipe[1], F_SETFL, fcntl(m_selfPipe[1], F_GETFL) | O_NONBLOCK);
+
+    Add(m_selfPipe[0], false);
+  }
+  else
+  {
+    esyslog("CLinuxPoller: Failed to create self-pipe");
+  }
+
   Add(fileHandle, bOut, bPriorityOnly);
 }
 
@@ -74,4 +94,10 @@ bool CLinuxPoller::Poll(int timeoutMs /* = 0 */)
     }
   }
   return false;
+}
+
+void CLinuxPoller::Abort(void)
+{
+  if (m_selfPipe[1] != -1)
+    write(m_selfPipe[1], "", 1);
 }

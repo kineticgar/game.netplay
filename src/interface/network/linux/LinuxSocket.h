@@ -45,7 +45,7 @@ namespace NETPLAY
     virtual bool Connect(void);
     virtual void Shutdown(void);
     virtual bool Read(std::string& buffer, unsigned int totalBytes);
-    virtual bool Abort(void);
+    virtual void Abort(void);
     virtual bool Write(const std::string& request);
 
    private:
@@ -54,5 +54,6 @@ namespace NETPLAY
     PLATFORM::CMutex m_MutexWrite;
     CLinuxPoller*    m_pollerRead;
     CLinuxPoller*    m_pollerWrite;
+    bool             m_bStop;
   };
 }

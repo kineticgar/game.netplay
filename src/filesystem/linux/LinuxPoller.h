@@ -35,10 +35,14 @@ namespace NETPLAY
 
     bool Poll(int timeoutMs = 0);
 
+    void Abort(void);
+
   private:
     enum { MaxPollFiles = 16 };
 
     pollfd       m_pfd[MaxPollFiles];
     unsigned int m_numFileHandles;
+
+    int m_selfPipe[2];
   };
 }

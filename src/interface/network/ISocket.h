@@ -36,7 +36,7 @@ namespace NETPLAY
 
     virtual bool Read(std::string& buffer, unsigned int totalBytes) = 0;
 
-    virtual bool Abort(void) = 0;
+    virtual void Abort(void) = 0;
 
     virtual bool Write(const std::string& request) = 0;
   };

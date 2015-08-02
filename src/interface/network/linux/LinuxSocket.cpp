@@ -51,6 +51,8 @@
 using namespace PLATFORM;
 using namespace NETPLAY;
 
+#define WRITE_POLL_TIMEOUT_MS  100 // Timeout for polling fd before write
+
 #ifndef MSG_MORE
   #define MSG_MORE 0
 #endif
@@ -92,7 +94,8 @@ namespace NETPLAY
 CLinuxSocket::CLinuxSocket(int fd) :
   m_fd(fd),
   m_pollerRead(NULL),
-  m_pollerWrite(NULL)
+  m_pollerWrite(NULL),
+  m_bStop(false)
 {
 }
 
@@ -106,14 +109,14 @@ bool CLinuxSocket::Connect(void)
 
   if (getpeername(m_fd, reinterpret_cast<struct sockaddr*>(&sin), &len))
   {
-    esyslog("%s - getpeername() failed, dropping new incoming connection", __FUNCTION__);
+    esyslog("CLinuxSocket: getpeername() failed, dropping new incoming connection");
     close(m_fd);
     return false;
   }
 
   if (fcntl(m_fd, F_SETFL, fcntl (m_fd, F_GETFL) | O_NONBLOCK) == -1)
   {
-    esyslog("%s - Error setting control socket to nonblocking mode", __FUNCTION__);
+    esyslog("CLinuxSocket: Error setting control socket to nonblocking mode");
     return false;
   }
 
@@ -174,11 +177,10 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   while (missing > 0)
   {
-    if (m_pollerRead->Poll(-1) == 0)
-    {
-      //esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
-      return false;
-    }
+    m_pollerRead->Poll(-1);
+
+    if (m_bStop)
+      break;
 
     ssize_t p = read(m_fd, ptr, missing);
 
@@ -186,17 +188,17 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
     {
       if (retryCounter < 10 && (errno == EINTR || errno == EAGAIN))
       {
-        dsyslog("CLinuxSocket::Read - EINTR/EAGAIN during read(), retrying");
+        dsyslog("CLinuxSocket: EINTR/EAGAIN during read(), retrying");
         retryCounter++;
         continue;
       }
 
-      esyslog("CLinuxSocket::Read - read() error at %d/%d", (int)(totalBytes - missing), (int)totalBytes);
+      esyslog("CLinuxSocket: Read error at %d/%d", (int)(totalBytes - missing), (int)totalBytes);
       return false;
     }
     else if (p == 0)
     {
-      dsyslog("CLinuxSocket::Read - end of stream, connection closed");
+      dsyslog("CLinuxSocket: End of stream, connection closed");
       SetChanged();
       NotifyObservers(ObservableMessageConnectionLost);
       Shutdown();
@@ -211,9 +213,10 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
   return true;
 }
 
-bool CLinuxSocket::Abort(void)
+void CLinuxSocket::Abort(void)
 {
-  return false; // TODO
+  m_bStop = true;
+  m_pollerRead->Abort();
 }
 
 bool CLinuxSocket::Write(const std::string& request)
@@ -228,9 +231,9 @@ bool CLinuxSocket::Write(const std::string& request)
 
   while (size > 0)
   {
-    if (!m_pollerWrite->Poll(-1))
+    if (!m_pollerWrite->Poll(WRITE_POLL_TIMEOUT_MS))
     {
-      esyslog("CLinuxSocket::write: poll() failed");
+      esyslog("CLinuxSocket: Write timed out");
       return written - size;
     }
 
@@ -241,12 +244,12 @@ bool CLinuxSocket::Write(const std::string& request)
     {
       if (errno == EINTR || errno == EAGAIN)
       {
-        dsyslog("CLinuxSocket::write: EINTR during write(), retrying");
+        dsyslog("CLinuxSocket: EINTR during write, retrying");
         continue;
       }
       else if (errno != EPIPE)
       {
-        esyslog("CLinuxSocket::write: write() error");
+        esyslog("CLinuxSocket: Write error");
       }
       return p;
     }

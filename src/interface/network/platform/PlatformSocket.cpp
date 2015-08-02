@@ -112,9 +112,9 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
   return bytesRead == totalBytes;
 }
 
-bool CPlatformSocket::Abort(void)
+void CPlatformSocket::Abort(void)
 {
-  return false; // TODO
+  //m_socket->Abort(); // TODO
 }
 
 bool CPlatformSocket::Write(const std::string& request)
