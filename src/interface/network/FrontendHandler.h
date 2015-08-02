@@ -31,7 +31,7 @@ namespace NETPLAY
     CFrontendHandler(IFrontend* frontendCallback);
     virtual ~CFrontendHandler(void) { }
 
-    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, IConnection* connection);
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client);
 
   private:
     IFrontend* const m_frontend;

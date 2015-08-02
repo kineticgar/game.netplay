@@ -19,8 +19,7 @@
  */
 
 #include "NetworkFrontend.h"
-#include "ConnectionFactory.h"
-#include "IConnection.h"
+#include "Client.h"
 #include "filesystem/StatStructure.h"
 
 #include "MessageIncludes.h"
@@ -30,8 +29,8 @@
 
 using namespace NETPLAY;
 
-CNetworkFrontend::CNetworkFrontend(IGame* game, int fd) :
-  m_rpc(CConnectionFactory::CreateFrontendConnection(game, fd))
+CNetworkFrontend::CNetworkFrontend(IGame* callbacks, const SocketPtr& socket) :
+  m_rpc(new CClient(socket, callbacks))
 {
   assert(m_rpc);
   m_rpc->RegisterObserver(this);
@@ -46,12 +45,12 @@ CNetworkFrontend::~CNetworkFrontend(void)
 
 bool CNetworkFrontend::Initialize(void)
 {
-  return m_rpc->Open();
+  return m_rpc->Initialize();
 }
 
 void CNetworkFrontend::Deinitialize(void)
 {
-  m_rpc->Close();
+  m_rpc->Deinitialize();
 }
 
 void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const char* msg)

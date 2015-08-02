@@ -21,14 +21,14 @@
 #include "interface/dll/DLLFrontend.h"
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
-#include "interface/network/IServer.h"
 #include "interface/network/NetworkGame.h"
-#include "interface/network/ServerFactory.h"
+#include "interface/network/Server.h"
 #include "log/Log.h"
 #include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_dll.h"
 #include "kodi/xbmc_addon_dll.h"
+#include "kodi/libKODI_guilib.h"
 
 #include <cstring>
 
@@ -40,10 +40,11 @@ using namespace NETPLAY;
 
 namespace NETPLAY
 {
-  IFrontend*        FRONTEND  = NULL;
-  CFrontendManager* CALLBACKS = NULL;
-  IGame*            GAME      = NULL;
-  IServer*          SERVER    = NULL;
+  CHelper_libKODI_guilib* GUI       = NULL;
+  IFrontend*              FRONTEND  = NULL;
+  CFrontendManager*       CALLBACKS = NULL;
+  IGame*                  GAME      = NULL;
+  CServer*                SERVER    = NULL;
 }
 
 // --- Helper functions --------------------------------------------------------
@@ -53,49 +54,33 @@ namespace NETPLAY
   /*!
    * \brief Remove the first item from the list of proxy DLLs
    */
-  void PopProxyDLL(GameClientProperties& properties)
+  GameClientProperties PopProxyDLL(const GameClientProperties& properties)
   {
-    properties.proxy_dll_paths.erase(properties.proxy_dll_paths.begin());
+    GameClientProperties props(properties);
+    props.proxy_dll_paths.erase(props.proxy_dll_paths.begin());
+    return props;
   }
 
-  IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks)
+  IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks,
+                 CHelper_libKODI_guilib* gui)
   {
     IGame* game = NULL;
 
-    std::string strNetplayDllPath;
+    std::string myPath; // netplay DLL path
     if (!properties.proxy_dll_paths.empty())
-      strNetplayDllPath = properties.proxy_dll_paths[0];
+      myPath = properties.proxy_dll_paths[0];
 
-    if (strNetplayDllPath.empty())
+    // If no proxy DLL is given, then we're being created in standalone mode
+    // and should load a game from the network
+    const bool bStandalone = myPath.empty();
+    if (bStandalone)
     {
-      esyslog("Can't find Netplay DLL: list of proxy DLLs is empty (netplay should be first)");
+      GAME = new CNetworkGame(callbacks, gui);
     }
     else
     {
-      const bool bLoadGameClient = !properties.game_client_dll_path.empty();
-      if (bLoadGameClient)
-      {
-        // Remove netplay DLL from beginning of list
-        GameClientProperties copy(properties);
-        PopProxyDLL(copy);
-
-        GAME = new CDLLGame(callbacks, copy, PathUtils::GetHelperLibraryDir(PathUtils::GetParentDirectory(strNetplayDllPath)));
-      }
-      else
-      {
-        std::string address = properties.netplay_server;
-        unsigned int port = properties.netplay_server_port;
-
-        if (!address.empty())
-        {
-          GAME = new CNetworkGame(callbacks, address, port);
-        }
-        else
-        {
-          // TODO
-          esyslog("Network discovery not implemented");
-        }
-      }
+      const std::string myDir = PathUtils::GetParentDirectory(myPath);
+      GAME = new CDLLGame(callbacks, PopProxyDLL(properties), PathUtils::GetHelperLibraryDir(myDir));
     }
 
     return game;
@@ -116,6 +101,10 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
   try
   {
+    GUI = new CHelper_libKODI_guilib;
+    if (!GUI->RegisterMe(callbacks))
+      throw ADDON_STATUS_PERMANENT_FAILURE;
+
     FRONTEND = new CDLLFrontend(callbacks);
     if (!FRONTEND->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
@@ -127,7 +116,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CALLBACKS->RegisterFrontend(FRONTEND);
 
     const game_client_properties& gameProps = *static_cast<game_client_properties*>(props);
-    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS);
+    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS, GUI);
     if (!GAME)
       throw ADDON_STATUS_UNKNOWN;
 
@@ -135,7 +124,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
       throw status;
 
-    SERVER = CServerFactory::Get().CreateServer(GAME, CALLBACKS);
+    SERVER = new CServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
@@ -171,6 +160,7 @@ void ADDON_Destroy()
   SAFE_DELETE(GAME);
   SAFE_DELETE(CALLBACKS);
   SAFE_DELETE(FRONTEND);
+  SAFE_DELETE(GUI);
 }
 
 ADDON_STATUS ADDON_GetStatus()

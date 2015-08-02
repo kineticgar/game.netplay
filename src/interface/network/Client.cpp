@@ -18,9 +18,10 @@
  *
  */
 
-#include "Connection.h"
+#include "Client.h"
 #include "FrontendHandler.h"
 #include "GameHandler.h"
+#include "ISocket.h"
 #include "log/Log.h"
 
 #include <assert.h>
@@ -30,38 +31,100 @@ using namespace PLATFORM;
 
 #define MAX_MESSAGE_LENGTH     (5 * 1024 * 1024) // 5 MB
 #define RESPONSE_TIMEOUT_MS    (5 * 1000) // 5 seconds
-#define READ_TIMEOUT_MS        1
-#define READ_DELAY_MS          16
 #define REQUEST_MASK           0x80 // MSB
 
-CConnection::CConnection(IFrontend* frontend) :
-  m_requestHandler(new CFrontendHandler(frontend)),
-  m_bConnectionLost(false)
+CClient::CClient(const SocketPtr& socket, IGame* game) :
+  m_socket(socket),
+  m_requestHandler(new CGameHandler(game))
 {
+  assert(m_socket.get() != NULL);
 }
 
-CConnection::CConnection(IGame* game) :
-  m_requestHandler(new CGameHandler(game)),
-  m_bConnectionLost(false)
+CClient::CClient(const SocketPtr& socket, IFrontend* frontend) :
+  m_socket(socket),
+  m_requestHandler(new CFrontendHandler(frontend))
 {
+  assert(m_socket.get() != NULL);
 }
 
-CConnection::~CConnection(void)
+CClient::~CClient(void)
 {
   delete m_requestHandler;
 }
 
-bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest)
+bool CClient::Initialize(void)
 {
-  if (!SendHeader(true, method, strRequest.size()))
-  {
-    SignalConnectionLost();
+  m_socket->RegisterObserver(this);
+  if (!m_socket->Connect())
     return false;
+
+  return CreateThread();
+}
+
+void CClient::Deinitialize(void)
+{
+  // Signal socket to abort
+  m_socket->Abort();
+
+  // Clean up
+  StopThread();
+  m_socket->Shutdown();
+  m_socket->UnregisterObserver(this);
+}
+
+void* CClient::Process(void)
+{
+  while (!IsStopped())
+  {
+    bool bRequest;
+    size_t msgLength;
+    RPC_METHOD msgMethod;
+    std::string strRequest;
+
+    {
+      CLockObject lock(m_readMutex);
+
+      if (!ReadHeader(bRequest, msgMethod, msgLength))
+        continue;
+
+      dsyslog("Received %s: method=%d, length=%u", bRequest ? "request" : "response", msgMethod, msgLength);
+
+      if (bRequest)
+      {
+        if (!m_socket->Read(strRequest, msgLength))
+          break;
+      }
+      else
+      {
+        if (!ReadResponse(msgMethod, msgLength))
+          break;
+      }
+    }
+
+    if (!strRequest.empty())
+    {
+      if (!m_requestHandler->HandleRequest(msgMethod, strRequest, this))
+        break;
+    }
   }
 
-  if (!SendData(strRequest))
+  return NULL;
+}
+
+bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest)
+{
+  bool bSuccess = false;
+
   {
-    SignalConnectionLost();
+    CLockObject lock(m_writeMutex);
+
+    if (SendHeader(true, method, strRequest.size()))
+      bSuccess = m_socket->Write(strRequest);
+  }
+
+  if (!bSuccess)
+  {
+    m_socket->Shutdown();
     return false;
   }
 
@@ -70,7 +133,7 @@ bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest)
   return true;
 }
 
-bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse)
+bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse)
 {
   if (!SendRequest(method, strRequest))
     return false;
@@ -78,90 +141,43 @@ bool CConnection::SendRequest(RPC_METHOD method, const std::string& strRequest, 
   if (!GetResponse(method, strResponse))
   {
     esyslog("Server failed to respond, method=%d", method);
-    SignalConnectionLost();
+    m_socket->Shutdown();
     return false;
   }
 
   return true;
 }
 
-bool CConnection::SendResponse(RPC_METHOD method, const std::string& strResponse)
+bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
 {
   if (!SendHeader(false, method, strResponse.size()))
   {
-    SignalConnectionLost();
+    m_socket->Shutdown();
     return false;
   }
 
-  if (!SendData(strResponse))
+  if (!m_socket->Write(strResponse))
   {
-    SignalConnectionLost();
+    m_socket->Shutdown();
     return false;
   }
 
   return true;
 }
 
-bool CConnection::SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength)
+bool CClient::SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength)
 {
   std::string header;
   if (!FormatHeader(header, bRequest, method, msgLength))
     return false;
 
-  if (!SendData(header))
+  if (!m_socket->Write(header))
     return false;
 
   return true;
 }
 
-void* CConnection::Process(void)
-{
-  while (!IsStopped())
-  {
-    bool bInvoking;
-
-    {
-      CLockObject lock(m_invocationMutex);
-      bInvoking = !m_invocations.empty();
-    }
-
-    if (!bInvoking)
-      Sleep(READ_DELAY_MS);
-
-    bool bRequest;
-    RPC_METHOD msgMethod;
-    size_t msgLength;
-
-    if (!ReadHeader(bRequest, msgMethod, msgLength))
-      continue;
-
-    dsyslog("Received %s: method=%d, length=%u", bRequest ? "request" : "response", msgMethod, msgLength);
-
-    if (bRequest)
-    {
-      if (!ReadRequest(msgMethod, msgLength))
-        break;
-    }
-    else
-    {
-      if (!ReadResponse(msgMethod, msgLength))
-        break;
-    }
-  }
-
-  return NULL;
-}
-
-bool CConnection::ReadRequest(RPC_METHOD method, size_t length)
-{
-  std::string strRequest;
-  if (!ReadData(strRequest, length, READ_TIMEOUT_MS))
-    return false;
-
-  return m_requestHandler->HandleRequest(method, strRequest, this);
-}
-
-bool CConnection::ReadResponse(RPC_METHOD method, size_t length)
+bool CClient::ReadResponse(RPC_METHOD method, size_t length)
 {
 
   bool bInvocationFound = false;
@@ -186,7 +202,7 @@ bool CConnection::ReadResponse(RPC_METHOD method, size_t length)
   {
     invocation.result->reserve(length);
 
-    if (!ReadData(*invocation.result, length, READ_TIMEOUT_MS))
+    if (!m_socket->Read(*invocation.result, length))
       return false;
 
     invocation.finished_event->Signal();
@@ -194,17 +210,17 @@ bool CConnection::ReadResponse(RPC_METHOD method, size_t length)
   else
   {
     std::string dummy;
-    if (!ReadData(dummy, length, READ_TIMEOUT_MS))
+    if (!m_socket->Read(dummy, length))
       return false;
   }
 
   return true;
 }
 
-bool CConnection::GetResponse(RPC_METHOD   method,
-                              std::string& response,
-                              unsigned int iInitialTimeoutMs    /* = 10000 */,
-                              unsigned int iDatapacketTimeoutMs /* = 10000 */)
+bool CClient::GetResponse(RPC_METHOD   method,
+                          std::string& response,
+                          unsigned int iInitialTimeoutMs    /* = 10000 */,
+                          unsigned int iDatapacketTimeoutMs /* = 10000 */)
 {
   bool bSuccess = false;
 
@@ -243,34 +259,19 @@ bool CConnection::GetResponse(RPC_METHOD   method,
   return bSuccess;
 }
 
-bool CConnection::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
+bool CClient::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
 {
   std::string header;
   header.resize(5);
 
   std::string message;
-  if (!ReadData(message, 5, READ_TIMEOUT_MS))
+  if (!m_socket->Read(message, 5))
     return false;
 
   return ParseHeader(message, bRequest, method, length);
 }
 
-void CConnection::SignalConnectionLost(void)
-{
-  if (m_bConnectionLost)
-    return;
-
-  esyslog("%s - connection lost !!!", __FUNCTION__);
-
-  m_bConnectionLost = true;
-
-  SetChanged();
-  NotifyObservers(ObservableMessageConnectionLost);
-
-  Close();
-}
-
-bool CConnection::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length)
+bool CClient::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length)
 {
   header.resize(5);
 
@@ -283,7 +284,7 @@ bool CConnection::FormatHeader(std::string& header, bool bRequest, RPC_METHOD me
   return true;
 }
 
-bool CConnection::ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length)
+bool CClient::ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length)
 {
   if (header.size() != 5)
     return false;
@@ -309,7 +310,7 @@ bool CConnection::ParseHeader(const std::string& header, bool& bRequest, RPC_MET
   return true;
 }
 
-CConnection::Invocation CConnection::Invoke(RPC_METHOD method)
+CClient::Invocation CClient::Invoke(RPC_METHOD method)
 {
   Invocation invocation;
 
@@ -320,11 +321,26 @@ CConnection::Invocation CConnection::Invoke(RPC_METHOD method)
   return invocation;
 }
 
-void CConnection::FreeInvocation(Invocation& invocation) const
+void CClient::FreeInvocation(Invocation& invocation) const
 {
   delete invocation.finished_event;
   invocation.finished_event = NULL;
 
   delete invocation.result;
   invocation.result = NULL;
+}
+
+void CClient::Notify(const Observable& obs, const ObservableMessage msg)
+{
+  switch (msg)
+  {
+    case ObservableMessageConnectionLost:
+    {
+      SetChanged();
+      NotifyObservers(msg);
+      break;
+    }
+    default:
+      break;
+  }
 }

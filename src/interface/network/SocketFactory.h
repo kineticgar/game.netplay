@@ -19,25 +19,15 @@
  */
 #pragma once
 
-#include "RPCMethods.h"
-#include "utils/Observer.h"
-
-#include <string>
+#include "NetworkTypes.h"
 
 namespace NETPLAY
 {
-  class IConnection : public Observable
+  class CSocketFactory
   {
   public:
-    virtual ~IConnection(void) { }
+    static ServerSocketPtr CreateServerSocket(void);
 
-    virtual std::string Address(void) const = 0;
-
-    virtual bool Open(void) = 0;
-    virtual void Close(void) = 0;
-
-    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest) = 0;
-    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse) = 0;
-    virtual bool SendResponse(RPC_METHOD method, const std::string& strResponse) = 0;
+    static SocketPtr CreateClientSocket(const std::string& strAddress, unsigned int port);
   };
 }

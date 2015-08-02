@@ -18,33 +18,27 @@
  *
  */
 
-#include "Client.h"
+#include "PlatformSocket.h"
 #include "log/Log.h"
 #include "utils/StringUtils.h"
 
-#include "platform/sockets/tcp.h"
 
 using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define CONNECTION_TIMEOUT_MS  2000
+#define READ_TIMEOUT_MS        1000
 
-CClient::CClient(IFrontend* frontend, const std::string& strAddress, unsigned int port) :
-  CConnection(frontend),
+CPlatformSocket::CPlatformSocket(const std::string& strAddress, unsigned int port) :
   m_strAddress(strAddress),
   m_port(port),
   m_socket(NULL)
 {
 }
 
-CClient::~CClient(void)
+bool CPlatformSocket::Connect(void)
 {
-  Close();
-}
-
-bool CClient::Open(void)
-{
-  Close();
+  Shutdown();
 
   isyslog("Connecting to %s", Address().c_str());
 
@@ -67,13 +61,11 @@ bool CClient::Open(void)
     return false;
   }
 
-  return CConnection::Open();
+  return true;
 }
 
-void CClient::Close(void)
+void CPlatformSocket::Shutdown(void)
 {
-  CConnection::Close();
-
   if (m_socket && m_socket->IsOpen())
   {
     isyslog("Closing connection to %s", Address().c_str());
@@ -87,7 +79,45 @@ void CClient::Close(void)
   }
 }
 
-bool CClient::SendData(const std::string& request)
+bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
+{
+  if (totalBytes == 0)
+    return false;
+
+  buffer.resize(totalBytes);
+
+  CLockObject lock(m_readMutex);
+
+  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, READ_TIMEOUT_MS);
+
+  if (m_socket->GetErrorNumber() == ETIMEDOUT)
+  {
+    if (0 < bytesRead && bytesRead < totalBytes)
+    {
+      // We read something, so try to finish the read
+      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
+                                          totalBytes - bytesRead,
+                                          READ_TIMEOUT_MS);
+      if (bytes > 0)
+        bytesRead += bytes;
+    }
+    else
+    {
+      SetChanged();
+      NotifyObservers(ObservableMessageConnectionLost);
+      Shutdown();
+    }
+  }
+
+  return bytesRead == totalBytes;
+}
+
+bool CPlatformSocket::Abort(void)
+{
+  return false; // TODO
+}
+
+bool CPlatformSocket::Write(const std::string& request)
 {
   ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.c_str()), request.length());
   if (iWriteResult != static_cast<ssize_t>(request.length()))
@@ -98,36 +128,7 @@ bool CClient::SendData(const std::string& request)
   return true;
 }
 
-bool CClient::ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs)
-{
-  if (totalBytes == 0)
-    return false;
-
-  buffer.resize(totalBytes);
-
-  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, timeoutMs);
-
-  if (m_socket->GetErrorNumber() == ETIMEDOUT)
-  {
-    if (0 < bytesRead && bytesRead < totalBytes)
-    {
-      // We read something, so try to finish the read
-      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
-                                          totalBytes - bytesRead,
-                                          timeoutMs);
-      if (bytes > 0)
-        bytesRead += bytes;
-    }
-    else
-    {
-      SignalConnectionLost();
-    }
-  }
-
-  return bytesRead == totalBytes;
-}
-
-std::string CClient::Address(void) const
+std::string CPlatformSocket::Address(void) const
 {
   return StringUtils::Format("%s:%d", m_strAddress.c_str(), m_port);
 }

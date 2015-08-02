@@ -21,6 +21,8 @@
 
 #include "IRequestHandler.h"
 
+#include <string>
+
 namespace NETPLAY
 {
   class IGame;
@@ -31,7 +33,7 @@ namespace NETPLAY
     CGameHandler(IGame* gameCallback);
     virtual ~CGameHandler(void) { }
 
-    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, IConnection* connection);
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client);
 
   private:
     IGame* const m_game;

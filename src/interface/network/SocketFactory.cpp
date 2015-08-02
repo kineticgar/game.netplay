@@ -18,24 +18,28 @@
  *
  */
 
-#include "ServerFactory.h"
-#include "interface/network/linux/LinuxServer.h"
+#include "SocketFactory.h"
+#include "interface/network/linux/LinuxServerSocket.h"
+#include "interface/network/platform/PlatformSocket.h"
 
 using namespace NETPLAY;
 
-CServerFactory& CServerFactory::Get(void)
+ServerSocketPtr CSocketFactory::CreateServerSocket(void)
 {
-  static CServerFactory instance;
-  return instance;
-}
-
-IServer* CServerFactory::CreateServer(IGame* game, CFrontendManager* callbacks)
-{
-  IServer* server = NULL;
+  ServerSocketPtr socket;
 
 #if !defined(_WIN32) // TODO
-  server = new CLinuxServer(game, callbacks);
+  socket = ServerSocketPtr(new CLinuxServerSocket());
 #endif
 
-  return server;
+  return socket;
+}
+
+SocketPtr CSocketFactory::CreateClientSocket(const std::string& strAddress, unsigned int port)
+{
+  SocketPtr socket;
+
+  socket = SocketPtr(new CPlatformSocket(strAddress, port));
+
+  return socket;
 }

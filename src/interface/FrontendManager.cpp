@@ -35,9 +35,13 @@ void CFrontendManager::RegisterFrontend(IFrontend* frontend)
   m_frontends.push_back(frontend);
 }
 
-void CFrontendManager::UnregisterFrontend(IFrontend* frontend)
+bool CFrontendManager::UnregisterFrontend(IFrontend* frontend)
 {
+  const unsigned int oldSize = m_frontends.size();
+
   m_frontends.erase(std::remove(m_frontends.begin(), m_frontends.end(), frontend), m_frontends.end());
+
+  return oldSize != m_frontends.size();
 }
 
 IFrontend* CFrontendManager::GetMaster(void)

@@ -4,7 +4,7 @@
        version="1.0.0"
        provider-name="Team-Kodi">
   <requires>
-    <import addon="kodi.game" version="1.0.8"/>
+    <import addon="kodi.game" version="1.0.9"/>
   </requires>
   <extension point="kodi.gameclient"
        library_android="libgame.netplay.so"

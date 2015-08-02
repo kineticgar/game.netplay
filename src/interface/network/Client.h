@@ -19,7 +19,10 @@
  */
 #pragma once
 
-#include "IConnection.h"
+#include "NetworkTypes.h"
+#include "RPCMethods.h"
+
+#include "utils/Observer.h"
 
 #include "platform/threads/mutex.h"
 #include "platform/threads/threads.h"
@@ -33,30 +36,36 @@ namespace NETPLAY
   class IGame;
   class IRequestHandler;
 
-  class CConnection : public IConnection,
-                      protected PLATFORM::CThread
+  class CClient : public Observer,
+                  public Observable,
+                  protected PLATFORM::CThread
   {
   public:
-    CConnection(IFrontend* frontend);
-    CConnection(IGame* game);
-    virtual ~CConnection(void);
+    CClient(const SocketPtr& socket, IGame* game);
+    CClient(const SocketPtr& socket, IFrontend* frontend);
 
-    // partial implementation of IConnection
-    virtual bool Open(void) { return CreateThread(); }
-    virtual void Close(void) { StopThread(); }
-    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest);
-    virtual bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse);
-    virtual bool SendResponse(RPC_METHOD method, const std::string& strResponse);
+    virtual ~CClient(void);
+
+    /*!
+     * \brief Initialize this client instance
+     */
+    bool Initialize(void);
+
+    /*!
+     * \brief Deinitialize this client instance
+     */
+    void Deinitialize(void);
+
+    bool SendRequest(RPC_METHOD method, const std::string& strRequest);
+    bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse);
+    bool SendResponse(RPC_METHOD method, const std::string& strResponse);
+
+    // implementation of Observer
+    virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   protected:
-    // implementation of CThread
+    // implementation of CThead
     virtual void* Process(void);
-
-    virtual bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs) = 0;
-    virtual bool SendData(const std::string& request) = 0;
-
-    void SignalConnectionLost(void);
-    bool IsConnectionLost(void) const { return m_bConnectionLost; }
 
   private:
     struct Invocation
@@ -74,7 +83,6 @@ namespace NETPLAY
     bool SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength);
 
     bool ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length);
-    bool ReadRequest(RPC_METHOD method, size_t length);
     bool ReadResponse(RPC_METHOD method, size_t length);
 
     bool FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length);
@@ -83,10 +91,11 @@ namespace NETPLAY
     Invocation Invoke(RPC_METHOD method);
     void FreeInvocation(Invocation& invocation) const;
 
+    const SocketPtr         m_socket;
     IRequestHandler* const  m_requestHandler;
+    PLATFORM::CMutex        m_readMutex;
+    PLATFORM::CMutex        m_writeMutex;
     std::vector<Invocation> m_invocations;
     PLATFORM::CMutex        m_invocationMutex;
-    bool                    m_bConnectionLost;
-    // TODO: write mutex
   };
 }

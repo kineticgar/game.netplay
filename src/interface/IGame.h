@@ -31,12 +31,10 @@ namespace NETPLAY
   public:
     virtual ~IGame(void) { }
 
-    virtual ADDON_STATUS Initialize(void) = 0;
-    virtual bool IsInitialized(void) = 0;
-    virtual void Deinitialize(void) = 0;
-
     // --- Add-on operations ---------------------------------------------------
 
+    virtual ADDON_STATUS Initialize(void) = 0;
+    virtual void         Deinitialize(void) = 0;
     virtual void         Stop(void) = 0;
     virtual ADDON_STATUS GetStatus(void) = 0;
     virtual bool         HasSettings(void) = 0;

@@ -24,20 +24,21 @@
 #include <map>
 #include <vector>
 
+class CHelper_libKODI_guilib;
+
 namespace NETPLAY
 {
-  class IConnection;
   class IFrontend;
+  class CClient;
 
   class CNetworkGame : public IGame
   {
   public:
-    CNetworkGame(IFrontend* frontend, const std::string& strAddress, unsigned int port);
+    CNetworkGame(IFrontend* callbacks, CHelper_libKODI_guilib* gui);
     virtual ~CNetworkGame(void);
 
     // implementation of IGame
     virtual ADDON_STATUS Initialize(void);
-    virtual bool         IsInitialized(void) { return false; } // Always attempt to initialize network games
     virtual void         Deinitialize(void);
     virtual void         Stop(void);
     virtual ADDON_STATUS GetStatus(void);
@@ -68,7 +69,9 @@ namespace NETPLAY
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
 
   private:
-    IConnection* const m_rpc;
+    IFrontend* const              m_callbacks;
+    CHelper_libKODI_guilib* const m_gui;
+    CClient*                      m_rpc;
 
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
   };

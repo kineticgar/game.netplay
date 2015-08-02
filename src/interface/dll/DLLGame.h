@@ -37,8 +37,6 @@ namespace NETPLAY
   {
     std::string              game_client_dll_path;
     std::vector<std::string> proxy_dll_paths;
-    std::string              netplay_server;
-    unsigned int             netplay_server_port;
     std::string              system_directory;
     std::string              content_directory;
     std::string              save_directory;

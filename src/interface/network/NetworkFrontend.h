@@ -19,20 +19,20 @@
  */
 #pragma once
 
+#include "NetworkTypes.h"
 #include "interface/IFrontend.h"
 #include "utils/Observer.h"
 
 namespace NETPLAY
 {
-  class IConnection;
+  class CClient;
   class IGame;
 
   class CNetworkFrontend : public IFrontend,
                            public Observer
-
   {
   public:
-    CNetworkFrontend(IGame* game, int fd);
+    CNetworkFrontend(IGame* callbacks, const SocketPtr& socket);
     virtual ~CNetworkFrontend(void);
 
     virtual bool Initialize(void);
@@ -86,6 +86,6 @@ namespace NETPLAY
     virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   private:
-    IConnection* const m_rpc;
+    CClient* const m_rpc;
   };
 }

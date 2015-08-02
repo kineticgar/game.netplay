@@ -19,20 +19,33 @@
  */
 #pragma once
 
-#include <string>
+#include "interface/network/ISocket.h"
+
+#include "platform/threads/mutex.h"
+#include "platform/sockets/tcp.h"
 
 namespace NETPLAY
 {
-  class IConnection;
-  class IFrontend;
-  class IGame;
-
-  class CConnectionFactory
+  class CPlatformSocket : public ISocket
   {
   public:
-    virtual ~CConnectionFactory(void) { }
+    CPlatformSocket(const std::string& strAddress, unsigned int port);
 
-    static IConnection* CreateFrontendConnection(IGame* gameCallback, int fd);
-    static IConnection* CreateGameConnection(IFrontend* frontendCallback, const std::string& strAddress, unsigned int port);
+    virtual ~CPlatformSocket(void) { Shutdown(); }
+
+    // implementation of ISocket
+    virtual bool Connect(void);
+    virtual void Shutdown(void);
+    virtual bool Read(std::string& buffer, unsigned int totalBytes);
+    virtual bool Abort(void);
+    virtual bool Write(const std::string& request);
+
+  private:
+    std::string Address(void) const;
+
+    const std::string         m_strAddress;
+    const unsigned int        m_port;
+    PLATFORM::CTcpConnection* m_socket;
+    PLATFORM::CMutex          m_readMutex;
   };
 }

@@ -19,20 +19,13 @@
  */
 #pragma once
 
+#include <memory>
+
 namespace NETPLAY
 {
-  class CFrontendManager;
-  class IGame;
-  class IServer;
+  class ISocket;
+  typedef std::shared_ptr<ISocket> SocketPtr;
 
-  class CServerFactory
-  {
-  private:
-    CServerFactory(void) { }
-
-  public:
-    static CServerFactory& Get(void);
-
-    IServer* CreateServer(IGame* game, CFrontendManager* callbacks);
-  };
+  class IServerSocket;
+  typedef std::shared_ptr<IServerSocket> ServerSocketPtr;
 }

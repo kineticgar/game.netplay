@@ -52,17 +52,16 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
-    src/interface/network/Connection.cpp
-    src/interface/network/ConnectionFactory.cpp
+    src/interface/network/Client.cpp
     src/interface/network/FrontendHandler.cpp
     src/interface/network/GameHandler.cpp
-    src/interface/network/linux/LinuxConnection.cpp
-    src/interface/network/linux/LinuxServer.cpp
+    src/interface/network/linux/LinuxServerSocket.cpp
     src/interface/network/linux/LinuxSocket.cpp
     src/interface/network/NetworkFrontend.cpp
     src/interface/network/NetworkGame.cpp
-    src/interface/network/platform/Client.cpp
-    src/interface/network/ServerFactory.cpp
+    src/interface/network/platform/PlatformSocket.cpp
+    src/interface/network/Server.cpp
+    src/interface/network/SocketFactory.cpp
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp

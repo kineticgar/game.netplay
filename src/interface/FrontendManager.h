@@ -39,8 +39,9 @@ namespace NETPLAY
 
     /*!
      * \brief Unregister a frontend from this manager
+     * \return false if the frontend wasn't previously registered
      */
-    void UnregisterFrontend(IFrontend* frontend);
+    bool UnregisterFrontend(IFrontend* frontend);
 
     // implementation of IFrontend
     virtual bool Initialize(void) { return true; }

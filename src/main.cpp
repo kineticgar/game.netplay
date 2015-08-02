@@ -20,9 +20,8 @@
 
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
-#include "interface/network/IServer.h"
 #include "interface/network/NetworkGame.h"
-#include "interface/network/ServerFactory.h"
+#include "interface/network/Server.h"
 #include "log/Log.h"
 #include "utils/AbortableTask.h"
 #include "utils/PathUtils.h"
@@ -80,7 +79,7 @@ namespace NETPLAY
       }
       case OPTION_REMOTE_GAME:
       {
-        game = new CNetworkGame(callbacks, argv[2], StringUtils::IntVal(argv[3]));
+        //game = new CNetworkGame(callbacks, argv[2], StringUtils::IntVal(argv[3])); // TODO
         break;
       }
       case OPTION_DISCOVER:
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 {
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
-  IServer*          SERVER    = NULL;
+  CServer*          SERVER    = NULL;
 
   OPTION option(OPTION_INVALID);
 
@@ -152,7 +151,7 @@ int main(int argc, char* argv[])
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
       throw std::runtime_error("Failed to initialize game client");
 
-    SERVER = CServerFactory::Get().CreateServer(GAME, CALLBACKS);
+    SERVER = new CServer(GAME, CALLBACKS);
     if (!SERVER->Initialize())
       throw std::runtime_error("Failed to initialize server");
   }

@@ -36,10 +36,13 @@
 
 #include <cstdio>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <net/if.h>
-#include <netinet/tcp.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -52,69 +55,186 @@ using namespace NETPLAY;
   #define MSG_MORE 0
 #endif
 
-CLinuxSocket::CLinuxSocket(void) :
-  m_fd(-1),
+// --- ip2txt ------------------------------------------------------------------
+
+namespace NETPLAY
+{
+  std::string ip2txt(uint32_t ip, unsigned int port)
+  {
+    // inet_ntoa is not thread-safe (?)
+    unsigned int iph = static_cast<unsigned int>(ntohl(ip));
+    unsigned int porth = static_cast<unsigned int>(ntohs(port));
+
+    char str[64];
+
+    if (porth == 0)
+    {
+      std::sprintf(str, "%d.%d.%d.%d", ((iph >> 24) & 0xff),
+                                       ((iph >> 16) & 0xff),
+                                       ((iph >> 8)  & 0xff),
+                                       ((iph)       & 0xff));
+    }
+    else
+    {
+      std::sprintf(str, "%u.%u.%u.%u:%u", ((iph >> 24) & 0xff),
+                                          ((iph >> 16) & 0xff),
+                                          ((iph >> 8)  & 0xff),
+                                          ((iph)       & 0xff),
+                                          porth);
+    }
+
+    return str;
+  }
+}
+
+// --- CLinuxSocket ------------------------------------------------------------
+
+CLinuxSocket::CLinuxSocket(int fd) :
+  m_fd(fd),
   m_pollerRead(NULL),
   m_pollerWrite(NULL)
 {
 }
 
-CLinuxSocket::~CLinuxSocket(void)
+bool CLinuxSocket::Connect(void)
 {
-  Close();
+  if (m_fd < 0)
+    return false;
 
-  delete m_pollerRead;
-  delete m_pollerWrite;
-}
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
 
-void CLinuxSocket::Close(void)
-{
-  CLockObject lock(m_MutexWrite);
-
-  if (m_fd >= 0)
+  if (getpeername(m_fd, reinterpret_cast<struct sockaddr*>(&sin), &len))
   {
+    esyslog("%s - getpeername() failed, dropping new incoming connection", __FUNCTION__);
     close(m_fd);
-
-    m_fd = -1;
-
-    delete m_pollerRead;
-    m_pollerRead = NULL;
-
-    delete m_pollerWrite;
-    m_pollerWrite = NULL;
+    return false;
   }
+
+  if (fcntl(m_fd, F_SETFL, fcntl (m_fd, F_GETFL) | O_NONBLOCK) == -1)
+  {
+    esyslog("%s - Error setting control socket to nonblocking mode", __FUNCTION__);
+    return false;
+  }
+
+  int val = 1;
+  setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
+
+  // Not portable
+#if defined(TCP_KEEPIDLE)
+  val = 30;
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+#endif
+
+  val = 15;
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+
+  val = 5;
+  setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val));
+
+  val = 1;
+  setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+
+  m_strAddress = ip2txt(sin.sin_addr.s_addr, sin.sin_port);
+
+  m_pollerRead  = new CLinuxPoller(m_fd);
+  m_pollerWrite = new CLinuxPoller(m_fd, true);
+
+  isyslog("Client connected: %s", m_strAddress.c_str());
+
+  return true;
 }
 
 void CLinuxSocket::Shutdown(void)
 {
-  CLockObject lock(m_MutexWrite);
+  Abort();
 
-  if (m_fd >= 0)
-  {
-    shutdown(m_fd, SHUT_RD);
-  }
+  isyslog("Client %s disconnected", m_strAddress.c_str());
+
+  delete m_pollerRead;
+  m_pollerRead = NULL;
+
+  delete m_pollerWrite;
+  m_pollerWrite = NULL;
+
+  shutdown(m_fd, SHUT_RD);
+
+  close(m_fd);
 }
 
-ssize_t CLinuxSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /* = -1 */,
-                                                           bool more_data /* = false */)
+bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 {
+  buffer.resize(totalBytes);
+
+  int retryCounter = 0;
+
+  ssize_t missing = static_cast<ssize_t>(totalBytes);
+
+  uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.c_str()));
+
+  while (missing > 0)
+  {
+    if (m_pollerRead->Poll(-1) == 0)
+    {
+      //esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
+      return false;
+    }
+
+    ssize_t p = read(m_fd, ptr, missing);
+
+    if (p < 0)
+    {
+      if (retryCounter < 10 && (errno == EINTR || errno == EAGAIN))
+      {
+        dsyslog("CLinuxSocket::Read - EINTR/EAGAIN during read(), retrying");
+        retryCounter++;
+        continue;
+      }
+
+      esyslog("CLinuxSocket::Read - read() error at %d/%d", (int)(totalBytes - missing), (int)totalBytes);
+      return false;
+    }
+    else if (p == 0)
+    {
+      dsyslog("CLinuxSocket::Read - end of stream, connection closed");
+      SetChanged();
+      NotifyObservers(ObservableMessageConnectionLost);
+      Shutdown();
+      return false;
+    }
+
+    retryCounter = 0;
+    ptr += p;
+    missing -= p;
+  }
+
+  return true;
+}
+
+bool CLinuxSocket::Abort(void)
+{
+  return false; // TODO
+}
+
+bool CLinuxSocket::Write(const std::string& request)
+{
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(request.c_str());
+
+  size_t size = request.size();
+
+  const ssize_t written = static_cast<ssize_t>(size);
+
   CLockObject lock(m_MutexWrite);
-
-  if (m_fd == -1)
-    return -1;
-
-  ssize_t written = static_cast<ssize_t>(size);
-
-  const uint8_t* ptr = buffer;
 
   while (size > 0)
   {
-    if (!m_pollerWrite->Poll(timeout_ms))
+    if (!m_pollerWrite->Poll(-1))
     {
       esyslog("CLinuxSocket::write: poll() failed");
-      return written-size;
+      return written - size;
     }
 
+    const bool more_data = false;
     ssize_t p = send(m_fd, ptr, size, (more_data ? MSG_MORE : 0));
 
     if (p <= 0)
@@ -136,66 +256,4 @@ ssize_t CLinuxSocket::Write(const uint8_t* buffer, size_t size, int timeout_ms /
   }
 
   return written;
-}
-
-ssize_t CLinuxSocket::Read(uint8_t* buffer, size_t size, int timeout_ms)
-{
-  int retryCounter = 0;
-
-  if (m_fd == -1)
-    return -1;
-
-  ssize_t missing = static_cast<ssize_t>(size);
-
-  uint8_t* ptr = buffer;
-
-  while (missing > 0)
-  {
-    if (m_pollerRead->Poll(timeout_ms) == 0)
-    {
-      //esyslog("CLinuxSocket::read: poll() failed at %d/%d", (int)(size - missing), (int)size);
-      return size - missing;
-    }
-
-    ssize_t p = read(m_fd, ptr, missing);
-
-    if (p < 0)
-    {
-      if (retryCounter < 10 && (errno == EINTR || errno == EAGAIN))
-      {
-        dsyslog("CLinuxSocket::Read - EINTR/EAGAIN during read(), retrying");
-        retryCounter++;
-        continue;
-      }
-
-      esyslog("CLinuxSocket::Read - read() error at %d/%d", (int)(size - missing), (int)size);
-      return 0;
-    }
-    else if (p == 0)
-    {
-      dsyslog("CLinuxSocket::Read - end of stream, connection closed");
-      Close();
-      return 0;
-    }
-
-    retryCounter = 0;
-    ptr  += p;
-    missing -= p;
-  }
-
-  return size;
-}
-
-void CLinuxSocket::SetHandle(int h)
-{
-  CLockObject lock(m_MutexWrite);
-
-  if (h != m_fd)
-  {
-    Close();
-
-    m_fd          = h;
-    m_pollerRead  = new CLinuxPoller(m_fd);
-    m_pollerWrite = new CLinuxPoller(m_fd, true);
-  }
 }

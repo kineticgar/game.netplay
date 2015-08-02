@@ -338,8 +338,6 @@ GameClientProperties CDLLGame::TranslateProperties(const game_client_properties&
   GameClientProperties properties = { };
 
   properties.game_client_dll_path = props.game_client_dll_path ? props.game_client_dll_path : "";
-  properties.netplay_server       = props.netplay_server       ? props.netplay_server       : "";
-  properties.netplay_server_port  = props.netplay_server_port;
   properties.system_directory     = props.system_directory     ? props.system_directory     : "";
   properties.content_directory    = props.content_directory    ? props.content_directory    : "";
   properties.save_directory       = props.save_directory       ? props.save_directory       : "";

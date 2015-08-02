@@ -19,7 +19,8 @@
  */
 #pragma once
 
-#include "interface/network/IServer.h"
+#include "NetworkTypes.h"
+#include "utils/IAbortable.h"
 #include "utils/Observer.h"
 
 #include "platform/threads/mutex.h"
@@ -33,34 +34,46 @@ namespace NETPLAY
   class IFrontend;
   class IGame;
 
-  class CLinuxServer : public IServer,
-                       public Observer,
-                       protected PLATFORM::CThread
+  class CServer : public IAbortable,
+                  public Observer,
+                  protected PLATFORM::CThread
   {
   public:
-    CLinuxServer(IGame* game, CFrontendManager* callbacks);
-    virtual ~CLinuxServer(void) { Deinitialize(); }
+    CServer(IGame* game, CFrontendManager* frontends);
 
-    // implementation of IServer
-    virtual bool Initialize(void);
+    virtual ~CServer(void) { Deinitialize(); }
+
+    /*!
+     * \brief Initialize this server instance
+     */
+    bool Initialize(void);
+
+    /*!
+     * \brief Deinitialize this service instance
+     * \comment Implementation of IAbortable
+     */
     virtual void Deinitialize(void);
-    virtual void WaitForExit(void) { Sleep(0); }
+
+    /*!
+     * \brief Block until the server has been deinitialized
+     */
+    void WaitForExit(void) { Sleep(0); }
 
     // implementation of Observer
     virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   protected:
-    // implementation of PLATFORM::CThread
+    // implementation of CThead
     virtual void* Process(void);
 
   private:
-    void NewClientConnected(int fd);
+    bool AddFrontend(const SocketPtr& socket);
+    void RemoveFrontend(IFrontend* frontend);
 
-    IGame* const              m_game;
-    CFrontendManager* const   m_callbacks;
-    int                       m_socketFd;
-    std::vector<IFrontend*>   m_clients;
-    std::vector<IFrontend*>   m_disconnectedClients;
-    PLATFORM::CMutex          m_clientMutex;
+    IGame* const            m_game;
+    CFrontendManager* const m_frontends;
+    ServerSocketPtr         m_socket;
+    std::vector<IFrontend*> m_disconnectedClients;
+    PLATFORM::CMutex        m_dcMutex; // Mutex for m_disconnectedClients
   };
 }

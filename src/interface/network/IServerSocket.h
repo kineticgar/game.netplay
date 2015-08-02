@@ -17,19 +17,21 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
-#include "ConnectionFactory.h"
-#include "interface/network/linux/LinuxConnection.h"
-#include "interface/network/platform/Client.h"
+#include "NetworkTypes.h"
 
-using namespace NETPLAY;
-
-IConnection* CConnectionFactory::CreateFrontendConnection(IGame* gameCallback, int fd)
+namespace NETPLAY
 {
-  return new CLinuxConnection(gameCallback, fd);
-}
+  class IServerSocket
+  {
+  public:
+    virtual ~IServerSocket(void) { }
 
-IConnection* CConnectionFactory::CreateGameConnection(IFrontend* frontendCallback, const std::string& strAddress, unsigned int port)
-{
-  return new CClient(frontendCallback, strAddress, port);
+    virtual bool Bind(void) = 0;
+
+    virtual void Shutdown(void) = 0;
+
+    virtual SocketPtr Listen(void) = 0;
+  };
 }

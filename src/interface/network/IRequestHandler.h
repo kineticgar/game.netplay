@@ -25,13 +25,13 @@
 
 namespace NETPLAY
 {
-  class IConnection;
+  class CClient;
 
   class IRequestHandler
   {
   public:
     virtual ~IRequestHandler(void) { }
 
-    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, IConnection* connection) = 0;
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client) = 0;
   };
 }

@@ -19,12 +19,14 @@
  */
 
 #include "NetworkGame.h"
-#include "interface/network/ConnectionFactory.h"
-#include "interface/network/IConnection.h"
+#include "Client.h"
+#include "ISocket.h"
+#include "SocketFactory.h"
 #include "log/Log.h"
 #include "utils/Version.h"
 
 #include "kodi/kodi_addon_utils.hpp"
+#include "kodi/libKODI_guilib.h"
 
 #include "MessageIncludes.h"
 
@@ -32,8 +34,10 @@
 
 using namespace NETPLAY;
 
-CNetworkGame::CNetworkGame(IFrontend* frontend, const std::string& strAddress, unsigned int port) :
-  m_rpc(CConnectionFactory::CreateGameConnection(frontend, strAddress, port))
+CNetworkGame::CNetworkGame(IFrontend* callbacks, CHelper_libKODI_guilib* gui) :
+  m_callbacks(callbacks),
+  m_gui(gui),
+  m_rpc(NULL)
 {
 }
 
@@ -46,51 +50,11 @@ CNetworkGame::~CNetworkGame(void)
 
 ADDON_STATUS CNetworkGame::Initialize(void)
 {
-  if (!m_rpc->Open())
-    return ADDON_STATUS_UNKNOWN;
-
-  dsyslog("Connected to network game. Logging in...");
-
-  static const Version gameApiVersion(GAME_API_VERSION);
-  static const Version gameMinApiVersion(GAME_MIN_API_VERSION);
-
-  addon::LoginRequest request;
-  request.set_game_version_major(gameApiVersion.version_major);
-  request.set_game_version_minor(gameApiVersion.version_minor);
-  request.set_game_version_point(gameApiVersion.version_point);
-  request.set_min_version_major(gameMinApiVersion.version_major);
-  request.set_min_version_minor(gameMinApiVersion.version_minor);
-  request.set_min_version_point(gameMinApiVersion.version_point);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::Login, strRequest, strResponse))
-    {
-      addon::LoginResponse response;
-      if (response.ParseFromString(strResponse))
-      {
-        ADDON_STATUS status = static_cast<ADDON_STATUS>(response.result());
-        isyslog("Logging into network game... result: %s", AddonUtils::TranslateAddonStatus(status));
-        return status;
-      }
-    }
-  }
-
-  return ADDON_STATUS_UNKNOWN;
+  return ADDON_STATUS_OK;
 }
 
 void CNetworkGame::Deinitialize(void)
 {
-  addon::LogoutRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::Logout, strRequest, strResponse);
-  }
-
-  m_rpc->Close();
 }
 
 void CNetworkGame::Stop(void)
@@ -151,91 +115,75 @@ void CNetworkGame::Announce(const std::string& flag, const std::string& sender, 
 
 std::string CNetworkGame::GetGameAPIVersion(void)
 {
-  game::GetGameAPIVersionRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetGameAPIVersion, strRequest, strResponse))
-    {
-      game::GetGameAPIVersionResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
-    }
-  }
-
   return GAME_API_VERSION;
 }
 
 std::string CNetworkGame::GetMininumGameAPIVersion(void)
 {
-  game::GetMininumGameAPIVersionRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetMininumGameAPIVersion, strRequest, strResponse))
-    {
-      game::GetMininumGameAPIVersionResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
-    }
-  }
-
   return GAME_MIN_API_VERSION;
 }
 
 GAME_ERROR CNetworkGame::LoadGame(const std::string& url)
 {
-  game::LoadGameRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::LoadGame, strRequest, strResponse))
-    {
-      game::LoadGameResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
-    }
-  }
-
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR CNetworkGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
-  game::LoadGameSpecialRequest request;
-  request.set_type(type);
-  for (unsigned int i = 0; i < urlCount; i++)
-    request.add_url(urls[i]);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::LoadGameSpecial, strRequest, strResponse))
-    {
-      game::LoadGameSpecialResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
-    }
-  }
-
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR CNetworkGame::LoadStandalone(void)
 {
-  game::LoadStandaloneRequest request;
+  const unsigned int remotePort = 35890; //TODO
+
+  char strRemoteAddress[256];
+  const std::string strHeader = "Netplay address"; // TODO
+  if (m_gui->Dialog_Keyboard_ShowAndGetInput(*strRemoteAddress, sizeof(strRemoteAddress), strHeader.c_str(), false, false))
+  {
+    SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
+    if (socket)
+      m_rpc = new CClient(socket, m_callbacks);
+  }
+
+  if (!m_rpc || !m_rpc->Initialize())
+  {
+    esyslog("Failed to open connection to network game");
+    return GAME_ERROR_FAILED;
+  }
+
+  dsyslog("Connected to network game. Logging in...");
+
+  static const Version gameApiVersion(GAME_API_VERSION);
+  static const Version gameMinApiVersion(GAME_MIN_API_VERSION);
+
+  addon::LoginRequest request;
+  request.set_game_version_major(gameApiVersion.version_major);
+  request.set_game_version_minor(gameApiVersion.version_minor);
+  request.set_game_version_point(gameApiVersion.version_point);
+  request.set_min_version_major(gameMinApiVersion.version_major);
+  request.set_min_version_minor(gameMinApiVersion.version_minor);
+  request.set_min_version_point(gameMinApiVersion.version_point);
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::LoadStandalone, strRequest, strResponse))
+    if (!m_rpc->SendRequest(RPC_METHOD::Login, strRequest, strResponse))
     {
-      game::LoadStandaloneResponse response;
+      esyslog("Failed to send login request");
+    }
+    else
+    {
+      addon::LoginResponse response;
       if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
+      {
+        const bool bLoginResult = response.result();
+        if (bLoginResult)
+        {
+          isyslog("Logged into network game");
+          return GAME_ERROR_NO_ERROR;
+        }
+      }
     }
   }
 
@@ -244,20 +192,17 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
 
 GAME_ERROR CNetworkGame::UnloadGame(void)
 {
-  game::UnloadGameRequest request;
+  addon::LogoutRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
   {
     std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::UnloadGame, strRequest, strResponse))
-    {
-      game::UnloadGameResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
-    }
+    m_rpc->SendRequest(RPC_METHOD::Logout, strRequest, strResponse);
   }
 
-  return GAME_ERROR_FAILED;
+  m_rpc->Deinitialize();
+
+  return GAME_ERROR_NO_ERROR;
 }
 
 GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)

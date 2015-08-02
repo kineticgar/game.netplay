@@ -19,39 +19,25 @@
  */
 #pragma once
 
-#include "interface/network/Connection.h"
+#include "utils/Observer.h"
 
-#include "platform/threads/mutex.h"
-
-#include <stddef.h>
 #include <string>
-
-namespace PLATFORM
-{
-  class CTcpConnection;
-}
 
 namespace NETPLAY
 {
-  class CClient : public CConnection
+  class ISocket : public Observable
   {
   public:
-    CClient(IFrontend* frontend, const std::string& strAddress, unsigned int port);
-    virtual ~CClient(void);
+    virtual ~ISocket(void) { }
 
-    // implementation of IConnection
-    virtual std::string Address(void) const;
-    virtual bool Open(void);
-    virtual void Close(void);
+    virtual bool Connect(void) = 0;
 
-  protected:
-    virtual bool SendData(const std::string& request);
-    virtual bool ReadData(std::string& buffer, size_t totalBytes, unsigned int timeoutMs);
+    virtual void Shutdown(void) = 0;
 
-  private:
-    const std::string         m_strAddress;
-    const unsigned int        m_port;
-    PLATFORM::CTcpConnection* m_socket;
-    PLATFORM::CMutex          m_readMutex;
+    virtual bool Read(std::string& buffer, unsigned int totalBytes) = 0;
+
+    virtual bool Abort(void) = 0;
+
+    virtual bool Write(const std::string& request) = 0;
   };
 }

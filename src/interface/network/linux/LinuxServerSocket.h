@@ -19,28 +19,29 @@
  */
 #pragma once
 
-#include "utils/IAbortable.h"
+#include "interface/network/IServerSocket.h"
+
+#include "platform/threads/mutex.h"
+#include "platform/threads/threads.h"
 
 namespace NETPLAY
 {
-  class IServer : public IAbortable
+  class CFrontendManager;
+  class IFrontend;
+  class IGame;
+
+  class CLinuxServerSocket : public IServerSocket
   {
   public:
-    virtual ~IServer(void) { }
+    CLinuxServerSocket(void);
+    virtual ~CLinuxServerSocket(void) { Shutdown(); }
 
-    /*!
-     * \brief Initialize this server instance
-     */
-    virtual bool Initialize(void) = 0;
+    // implementation of IServerSocket
+    virtual bool Bind(void);
+    virtual void Shutdown(void);
+    virtual SocketPtr Listen(void);
 
-    /*!
-     * \brief Deinitialize this service instance
-     */
-    virtual void Deinitialize(void) = 0;
-
-    /*!
-     * \brief Block until the server has exited
-     */
-    virtual void WaitForExit(void) = 0;
+  private:
+    int m_socketFd;
   };
 }

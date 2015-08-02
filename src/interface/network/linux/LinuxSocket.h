@@ -24,35 +24,33 @@
  */
 #pragma once
 
+#include "interface/network/ISocket.h"
+
 #include "platform/threads/mutex.h"
 
-#include <inttypes.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <sys/types.h>
+#include <string>
 
 namespace NETPLAY
 {
   class CLinuxPoller;
 
-  class CLinuxSocket
+  class CLinuxSocket : public ISocket
   {
    public:
-    CLinuxSocket(void);
-    ~CLinuxSocket(void);
+    CLinuxSocket(int fd);
 
-    void SetHandle(int h);
+    virtual ~CLinuxSocket(void) { Shutdown(); }
 
-    void Close(void);
-
-    void Shutdown(void);
-
-    ssize_t Read(uint8_t* buffer, size_t size, int timeout_ms = -1);
-
-    ssize_t Write(const uint8_t* buffer, size_t size, int timeout_ms = -1, bool more_data = false);
+    // implementation of ISocket
+    virtual bool Connect(void);
+    virtual void Shutdown(void);
+    virtual bool Read(std::string& buffer, unsigned int totalBytes);
+    virtual bool Abort(void);
+    virtual bool Write(const std::string& request);
 
    private:
-    int              m_fd;
+    const int        m_fd;
+    std::string      m_strAddress;
     PLATFORM::CMutex m_MutexWrite;
     CLinuxPoller*    m_pollerRead;
     CLinuxPoller*    m_pollerWrite;
