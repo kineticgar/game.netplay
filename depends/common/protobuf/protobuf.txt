@@ -1,1 +1,1 @@
-protobuf https://github.com/google/protobuf tags/v2.6.1
+protobuf https://github.com/google/protobuf tags/v3.0.0-alpha-3
