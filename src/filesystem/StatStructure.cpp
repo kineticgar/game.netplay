@@ -25,7 +25,7 @@
 
 using namespace NETPLAY;
 
-void StatTranslator::TranslateToStruct64(const STAT_STRUCTURE& output, struct stat64& buffer)
+void StatTranslator::TranslateToStruct64(const STAT_STRUCTURE& output, struct __stat64& buffer)
 {
   buffer.st_dev          = output.deviceId;
   buffer.st_size         = output.size;
