@@ -38,6 +38,7 @@ include_directories(
     ${kodi_INCLUDE_DIR}
     ${kodiplatform_INCLUDE_DIRS}
     ${platform_INCLUDE_DIRS}
+    ${PROTOBUF_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR} # For protobuf
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src
@@ -94,10 +95,11 @@ set(GAME_HELPER_LIB_SOURCES
 list(APPEND DEPLIBS
     ${kodiplatform_LIBRARIES}
     ${platform_LIBRARIES}
+    ${PROTOBUF_LIBRARIES}
 )
 
-set(STANDALONE_DEPLIBS
-    protobuf
+set(STANDALONE_LIBS
+    ${DEPLIBS}
     dl
 )
 
@@ -134,7 +136,7 @@ endif()
 
 add_executable(netplay_server ${STANDALONE_SOURCES})
 
-target_link_libraries(netplay_server ${DEPLIBS} ${STANDALONE_DEPLIBS})
+target_link_libraries(netplay_server ${STANDALONE_LIBS})
 
 ################################################################################
 #
