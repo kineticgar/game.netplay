@@ -1,0 +1,45 @@
+From 3518cbab7cdb7869eab77dd1e5771bad783d515c Mon Sep 17 00:00:00 2001
+From: Garrett Brown <themagnificentmrb@gmail.com>
+Date: Thu, 6 Aug 2015 03:42:56 -0700
+Subject: [PATCH] [cmake] Add install commands
+
+---
+ cmake/libprotobuf-lite.cmake | 2 ++
+ cmake/libprotobuf.cmake      | 5 +++++
+ cmake/protoc.cmake           | 2 ++
+ 3 files changed, 9 insertions(+)
+
+diff --git a/cmake/libprotobuf-lite.cmake b/cmake/libprotobuf-lite.cmake
+index e323840..d1ab433 100644
+--- a/cmake/libprotobuf-lite.cmake
++++ b/cmake/libprotobuf-lite.cmake
+@@ -28,3 +28,5 @@ target_include_directories(libprotobuf-lite PUBLIC ${protobuf_source_dir}/src)
+ set_target_properties(libprotobuf-lite PROPERTIES
+     COMPILE_DEFINITIONS LIBPROTOBUF_EXPORTS
+     OUTPUT_NAME ${LIB_PREFIX}protobuf-lite)
++
++install(TARGETS libprotobuf-lite DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+diff --git a/cmake/libprotobuf.cmake b/cmake/libprotobuf.cmake
+index 31fb1fb..59a97ad 100644
+--- a/cmake/libprotobuf.cmake
++++ b/cmake/libprotobuf.cmake
+@@ -58,3 +58,8 @@ target_include_directories(libprotobuf PUBLIC ${protobuf_source_dir}/src)
+ set_target_properties(libprotobuf PROPERTIES
+     COMPILE_DEFINITIONS LIBPROTOBUF_EXPORTS
+     OUTPUT_NAME ${LIB_PREFIX}protobuf)
++
++install(TARGETS libprotobuf DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(DIRECTORY ${protobuf_source_dir}/src/google/protobuf/
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/google/protobuf
++    FILES_MATCHING PATTERN "*.h")
+diff --git a/cmake/protoc.cmake b/cmake/protoc.cmake
+index 4f07c38..8f011a3 100644
+--- a/cmake/protoc.cmake
++++ b/cmake/protoc.cmake
+@@ -4,3 +4,5 @@ set(protoc_files
+ 
+ add_executable(protoc ${protoc_files})
+ target_link_libraries(protoc libprotobuf libprotoc)
++
++install(TARGETS protoc DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
