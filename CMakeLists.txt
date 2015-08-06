@@ -155,14 +155,33 @@ build_addon(${PROJECT_NAME} ADDON DEPLIBS)
 
 ################################################################################
 #
-#  Helper libraries (TODO: Fix platform suffix for helper libraries)
+#  Helper libraries
 #
 ################################################################################
 
-set(ADDON_HELPER_ARCH x86_64-linux) # TODO
+if("${CORE_SYSTEM_NAME}" STREQUAL "windows")
+    # pass
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "android")
+    set(ADDON_HELPER_ARCH arm)
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "freebsd")
+    set(ADDON_HELPER_ARCH x86_64-linux) # TODO: x86
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "ios")
+    set(ADDON_HELPER_ARCH arm-osx)
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "linux")
+    set(ADDON_HELPER_ARCH x86_64-linux) # TODO: x86
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "darwin" OR "${CORE_SYSTEM_NAME}" STREQUAL "osx")
+    set(ADDON_HELPER_ARCH x86-osx) # TODO: x86, powerpc
+elseif("${CORE_SYSTEM_NAME}" STREQUAL "rbpi")
+    set(ADDON_HELPER_ARCH arm)
+endif()
 
-set(XBMC_ADDON_HELPER XBMC_addon-${ADDON_HELPER_ARCH})
-set(KODI_GAME_HELPER KODI_game-${ADDON_HELPER_ARCH})
+if(ADDON_HELPER_ARCH)
+    set(XBMC_ADDON_HELPER XBMC_addon-${ADDON_HELPER_ARCH})
+    set(KODI_GAME_HELPER KODI_game-${ADDON_HELPER_ARCH})
+else()
+    set(XBMC_ADDON_HELPER XBMC_addon)
+    set(KODI_GAME_HELPER KODI_game)
+endif()
 
 build_addon_library(${XBMC_ADDON_HELPER} ${PROJECT_NAME} ADDON_HELPER_LIB ADDON_HELPER_DEPLIBS)
 build_addon_library(${KODI_GAME_HELPER} ${PROJECT_NAME} GAME_HELPER_LIB GAME_HELPER_DEPLIBS)
