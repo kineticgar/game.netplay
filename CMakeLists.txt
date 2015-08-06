@@ -175,7 +175,7 @@ set_target_properties(KODI_game-${ADDON_HELPER_ARCH}
 )
 
 install(TARGETS ${XBMC_ADDON_HELPER} ${KODI_GAME_HELPER}
-    LIBRARY DESTINATION ${KODI_LIB_DIR}/addons/${PROJECT_NAME}/resources
+    DESTINATION ${KODI_LIB_DIR}/addons/${PROJECT_NAME}/resources
 )
 
 include(CPack)
