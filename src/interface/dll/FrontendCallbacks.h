@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "utils/CommonIncludes.h"
+
 #include "kodi/kodi_addon_callbacks.h"
 #include "kodi/kodi_game_callbacks.h"
 

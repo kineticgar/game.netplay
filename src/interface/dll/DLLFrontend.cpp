@@ -30,18 +30,6 @@
 using namespace ADDON;
 using namespace NETPLAY;
 
-#ifdef DeleteFile
-  #undef DeleteFile
-#endif
-
-#ifdef CreateDirectory
-  #undef CreateDirectory
-#endif
-
-#ifdef RemoveDirectory
-  #undef RemoveDirectory
-#endif
-
 CDLLFrontend::CDLLFrontend(void* callbacks)
 {
   try

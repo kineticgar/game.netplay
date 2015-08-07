@@ -19,6 +19,7 @@
  */
 
 #include "interface/dll/FrontendCallbackLib.h"
+#include "utils/CommonIncludes.h"
 
 #include "kodi/kodi_addon_callbacks.h"
 
@@ -26,9 +27,6 @@
 
 #ifdef _WIN32
   #include <windows.h>
-  #undef DeleteFile
-  #undef CreateDirectory
-  #undef RemoveDirectory
   #define DLLEXPORT __declspec(dllexport)
 #else
   #define DLLEXPORT

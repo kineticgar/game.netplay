@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "filesystem/StatStructure.h"
+#include "utils/CommonIncludes.h"
 #include "utils/Observer.h"
 
 #include "kodi/xbmc_addon_types.h"
@@ -30,6 +30,8 @@
 
 namespace NETPLAY
 {
+  struct STAT_STRUCTURE;
+
   class IFrontend : public Observable
   {
   public:
