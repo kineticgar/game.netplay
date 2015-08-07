@@ -82,8 +82,6 @@ namespace NETPLAY
     virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance);
 
   private:
-    static void TranslateToStruct(const struct __stat64* buffer, STAT_STRUCTURE& output);
-
     ADDON::CHelper_libXBMC_addon* m_addon;
     CHelper_libKODI_game*         m_game;
   };

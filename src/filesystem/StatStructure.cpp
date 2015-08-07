@@ -21,9 +21,39 @@
 #include "StatStructure.h"
 
 #include <fcntl.h>
-#include <sys/stat.h>
+#include <sys/types.h>
 
 using namespace NETPLAY;
+
+#ifndef S_ISDIR
+  #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
+void StatTranslator::TranslateToStruct(const struct __stat64& buffer, STAT_STRUCTURE& output)
+{
+  output.deviceId         = buffer.st_dev;
+  output.size             = buffer.st_size;
+#if defined(_WIN32)
+  output.accessTime       = buffer.st_atime;
+  output.modificationTime = buffer.st_mtime;
+  output.statusTime       = buffer.st_ctime;
+#elif defined(__APPLE__)
+  output.accessTime       = buffer.st_atimespec;
+  output.modificationTime = buffer.st_mtimespec;
+  output.statusTime       = buffer.st_ctimespec;
+#else
+  output.accessTime       = buffer.st_atim;
+  output.modificationTime = buffer.st_mtim;
+  output.statusTime       = buffer.st_ctim;
+#endif
+  output.isDirectory      = S_ISDIR(buffer.st_mode);
+#if defined(_WIN32)
+  output.isSymLink        = false;
+#else
+  output.isSymLink        = S_ISLNK(buffer.st_mode);
+#endif
+  output.isHidden         = false; // TODO
+}
 
 void StatTranslator::TranslateToStruct64(const STAT_STRUCTURE& output, struct __stat64& buffer)
 {
@@ -45,8 +75,10 @@ void StatTranslator::TranslateToStruct64(const STAT_STRUCTURE& output, struct __
   buffer.st_mode = 0;
   if (output.isDirectory)
     buffer.st_mode       |= S_IFDIR;
+#if !defined(_WIN32)
   if (output.isSymLink)
     buffer.st_mode       |= S_IFLNK;
+#endif
   // TODO
   //if (output.isHidden)
   //  buffer.st_mode |= __S_IFDIR;

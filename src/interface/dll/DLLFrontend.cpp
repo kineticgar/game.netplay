@@ -170,7 +170,7 @@ bool CDLLFrontend::StatFile(const char* strFileName, STAT_STRUCTURE& buffer)
 
   if (m_addon->StatFile(strFileName, &statBuffer) >= 0)
   {
-    TranslateToStruct(&statBuffer, buffer);
+    StatTranslator::TranslateToStruct(statBuffer, buffer);
     return true;
   }
 
@@ -280,29 +280,4 @@ bool CDLLFrontend::GetLocation(double* lat, double* lon, double* horizAccuracy, 
 void CDLLFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
 {
   return m_game->SetLocationInterval(intervalMs, intervalDistance);
-}
-
-void CDLLFrontend::TranslateToStruct(const struct __stat64* buffer, STAT_STRUCTURE& output)
-{
-  if (buffer)
-  {
-    output.deviceId         = buffer->st_dev;
-    output.size             = buffer->st_size;
-  #if defined(_WIN32)
-    output.accessTime       = buffer->st_atime;
-    output.modificationTime = buffer->st_mtime;
-    output.statusTime       = buffer->st_ctime;
-  #elif defined(__APPLE__)
-    output.accessTime       = buffer->st_atimespec;
-    output.modificationTime = buffer->st_mtimespec;
-    output.statusTime       = buffer->st_ctimespec;
-  #else
-    output.accessTime       = buffer->st_atim;
-    output.modificationTime = buffer->st_mtim;
-    output.statusTime       = buffer->st_ctim;
-  #endif
-    output.isDirectory      = S_ISDIR(buffer->st_mode);
-    output.isSymLink        = S_ISLNK(buffer->st_mode);
-    output.isHidden         = false; // TODO
-  }
 }

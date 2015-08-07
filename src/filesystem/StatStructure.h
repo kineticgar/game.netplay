@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "kodi/libXBMC_addon.h"
+#include "kodi/libXBMC_addon.h" // for definition of __stat64
 
 #include <stdint.h>
 #include <time.h>
@@ -47,6 +47,7 @@ namespace NETPLAY
   class StatTranslator
   {
   public:
+    static void TranslateToStruct(const struct __stat64& buffer, STAT_STRUCTURE& output);
     static void TranslateToStruct64(const STAT_STRUCTURE& output, struct __stat64& buffer);
   };
 }
