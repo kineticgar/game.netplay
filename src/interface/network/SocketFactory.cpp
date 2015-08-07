@@ -19,8 +19,11 @@
  */
 
 #include "SocketFactory.h"
-#include "interface/network/linux/LinuxServerSocket.h"
 #include "interface/network/platform/PlatformSocket.h"
+
+#if !defined(_WIN32)
+  #include "interface/network/linux/LinuxServerSocket.h"
+#endif
 
 using namespace NETPLAY;
 
@@ -28,7 +31,7 @@ ServerSocketPtr CSocketFactory::CreateServerSocket(void)
 {
   ServerSocketPtr socket;
 
-#if !defined(_WIN32) // TODO
+#if !defined(_WIN32)
   socket = ServerSocketPtr(new CLinuxServerSocket);
 #endif
 

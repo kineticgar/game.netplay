@@ -46,7 +46,6 @@ include_directories(
 
 set(NETPLAY_SOURCES
     ${PROTO_SRCS}
-    src/filesystem/linux/LinuxPoller.cpp
     src/filesystem/StatStructure.cpp
     src/interface/dll/DLLFrontend.cpp
     src/interface/dll/DLLGame.cpp
@@ -56,8 +55,6 @@ set(NETPLAY_SOURCES
     src/interface/network/Client.cpp
     src/interface/network/FrontendHandler.cpp
     src/interface/network/GameHandler.cpp
-    src/interface/network/linux/LinuxServerSocket.cpp
-    src/interface/network/linux/LinuxSocket.cpp
     src/interface/network/NetworkFrontend.cpp
     src/interface/network/NetworkGame.cpp
     src/interface/network/platform/PlatformSocket.cpp
@@ -73,6 +70,16 @@ set(NETPLAY_SOURCES
     src/utils/StringUtils.cpp
     src/utils/Version.cpp
 )
+
+if(WIN32)
+    # TODO
+else(WIN32)
+    list(APPEND NETPLAY_SOURCES
+        src/filesystem/linux/LinuxPoller.cpp
+        src/interface/network/linux/LinuxServerSocket.cpp
+        src/interface/network/linux/LinuxSocket.cpp
+    )
+endif(WIN32)
 
 set(STANDALONE_SOURCES
     ${NETPLAY_SOURCES}
