@@ -75,12 +75,12 @@ namespace NETPLAY
     const bool bStandalone = myPath.empty();
     if (bStandalone)
     {
-      GAME = new CNetworkGame(callbacks, gui);
+      game = new CNetworkGame(callbacks, gui);
     }
     else
     {
       const std::string myDir = PathUtils::GetParentDirectory(myPath);
-      GAME = new CDLLGame(callbacks, PopProxyDLL(properties), PathUtils::GetHelperLibraryDir(myDir));
+      game = new CDLLGame(callbacks, PopProxyDLL(properties), PathUtils::GetHelperLibraryDir(myDir));
     }
 
     return game;
