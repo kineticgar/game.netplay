@@ -29,7 +29,7 @@ ServerSocketPtr CSocketFactory::CreateServerSocket(void)
   ServerSocketPtr socket;
 
 #if !defined(_WIN32) // TODO
-  socket = ServerSocketPtr(new CLinuxServerSocket());
+  socket = ServerSocketPtr(new CLinuxServerSocket);
 #endif
 
   return socket;
