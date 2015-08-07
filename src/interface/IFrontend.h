@@ -80,12 +80,5 @@ namespace NETPLAY
     virtual bool OpenPort(unsigned int port) = 0;
     virtual void ClosePort(unsigned int port) = 0;
     virtual void RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength) = 0;
-    virtual void SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps) = 0;
-    virtual bool StartCamera(void) = 0;
-    virtual void StopCamera(void) = 0;
-    virtual bool StartLocation(void) = 0;
-    virtual void StopLocation(void) = 0;
-    virtual bool GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy) = 0;
-    virtual void SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance) = 0;
   };
 }

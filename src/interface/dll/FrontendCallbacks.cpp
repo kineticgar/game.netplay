@@ -422,13 +422,6 @@ CFrontendCallbacksGame::CFrontendCallbacksGame(IFrontend* frontend) :
   m_callbacks.OpenPort                       = OpenPort;
   m_callbacks.ClosePort                      = ClosePort;
   m_callbacks.RumbleSetState                 = RumbleSetState;
-  m_callbacks.SetCameraInfo                  = SetCameraInfo;
-  m_callbacks.StartCamera                    = StartCamera;
-  m_callbacks.StopCamera                     = StopCamera;
-  m_callbacks.StartLocation                  = StartLocation;
-  m_callbacks.StopLocation                   = StopLocation;
-  m_callbacks.GetLocation                    = GetLocation;
-  m_callbacks.SetLocationInterval            = SetLocationInterval;
 }
 
 void CFrontendCallbacksGame::CloseGame(void* addonData)
@@ -522,73 +515,4 @@ void CFrontendCallbacksGame::RumbleSetState(void* addonData, unsigned int port, 
     return;
 
   return frontend->RumbleSetState(port, effect, strength);
-}
-
-void CFrontendCallbacksGame::SetCameraInfo(void* addonData, unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return;
-
-  if (width == 0 || height == 0)
-    return;
-
-  return frontend->SetCameraInfo(width, height, caps);
-}
-
-bool CFrontendCallbacksGame::StartCamera(void* addonData)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return false;
-
-  return frontend->StartCamera();
-}
-
-void CFrontendCallbacksGame::StopCamera(void* addonData)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return;
-
-  return frontend->StopCamera();
-}
-
-bool CFrontendCallbacksGame::StartLocation(void* addonData)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return false;
-
-  return frontend->StartLocation();
-}
-
-void CFrontendCallbacksGame::StopLocation(void* addonData)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return;
-
-  return frontend->StopLocation();
-}
-
-bool CFrontendCallbacksGame::GetLocation(void* addonData, double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return false;
-
-  if (lat == NULL || lon == NULL || horizAccuracy == NULL || vertAccuracy == NULL)
-    return false;
-
-  return frontend->GetLocation(lat, lon, horizAccuracy, vertAccuracy);
-}
-
-void CFrontendCallbacksGame::SetLocationInterval(void* addonData, unsigned int intervalMs, unsigned int intervalDistance)
-{
-  IFrontend* frontend = GetFrontend(addonData);
-  if (frontend == NULL)
-    return;
-
-  return frontend->SetLocationInterval(intervalMs, intervalDistance);
 }

@@ -85,26 +85,6 @@ message game_system_av_info {
   required game_system_timing timing = 2;
 }
 
-message game_camera_info {
-  required uint64 caps = 1;                // Camera capabilities
-  required uint32 width = 2;               // Hint at desired resolution
-  required uint32 height = 3;              // Hint at desired resolution
-}
-
-message game_hw_info {
-  required uint32 context_type = 1;        // Which API to use. Set by game client
-  required bool   depth = 2;               // Set if render buffers should have depth component attached
-  required bool   stencil = 3;             // Set if stencil buffers should be attached
-                                           // If depth and stencil are true, a packed 24/8 buffer will be added. Only attaching stencil is invalid and will be ignored
-  required bool   bottom_left_origin = 4;  // Use conventional bottom-left origin convention. Is false, standard top-left origin semantics are used
-  required uint32 version_major = 5;       // Major version number for core GL context
-  required uint32 version_minor = 6;       // Minor version number for core GL context
-  required bool   cache_context = 7;       // If this is true, the frontend will go very far to avoid resetting context in scenarios like toggling fullscreen, etc.
-                                           // The reset callback might still be called in extreme situations such as if the context is lost beyond recovery
-                                           // For optimal stability, set this to false, and allow context to be reset at any time
-  required bool   context_debug = 8;       // Creates a debug context
-}
-
 // --- Game operations ---------------------------------------------------------
 
 message GetGameInfoRequest {
@@ -253,36 +233,3 @@ message RumbleSetStateRequest {
 
 message RumbleSetStateResponse {
 }
-
-message StartLocationRequest {
-}
-
-message StartLocationResponse {
-  required bool result = 1;
-}
-
-message StopLocationRequest {
-}
-
-message StopLocationResponse {
-}
-
-message GetLocationRequest {
-}
-
-message GetLocationResponse {
-  required bool result = 1;
-  required double lat = 2;
-  required double lon = 3;
-  required double horizAccuracy = 4;
-  required double vertAccuracy = 5;
-}
-
-message SetLocationIntervalRequest {
-  required uint32 intervalMs = 1;
-  required uint32 intervalDistance = 2;
-}
-
-message SetLocationIntervalResponse {
-}
-

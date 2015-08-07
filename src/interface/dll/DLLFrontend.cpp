@@ -246,38 +246,3 @@ void CDLLFrontend::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, 
 {
   return m_game->RumbleSetState(port, effect, strength);
 }
-
-void CDLLFrontend::SetCameraInfo(unsigned int width, unsigned int height, GAME_CAMERA_BUFFER caps)
-{
-  return m_game->SetCameraInfo(width, height, caps);
-}
-
-bool CDLLFrontend::StartCamera(void)
-{
-  return m_game->StartCamera();
-}
-
-void CDLLFrontend::StopCamera(void)
-{
-  return m_game->StopCamera();
-}
-
-bool CDLLFrontend::StartLocation(void)
-{
-  return m_game->StartLocation();
-}
-
-void CDLLFrontend::StopLocation(void)
-{
-  return m_game->StopLocation();
-}
-
-bool CDLLFrontend::GetLocation(double* lat, double* lon, double* horizAccuracy, double* vertAccuracy)
-{
-  return m_game->GetLocation(lat, lon, horizAccuracy, vertAccuracy);
-}
-
-void CDLLFrontend::SetLocationInterval(unsigned int intervalMs, unsigned int intervalDistance)
-{
-  return m_game->SetLocationInterval(intervalMs, intervalDistance);
-}

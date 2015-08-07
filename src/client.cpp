@@ -330,67 +330,6 @@ bool InputEvent(unsigned int port, const game_input_event* event)
   return false;
 }
 
-GAME_ERROR DiskSetEjectState(GAME_EJECT_STATE ejected)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_EJECT_STATE DiskGetEjectState(void)
-{
-  return GAME_NOT_EJECTED;
-}
-
-unsigned DiskGetImageIndex(void)
-{
-  return 0;
-}
-
-GAME_ERROR DiskSetImageIndex(unsigned int index)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-unsigned DiskGetNumImages(void)
-{
-  return 0;
-}
-
-GAME_ERROR DiskReplaceImageIndex(unsigned int index, const char* url)
-{
-  if (url == NULL)
-    return GAME_ERROR_INVALID_PARAMETERS;
-
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_ERROR DiskAddImageIndex(void)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_ERROR CameraInitialized(void)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_ERROR CameraDeinitialized(void)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_ERROR CameraFrameRawBuffer(const uint32_t* buffer, unsigned int width, unsigned int height, size_t stride)
-{
-  if (buffer == NULL || width == 0 || height == 0 || stride == 0)
-    return GAME_ERROR_INVALID_PARAMETERS;
-
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
-GAME_ERROR CameraFrameOpenglTexture(unsigned int textureId, unsigned int textureTarget, const float* affine)
-{
-  return GAME_ERROR_NOT_IMPLEMENTED;
-}
-
 size_t SerializeSize(void)
 {
   return 0;
