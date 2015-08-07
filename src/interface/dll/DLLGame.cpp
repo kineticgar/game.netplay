@@ -158,9 +158,11 @@ void CDLLGame::Deinitialize(void)
 {
   CLockObject lock(m_mutex);
 
-  m_ADDON_Destroy();
+  if (m_ADDON_Destroy)
+    m_ADDON_Destroy();
 
   delete m_pHelper;
+  m_pHelper = NULL;
 
   if (m_dll)
   {
