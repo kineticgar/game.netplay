@@ -157,26 +157,8 @@ set(ADDON_HELPER_ARCH x86_64-linux) # TODO
 set(XBMC_ADDON_HELPER XBMC_addon-${ADDON_HELPER_ARCH})
 set(KODI_GAME_HELPER KODI_game-${ADDON_HELPER_ARCH})
 
-add_library(${XBMC_ADDON_HELPER} ${ADDON_HELPER_LIB_SOURCES})
-add_library(${KODI_GAME_HELPER} ${GAME_HELPER_LIB_SOURCES})
-
-set_target_properties(XBMC_addon-${ADDON_HELPER_ARCH}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xbmc.addon"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xbmc.addon"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.xbmc.addon"
-)
-
-set_target_properties(KODI_game-${ADDON_HELPER_ARCH}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/resources/library.kodi.game"
-)
-
-install(TARGETS ${XBMC_ADDON_HELPER} ${KODI_GAME_HELPER}
-    DESTINATION ${KODI_LIB_DIR}/addons/${PROJECT_NAME}/resources
-)
+build_addon_library(${XBMC_ADDON_HELPER} ${PROJECT_NAME} ADDON_HELPER_LIB ADDON_HELPER_DEPLIBS)
+build_addon_library(${KODI_GAME_HELPER} ${PROJECT_NAME} GAME_HELPER_LIB GAME_HELPER_DEPLIBS)
 
 include(CPack)
 
