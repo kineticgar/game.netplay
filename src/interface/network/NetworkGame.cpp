@@ -64,16 +64,19 @@ void CNetworkGame::Stop(void)
 
 ADDON_STATUS CNetworkGame::GetStatus(void)
 {
-  addon::GetStatusRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetStatus, strRequest, strResponse))
+    addon::GetStatusRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      addon::GetStatusResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<ADDON_STATUS>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetStatus, strRequest, strResponse))
+      {
+        addon::GetStatusResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<ADDON_STATUS>(response.result());
+      }
     }
   }
 
@@ -101,15 +104,18 @@ void CNetworkGame::FreeSettings(void)
 
 void CNetworkGame::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
 {
-  addon::AnnounceRequest request;
-  request.set_flag(flag);
-  request.set_sender(sender);
-  request.set_msg(message);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::Announce, strRequest, strResponse);
+    addon::AnnounceRequest request;
+    request.set_flag(flag);
+    request.set_sender(sender);
+    request.set_msg(message);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::Announce, strRequest, strResponse);
+    }
   }
 }
 
@@ -149,49 +155,56 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
   if (!m_rpc || !m_rpc->Initialize())
   {
     esyslog("Failed to open connection to network game");
-    return GAME_ERROR_FAILED;
   }
-
-  dsyslog("Connected to network game. Logging in...");
-
-  static const Version gameApiVersion(GAME_API_VERSION);
-  static const Version gameMinApiVersion(GAME_MIN_API_VERSION);
-
-  addon::LoginRequest request;
-  request.set_game_version_major(gameApiVersion.version_major);
-  request.set_game_version_minor(gameApiVersion.version_minor);
-  request.set_game_version_point(gameApiVersion.version_point);
-  request.set_min_version_major(gameMinApiVersion.version_major);
-  request.set_min_version_minor(gameMinApiVersion.version_minor);
-  request.set_min_version_point(gameMinApiVersion.version_point);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  else
   {
-    std::string strResponse;
-    if (!m_rpc->SendRequest(RPC_METHOD::Login, strRequest, strResponse))
+    dsyslog("Connected to network game. Logging in...");
+
+    static const Version gameApiVersion(GAME_API_VERSION);
+    static const Version gameMinApiVersion(GAME_MIN_API_VERSION);
+
+    addon::LoginRequest request;
+    request.set_game_version_major(gameApiVersion.version_major);
+    request.set_game_version_minor(gameApiVersion.version_minor);
+    request.set_game_version_point(gameApiVersion.version_point);
+    request.set_min_version_major(gameMinApiVersion.version_major);
+    request.set_min_version_minor(gameMinApiVersion.version_minor);
+    request.set_min_version_point(gameMinApiVersion.version_point);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      esyslog("Failed to send login request");
-    }
-    else
-    {
-      addon::LoginResponse response;
-      if (response.ParseFromString(strResponse))
+      std::string strResponse;
+      if (!m_rpc->SendRequest(RPC_METHOD::Login, strRequest, strResponse))
       {
-        const bool bLoginResult = response.result();
-        if (bLoginResult)
+        esyslog("Failed to send login request");
+      }
+      else
+      {
+        addon::LoginResponse response;
+        if (response.ParseFromString(strResponse))
         {
-          isyslog("Logged into network game");
-          return GAME_ERROR_NO_ERROR;
+          const bool bLoginResult = response.result();
+          if (bLoginResult)
+          {
+            isyslog("Logged into network game");
+            return GAME_ERROR_NO_ERROR;
+          }
         }
       }
     }
   }
+
+  delete m_rpc;
+  m_rpc = NULL;
 
   return GAME_ERROR_FAILED;
 }
 
 GAME_ERROR CNetworkGame::UnloadGame(void)
 {
+  if (!m_rpc)
+    return GAME_ERROR_FAILED;
+
   addon::LogoutRequest request;
   std::string strRequest;
   if (request.SerializeToString(&strRequest))
@@ -202,6 +215,9 @@ GAME_ERROR CNetworkGame::UnloadGame(void)
 
   m_rpc->Deinitialize();
 
+  delete m_rpc;
+  m_rpc = NULL;
+
   return GAME_ERROR_NO_ERROR;
 }
 
@@ -209,25 +225,28 @@ GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  game::GetGameInfoRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetGameInfo, strRequest, strResponse))
+    game::GetGameInfoRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::GetGameInfoResponse response;
-      if (response.ParseFromString(strResponse))
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetGameInfo, strRequest, strResponse))
       {
-        result = static_cast<GAME_ERROR>(response.result());
-        if (result == GAME_ERROR_NO_ERROR)
+        game::GetGameInfoResponse response;
+        if (response.ParseFromString(strResponse))
         {
-          info->geometry.base_width = response.info().geometry().base_width();
-          info->geometry.base_height = response.info().geometry().base_height();
-          info->geometry.max_width = response.info().geometry().max_width();
-          info->geometry.max_height = response.info().geometry().max_height();
-          info->timing.fps = response.info().timing().fps();
-          info->timing.sample_rate = response.info().timing().sample_rate();
+          result = static_cast<GAME_ERROR>(response.result());
+          if (result == GAME_ERROR_NO_ERROR)
+          {
+            info->geometry.base_width = response.info().geometry().base_width();
+            info->geometry.base_height = response.info().geometry().base_height();
+            info->geometry.max_width = response.info().geometry().max_width();
+            info->geometry.max_height = response.info().geometry().max_height();
+            info->timing.fps = response.info().timing().fps();
+            info->timing.sample_rate = response.info().timing().sample_rate();
+          }
         }
       }
     }
@@ -238,16 +257,19 @@ GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
 
 GAME_REGION CNetworkGame::GetRegion(void)
 {
-  game::GetRegionRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetRegion, strRequest, strResponse))
+    game::GetRegionRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::GetRegionResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_REGION>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetRegion, strRequest, strResponse))
+      {
+        game::GetRegionResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<GAME_REGION>(response.result());
+      }
     }
   }
 
@@ -256,27 +278,33 @@ GAME_REGION CNetworkGame::GetRegion(void)
 
 void CNetworkGame::FrameEvent(void)
 {
-  game::FrameEventRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::FrameEvent, strRequest, strResponse);
+    game::FrameEventRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::FrameEvent, strRequest, strResponse);
+    }
   }
 }
 
 GAME_ERROR CNetworkGame::Reset(void)
 {
-  game::ResetRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::Reset, strRequest, strResponse))
+    game::ResetRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::ResetResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::Reset, strRequest, strResponse))
+      {
+        game::ResetResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<GAME_ERROR>(response.result());
+      }
     }
   }
 
@@ -295,76 +323,82 @@ GAME_ERROR CNetworkGame::HwContextDestroy(void)
 
 void CNetworkGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
-  game::UpdatePortRequest request;
-  request.set_port(port);
-  request.set_connected(connected);
-  request.mutable_controller()->set_controller_id(controller->controller_id ? controller->controller_id : "");
-  request.mutable_controller()->set_digital_button_count(controller->digital_button_count);
-  request.mutable_controller()->set_analog_button_count(controller->analog_button_count);
-  request.mutable_controller()->set_analog_stick_count(controller->analog_stick_count);
-  request.mutable_controller()->set_accelerometer_count(controller->accelerometer_count);
-  request.mutable_controller()->set_key_count(controller->key_count);
-  request.mutable_controller()->set_rel_pointer_count(controller->rel_pointer_count);
-  request.mutable_controller()->set_abs_pointer_count(controller->abs_pointer_count);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::UpdatePort, strRequest, strResponse);
+    game::UpdatePortRequest request;
+    request.set_port(port);
+    request.set_connected(connected);
+    request.mutable_controller()->set_controller_id(controller->controller_id ? controller->controller_id : "");
+    request.mutable_controller()->set_digital_button_count(controller->digital_button_count);
+    request.mutable_controller()->set_analog_button_count(controller->analog_button_count);
+    request.mutable_controller()->set_analog_stick_count(controller->analog_stick_count);
+    request.mutable_controller()->set_accelerometer_count(controller->accelerometer_count);
+    request.mutable_controller()->set_key_count(controller->key_count);
+    request.mutable_controller()->set_rel_pointer_count(controller->rel_pointer_count);
+    request.mutable_controller()->set_abs_pointer_count(controller->abs_pointer_count);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::UpdatePort, strRequest, strResponse);
+    }
   }
 }
 
 bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
 {
-  game::InputEventRequest request;
-  request.set_port(port);
-  request.mutable_event()->set_type(event->type);
-  request.mutable_event()->set_port(event->port);
-  request.mutable_event()->set_controller_id(event->controller_id ? event->controller_id : "");
-  request.mutable_event()->set_feature_name(event->feature_name ? event->feature_name : "");
-  switch (event->type)
+  if (m_rpc)
   {
-    case GAME_INPUT_EVENT_DIGITAL_BUTTON:
-      request.mutable_event()->mutable_digital_button()->set_pressed(event->digital_button.pressed);
-      break;
-    case GAME_INPUT_EVENT_ANALOG_BUTTON:
-      request.mutable_event()->mutable_analog_button()->set_magnitude(event->analog_button.magnitude);
-      break;
-    case GAME_INPUT_EVENT_ANALOG_STICK:
-      request.mutable_event()->mutable_analog_stick()->set_x(event->analog_stick.x);
-      request.mutable_event()->mutable_analog_stick()->set_y(event->analog_stick.y);
-      break;
-    case GAME_INPUT_EVENT_ACCELEROMETER:
-      request.mutable_event()->mutable_accelerometer()->set_x(event->accelerometer.x);
-      request.mutable_event()->mutable_accelerometer()->set_y(event->accelerometer.y);
-      request.mutable_event()->mutable_accelerometer()->set_z(event->accelerometer.z);
-      break;
-    case GAME_INPUT_EVENT_KEY:
-      request.mutable_event()->mutable_key()->set_pressed(event->key.pressed);
-      request.mutable_event()->mutable_key()->set_character(event->key.character);
-      request.mutable_event()->mutable_key()->set_modifiers(event->key.modifiers);
-      break;
-    case GAME_INPUT_EVENT_RELATIVE_POINTER:
-      request.mutable_event()->mutable_rel_pointer()->set_x(event->rel_pointer.x);
-      request.mutable_event()->mutable_rel_pointer()->set_y(event->rel_pointer.y);
-      break;
-    case GAME_INPUT_EVENT_ABSOLUTE_POINTER:
-      request.mutable_event()->mutable_abs_pointer()->set_pressed(event->abs_pointer.pressed);
-      request.mutable_event()->mutable_abs_pointer()->set_x(event->abs_pointer.x);
-      request.mutable_event()->mutable_abs_pointer()->set_y(event->abs_pointer.y);
-      break;
-    default:
-      break;
-  }
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
-  {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::InputEvent, strRequest, strResponse))
+    game::InputEventRequest request;
+    request.set_port(port);
+    request.mutable_event()->set_type(event->type);
+    request.mutable_event()->set_port(event->port);
+    request.mutable_event()->set_controller_id(event->controller_id ? event->controller_id : "");
+    request.mutable_event()->set_feature_name(event->feature_name ? event->feature_name : "");
+    switch (event->type)
     {
-      game::InputEventResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      case GAME_INPUT_EVENT_DIGITAL_BUTTON:
+        request.mutable_event()->mutable_digital_button()->set_pressed(event->digital_button.pressed);
+        break;
+      case GAME_INPUT_EVENT_ANALOG_BUTTON:
+        request.mutable_event()->mutable_analog_button()->set_magnitude(event->analog_button.magnitude);
+        break;
+      case GAME_INPUT_EVENT_ANALOG_STICK:
+        request.mutable_event()->mutable_analog_stick()->set_x(event->analog_stick.x);
+        request.mutable_event()->mutable_analog_stick()->set_y(event->analog_stick.y);
+        break;
+      case GAME_INPUT_EVENT_ACCELEROMETER:
+        request.mutable_event()->mutable_accelerometer()->set_x(event->accelerometer.x);
+        request.mutable_event()->mutable_accelerometer()->set_y(event->accelerometer.y);
+        request.mutable_event()->mutable_accelerometer()->set_z(event->accelerometer.z);
+        break;
+      case GAME_INPUT_EVENT_KEY:
+        request.mutable_event()->mutable_key()->set_pressed(event->key.pressed);
+        request.mutable_event()->mutable_key()->set_character(event->key.character);
+        request.mutable_event()->mutable_key()->set_modifiers(event->key.modifiers);
+        break;
+      case GAME_INPUT_EVENT_RELATIVE_POINTER:
+        request.mutable_event()->mutable_rel_pointer()->set_x(event->rel_pointer.x);
+        request.mutable_event()->mutable_rel_pointer()->set_y(event->rel_pointer.y);
+        break;
+      case GAME_INPUT_EVENT_ABSOLUTE_POINTER:
+        request.mutable_event()->mutable_abs_pointer()->set_pressed(event->abs_pointer.pressed);
+        request.mutable_event()->mutable_abs_pointer()->set_x(event->abs_pointer.x);
+        request.mutable_event()->mutable_abs_pointer()->set_y(event->abs_pointer.y);
+        break;
+      default:
+        break;
+    }
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::InputEvent, strRequest, strResponse))
+      {
+        game::InputEventResponse response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -373,16 +407,19 @@ bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
 
 size_t CNetworkGame::SerializeSize(void)
 {
-  game::SerializeSizeRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::SerializeSize, strRequest, strResponse))
+    game::SerializeSizeRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::SerializeSizeResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::SerializeSize, strRequest, strResponse))
+      {
+        game::SerializeSizeResponse response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -393,21 +430,24 @@ GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  game::SerializeRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::Serialize, strRequest, strResponse))
+    game::SerializeRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::SerializeResponse response;
-      if (response.ParseFromString(strResponse))
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::Serialize, strRequest, strResponse))
       {
-        result = static_cast<GAME_ERROR>(response.result());
-        if (result == GAME_ERROR_NO_ERROR)
+        game::SerializeResponse response;
+        if (response.ParseFromString(strResponse))
         {
-          size = std::min(size, response.data().length());
-          std::memcpy(data, response.data().c_str(), size);
+          result = static_cast<GAME_ERROR>(response.result());
+          if (result == GAME_ERROR_NO_ERROR)
+          {
+            size = std::min(size, response.data().length());
+            std::memcpy(data, response.data().c_str(), size);
+          }
         }
       }
     }
@@ -418,18 +458,21 @@ GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
 
 GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
 {
-  game::DeserializeRequest request;
-  request.mutable_data()->resize(size);
-  std::memcpy(const_cast<char*>(request.mutable_data()->c_str()), data, size);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::Deserialize, strRequest, strResponse))
+    game::DeserializeRequest request;
+    request.mutable_data()->resize(size);
+    std::memcpy(const_cast<char*>(request.mutable_data()->c_str()), data, size);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::DeserializeResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::Deserialize, strRequest, strResponse))
+      {
+        game::DeserializeResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<GAME_ERROR>(response.result());
+      }
     }
   }
 
@@ -438,16 +481,19 @@ GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
 
 GAME_ERROR CNetworkGame::CheatReset(void)
 {
-  game::CheatResetRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::CheatReset, strRequest, strResponse))
+    game::CheatResetRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::CheatResetResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::CheatReset, strRequest, strResponse))
+      {
+        game::CheatResetResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<GAME_ERROR>(response.result());
+      }
     }
   }
 
@@ -458,25 +504,28 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  game::GetMemoryRequest request;
-  request.set_type(type);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetMemory, strRequest, strResponse))
+    game::GetMemoryRequest request;
+    request.set_type(type);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::GetMemoryResponse response;
-      if (response.ParseFromString(strResponse))
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetMemory, strRequest, strResponse))
       {
-        result = static_cast<GAME_ERROR>(response.result());
-        if (result == GAME_ERROR_NO_ERROR)
+        game::GetMemoryResponse response;
+        if (response.ParseFromString(strResponse))
         {
-          std::vector<uint8_t>& memory = m_memory[type];
-          memory.resize(response.data().length());
-          std::memcpy(memory.data(), response.data().c_str(), response.data().length());
-          *data = memory.data();
-          *size = response.data().length();
+          result = static_cast<GAME_ERROR>(response.result());
+          if (result == GAME_ERROR_NO_ERROR)
+          {
+            std::vector<uint8_t>& memory = m_memory[type];
+            memory.resize(response.data().length());
+            std::memcpy(memory.data(), response.data().c_str(), response.data().length());
+            *data = memory.data();
+            *size = response.data().length();
+          }
         }
       }
     }
@@ -487,19 +536,22 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
 
 GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const std::string& code)
 {
-  game::SetCheatRequest request;
-  request.set_index(index);
-  request.set_enabled(enabled);
-  request.set_code(code);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_rpc)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::SetCheat, strRequest, strResponse))
+    game::SetCheatRequest request;
+    request.set_index(index);
+    request.set_enabled(enabled);
+    request.set_code(code);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::SetCheatResponse response;
-      if (response.ParseFromString(strResponse))
-        return static_cast<GAME_ERROR>(response.result());
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::SetCheat, strRequest, strResponse))
+      {
+        game::SetCheatResponse response;
+        if (response.ParseFromString(strResponse))
+          return static_cast<GAME_ERROR>(response.result());
+      }
     }
   }
 
