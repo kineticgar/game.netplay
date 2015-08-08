@@ -84,7 +84,7 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
   if (totalBytes == 0)
     return false;
 
-  buffer.resize(totalBytes);
+  buffer.assign(totalBytes, '\0');
 
   CLockObject lock(m_readMutex);
 
