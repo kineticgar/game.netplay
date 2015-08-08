@@ -20,6 +20,8 @@
 
 #include "DLLFrontend.h"
 #include "filesystem/StatStructure.h"
+#include "log/Log.h"
+#include "log/LogAddon.h"
 
 #include "kodi/libXBMC_addon.h"
 #include "kodi/libKODI_game.h"
@@ -30,23 +32,18 @@
 using namespace ADDON;
 using namespace NETPLAY;
 
-CDLLFrontend::CDLLFrontend(void* callbacks)
+CDLLFrontend::CDLLFrontend(void* callbacks) :
+  m_addon(new CHelper_libXBMC_addon),
+  m_game(new CHelper_libKODI_game)
 {
-  try
-  {
-    m_addon = new CHelper_libXBMC_addon;
-    if (!m_addon->RegisterMe(callbacks))
-      throw false;
+  if (!m_addon->RegisterMe(callbacks))
+    Deinitialize();
 
-    m_game = new CHelper_libKODI_game;
-    if (!m_game->RegisterMe(callbacks))
-      throw false;
-  }
-  catch (const bool& bSuccess)
-  {
-    if (!bSuccess)
-      Deinitialize();
-  }
+  if (!m_game->RegisterMe(callbacks))
+    Deinitialize();
+
+  if (m_addon)
+    CLog::Get().SetPipe(new CLogAddon(m_addon));
 }
 
 bool CDLLFrontend::Initialize(void)

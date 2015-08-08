@@ -23,7 +23,6 @@
 #include "interface/FrontendManager.h"
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
-#include "log/Log.h"
 #include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_dll.h"
