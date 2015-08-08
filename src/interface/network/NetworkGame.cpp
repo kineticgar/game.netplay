@@ -184,7 +184,11 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
         if (response.ParseFromString(strResponse))
         {
           const bool bLoginResult = response.result();
-          if (bLoginResult)
+          if (!bLoginResult)
+          {
+            esyslog("Login rejected");
+          }
+          else
           {
             isyslog("Logged into network game");
             return GAME_ERROR_NO_ERROR;
