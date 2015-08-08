@@ -40,6 +40,6 @@ namespace NETPLAY
     virtual SYS_LOG_TYPE Type(void) const { return SYS_LOG_TYPE_ADDON; }
 
   private:
-    ADDON::CHelper_libXBMC_addon* m_frontend;
+    ADDON::CHelper_libXBMC_addon* const m_frontend;
   };
 }
