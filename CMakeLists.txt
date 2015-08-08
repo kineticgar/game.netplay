@@ -155,6 +155,75 @@ build_addon(${PROJECT_NAME} ADDON DEPLIBS)
 
 ################################################################################
 #
+#  Add-on helper library macro
+#
+################################################################################
+
+# Build, link and optionally package an add-on's additional library
+macro (build_addon_library target addon_id prefix libs output_subdir)
+  if(${prefix}_SOURCES)
+    ADD_LIBRARY(${target} ${${prefix}_SOURCES})
+    TARGET_LINK_LIBRARIES(${target} ${${libs}})
+  else()
+    add_custom_target(${target})
+  endif()
+
+  IF(PACKAGE_ZIP OR PACKAGE_TGZ)
+    IF(WIN32)
+      # get the installation location for the addon's target
+      get_property(dll_location TARGET ${target} PROPERTY LOCATION)
+      # in case of a VC++ project the installation location contains a $(Configuration) VS variable
+      # we replace it with ${CMAKE_BUILD_TYPE} (which doesn't cover the case when the build configuration
+      # is changed within Visual Studio)
+      string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" dll_location "${dll_location}")
+
+      if(${prefix}_SOURCES)
+        # install the generated DLL file
+        INSTALL(PROGRAMS ${dll_location} DESTINATION ${addon_id}/${output_subdir}
+                COMPONENT ${target})
+
+        IF(CMAKE_BUILD_TYPE MATCHES Debug)
+          # for debug builds also install the PDB file
+          get_filename_component(dll_directory ${dll_location} DIRECTORY)
+          INSTALL(FILES ${dll_directory}/${target}.pdb DESTINATION ${addon_id}/${output_subdir}
+                  COMPONENT ${target})
+        ENDIF()
+      endif()
+    ELSE(WIN32)
+      if(${prefix}_SOURCES)
+        INSTALL(TARGETS ${target} DESTINATION ${addon_id}/${output_subdir}
+                COMPONENT ${target})
+        set_target_properties(${target} PROPERTIES SUFFIX ".so")
+      endif()
+    ENDIF(WIN32)
+  ELSE(PACKAGE_ZIP OR PACKAGE_TGZ)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT CMAKE_INSTALL_PREFIX)
+        message(STATUS "setting install paths to match ${APP_NAME}: CMAKE_INSTALL_PREFIX: ${${APP_NAME_UC}_PREFIX}")
+        set(CMAKE_INSTALL_PREFIX "${${APP_NAME_UC}_PREFIX}" CACHE PATH "${APP_NAME} install prefix" FORCE)
+        set(CMAKE_INSTALL_LIBDIR "${${APP_NAME_UC}_LIB_DIR}" CACHE PATH "${APP_NAME} install libdir" FORCE)
+      elseif(NOT CMAKE_INSTALL_PREFIX STREQUAL "${${APP_NAME_UC}_PREFIX}" AND NOT OVERRIDE_PATHS)
+        message(FATAL_ERROR "CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} differs from ${APP_NAME} prefix ${${APP_NAME_UC}_PREFIX}. Please pass -DOVERRIDE_PATHS=1 to skip this check")
+      else()
+        if(NOT CMAKE_INSTALL_LIBDIR)
+          set(CMAKE_INSTALL_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/${APP_NAME_LC}")
+        endif()
+      endif()
+    else()
+      set(CMAKE_INSTALL_LIBDIR "lib/${APP_NAME_LC}")
+    endif()
+
+    if(${prefix}_SOURCES)
+      INSTALL(TARGETS ${target} DESTINATION ${CMAKE_INSTALL_LIBDIR}/addons/${addon_id}/${output_subdir})
+      if (NOT WIN32)
+        set_target_properties(${target} PROPERTIES SUFFIX ".so")
+      endif()
+    endif()
+  ENDIF(PACKAGE_ZIP OR PACKAGE_TGZ)
+endmacro()
+
+################################################################################
+#
 #  Helper libraries
 #
 ################################################################################
