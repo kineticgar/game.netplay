@@ -191,8 +191,19 @@ else()
     set(KODI_GAME_HELPER KODI_game)
 endif()
 
-build_addon_library(${XBMC_ADDON_HELPER} ${PROJECT_NAME} ADDON_HELPER_LIB ADDON_HELPER_DEPLIBS)
-build_addon_library(${KODI_GAME_HELPER} ${PROJECT_NAME} GAME_HELPER_LIB GAME_HELPER_DEPLIBS)
+build_addon_library(${XBMC_ADDON_HELPER}
+                    ${PROJECT_NAME}
+                    ADDON_HELPER_LIB
+                    ADDON_HELPER_DEPLIBS
+                    resources/library.xbmc.addon
+)
+
+build_addon_library(${KODI_GAME_HELPER}
+                    ${PROJECT_NAME}
+                    GAME_HELPER_LIB
+                    GAME_HELPER_DEPLIBS
+                    resources/library.kodi.game
+)
 
 include(CPack)
 
