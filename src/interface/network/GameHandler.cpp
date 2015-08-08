@@ -135,7 +135,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
       addon::AnnounceRequest request;
       if (request.ParseFromString(strRequest))
       {
-        m_game->Announce(request.flag(), request.sender(), request.msg(), NULL);
+        m_game->Announce(request.flag().c_str(), request.sender().c_str(), request.msg().c_str(), NULL);
 
         addon::AnnounceResponse response;
         if (response.SerializeToString(&strResponse))

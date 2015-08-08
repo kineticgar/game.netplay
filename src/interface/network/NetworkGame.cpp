@@ -93,7 +93,7 @@ unsigned int CNetworkGame::GetSettings(ADDON_StructSetting*** sSet)
   return 0;
 }
 
-ADDON_STATUS CNetworkGame::SetSetting(const std::string& settingName, const void* settingValue)
+ADDON_STATUS CNetworkGame::SetSetting(const char* settingName, const void* settingValue)
 {
   return ADDON_STATUS_UNKNOWN; // TODO
 }
@@ -102,14 +102,14 @@ void CNetworkGame::FreeSettings(void)
 {
 }
 
-void CNetworkGame::Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data)
+void CNetworkGame::Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
   if (m_rpc)
   {
     addon::AnnounceRequest request;
-    request.set_flag(flag);
-    request.set_sender(sender);
-    request.set_msg(message);
+    request.set_flag(flag ? flag : "");
+    request.set_sender(sender ? sender : "");
+    request.set_msg(message ? message : "");
     std::string strRequest;
     if (request.SerializeToString(&strRequest))
     {
@@ -129,7 +129,7 @@ std::string CNetworkGame::GetMininumGameAPIVersion(void)
   return GAME_MIN_API_VERSION;
 }
 
-GAME_ERROR CNetworkGame::LoadGame(const std::string& url)
+GAME_ERROR CNetworkGame::LoadGame(const char* url)
 {
   return GAME_ERROR_FAILED;
 }
@@ -534,14 +534,14 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
   return result;
 }
 
-GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const std::string& code)
+GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const char* code)
 {
   if (m_rpc)
   {
     game::SetCheatRequest request;
     request.set_index(index);
     request.set_enabled(enabled);
-    request.set_code(code);
+    request.set_code(code ? code : "");
     std::string strRequest;
     if (request.SerializeToString(&strRequest))
     {

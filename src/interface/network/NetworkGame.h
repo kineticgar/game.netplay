@@ -44,12 +44,12 @@ namespace NETPLAY
     virtual ADDON_STATUS GetStatus(void);
     virtual bool         HasSettings(void);
     virtual unsigned int GetSettings(ADDON_StructSetting*** sSet);
-    virtual ADDON_STATUS SetSetting(const std::string& settingName, const void* settingValue);
+    virtual ADDON_STATUS SetSetting(const char* settingName, const void* settingValue);
     virtual void         FreeSettings(void);
-    virtual void         Announce(const std::string& flag, const std::string& sender, const std::string& message, const void* data);
+    virtual void         Announce(const char* flag, const char* sender, const char* message, const void* data);
     virtual std::string GetGameAPIVersion(void);
     virtual std::string GetMininumGameAPIVersion(void);
-    virtual GAME_ERROR LoadGame(const std::string& url);
+    virtual GAME_ERROR LoadGame(const char* url);
     virtual GAME_ERROR LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount);
     virtual GAME_ERROR LoadStandalone(void);
     virtual GAME_ERROR UnloadGame(void);
@@ -66,7 +66,7 @@ namespace NETPLAY
     virtual GAME_ERROR Deserialize(const uint8_t* data, size_t size);
     virtual GAME_ERROR CheatReset(void);
     virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
-    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const std::string& code);
+    virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code);
 
   private:
     IFrontend* const              m_callbacks;
