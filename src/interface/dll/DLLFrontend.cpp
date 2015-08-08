@@ -54,6 +54,8 @@ bool CDLLFrontend::Initialize(void)
 
 void CDLLFrontend::Deinitialize(void)
 {
+  CLog::Get().SetType(SYS_LOG_TYPE_CONSOLE);
+
   delete m_addon;
   delete m_game;
 
