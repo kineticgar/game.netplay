@@ -30,6 +30,8 @@
 
 using namespace NETPLAY;
 
+#define HELPER_LIBRARY_DIR  "resources"
+
 #if defined(_WIN32)
   #define PATH_SEPARATOR    "\\"
 #else
@@ -83,5 +85,5 @@ std::string PathUtils::RemoveSlashAtEnd(const std::string& strPath)
 
 std::string PathUtils::GetHelperLibraryDir(const std::string& strBasePath)
 {
-  return strBasePath;
+  return strBasePath + PATH_SEPARATOR + HELPER_LIBRARY_DIR;
 }
