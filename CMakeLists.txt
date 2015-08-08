@@ -161,11 +161,15 @@ build_addon(${PROJECT_NAME} ADDON DEPLIBS)
 
 # Build, link and optionally package an add-on's additional library
 macro (build_addon_library target addon_id prefix libs output_subdir)
-  if(${prefix}_SOURCES)
-    ADD_LIBRARY(${target} ${${prefix}_SOURCES})
-    TARGET_LINK_LIBRARIES(${target} ${${libs}})
-  else()
-    add_custom_target(${target})
+  ADD_LIBRARY(${target} ${${prefix}_SOURCES})
+  TARGET_LINK_LIBRARIES(${target} ${${libs}})
+  set_target_properties(${target}
+                        PROPERTIES
+                        ARCHIVE_OUTPUT_DIRECTORY ${output_subdir}
+                        LIBRARY_OUTPUT_DIRECTORY ${output_subdir}
+                        RUNTIME_OUTPUT_DIRECTORY ${output_subdir})
+  if (NOT WIN32)
+    set_target_properties(${target} PROPERTIES SUFFIX ".so")
   endif()
 
   IF(PACKAGE_ZIP OR PACKAGE_TGZ)
@@ -177,24 +181,19 @@ macro (build_addon_library target addon_id prefix libs output_subdir)
       # is changed within Visual Studio)
       string(REPLACE "$(Configuration)" "${CMAKE_BUILD_TYPE}" dll_location "${dll_location}")
 
-      if(${prefix}_SOURCES)
-        # install the generated DLL file
-        INSTALL(PROGRAMS ${dll_location} DESTINATION ${addon_id}/${output_subdir}
-                COMPONENT ${target})
+      # install the generated DLL file
+      INSTALL(PROGRAMS ${dll_location} DESTINATION ${addon_id}/${output_subdir}
+              COMPONENT ${target})
 
-        IF(CMAKE_BUILD_TYPE MATCHES Debug)
-          # for debug builds also install the PDB file
-          get_filename_component(dll_directory ${dll_location} DIRECTORY)
-          INSTALL(FILES ${dll_directory}/${target}.pdb DESTINATION ${addon_id}/${output_subdir}
-                  COMPONENT ${target})
-        ENDIF()
-      endif()
-    ELSE(WIN32)
-      if(${prefix}_SOURCES)
-        INSTALL(TARGETS ${target} DESTINATION ${addon_id}/${output_subdir}
+      IF(CMAKE_BUILD_TYPE MATCHES Debug)
+        # for debug builds also install the PDB file
+        get_filename_component(dll_directory ${dll_location} DIRECTORY)
+        INSTALL(FILES ${dll_directory}/${target}.pdb DESTINATION ${addon_id}/${output_subdir}
                 COMPONENT ${target})
-        set_target_properties(${target} PROPERTIES SUFFIX ".so")
-      endif()
+      ENDIF()
+    ELSE(WIN32)
+      INSTALL(TARGETS ${target} DESTINATION ${addon_id}/${output_subdir}
+              COMPONENT ${target})
     ENDIF(WIN32)
   ELSE(PACKAGE_ZIP OR PACKAGE_TGZ)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -213,18 +212,14 @@ macro (build_addon_library target addon_id prefix libs output_subdir)
       set(CMAKE_INSTALL_LIBDIR "lib/${APP_NAME_LC}")
     endif()
 
-    if(${prefix}_SOURCES)
-      INSTALL(TARGETS ${target} DESTINATION ${CMAKE_INSTALL_LIBDIR}/addons/${addon_id}/${output_subdir})
-      if (NOT WIN32)
-        set_target_properties(${target} PROPERTIES SUFFIX ".so")
-      endif()
-    endif()
+    INSTALL(TARGETS  ${target}
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/addons/${addon_id}/${output_subdir})
   ENDIF(PACKAGE_ZIP OR PACKAGE_TGZ)
 endmacro()
 
 ################################################################################
 #
-#  Helper libraries
+#  Guess the helper library suffix used in libXBMC_addon.h
 #
 ################################################################################
 
@@ -253,12 +248,17 @@ elseif("${CORE_SYSTEM_NAME}" STREQUAL "rbpi")
 endif()
 
 if(ADDON_HELPER_ARCH)
-    set(XBMC_ADDON_HELPER XBMC_addon-${ADDON_HELPER_ARCH})
-    set(KODI_GAME_HELPER KODI_game-${ADDON_HELPER_ARCH})
-else()
-    set(XBMC_ADDON_HELPER XBMC_addon)
-    set(KODI_GAME_HELPER KODI_game)
+    set(ADDON_HELPER_SUFFIX "-${ADDON_HELPER_ARCH}")
 endif()
+
+################################################################################
+#
+#  Add-on helper libraries
+#
+################################################################################
+
+set(XBMC_ADDON_HELPER XBMC_addon${ADDON_HELPER_SUFFIX})
+set(KODI_GAME_HELPER KODI_game${ADDON_HELPER_SUFFIX})
 
 build_addon_library(${XBMC_ADDON_HELPER}
                     ${PROJECT_NAME}
