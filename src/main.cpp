@@ -100,6 +100,8 @@ namespace NETPLAY
 
 int main(int argc, char* argv[])
 {
+  isyslog("Netplay server initializing");
+
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
   CServer*          SERVER    = NULL;
@@ -161,15 +163,19 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  isyslog("Netplay initialized");
+
   CAbortableTask task(SERVER);
-
   SERVER->WaitForExit();
-
   int exitCode = task.GetExitCode();
+
+  isyslog("Netplay shutting down");
 
   delete SERVER;
   delete CALLBACKS;
   delete GAME;
+
+  isyslog("Netplay ended with return code %d", exitCode);
 
   return exitCode;
 }

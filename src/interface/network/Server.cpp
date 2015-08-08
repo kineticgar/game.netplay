@@ -42,7 +42,13 @@ bool CServer::Initialize(void)
   if (m_socket)
     bSuccess = m_socket->Bind();
 
-  return bSuccess && CreateThread();
+  if (bSuccess && CreateThread())
+  {
+    isyslog("Netplay server starting up");
+    return true;
+  }
+
+  return false;
 }
 
 void CServer::Deinitialize(void)
