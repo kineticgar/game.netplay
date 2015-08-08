@@ -145,8 +145,12 @@ ADDON_STATUS CDLLGame::Initialize(void)
 
   m_pHelper = new CFrontendCallbackLib(m_callbacks, m_strLibBasePath);
 
-  GameClientProperties props(m_properties);
+  game_client_properties props = { };
+  TranslateProperties(m_properties, props);
+
   ADDON_STATUS status = m_ADDON_Create(m_pHelper->GetCallbacks(), &props);
+
+  FreeProperties(props);
 
   if (status != ADDON_STATUS_UNKNOWN || status != ADDON_STATUS_PERMANENT_FAILURE)
     m_bInitialized = true;
@@ -348,4 +352,27 @@ GameClientProperties CDLLGame::TranslateProperties(const game_client_properties&
     properties.proxy_dll_paths.push_back(props.proxy_dll_paths[i] ? props.proxy_dll_paths[i] : "");
 
   return properties;
+}
+
+void CDLLGame::TranslateProperties(const GameClientProperties& props, game_client_properties& propsStruct)
+{
+  propsStruct.game_client_dll_path = props.game_client_dll_path.c_str();
+  propsStruct.proxy_dll_paths = NULL;
+  propsStruct.proxy_dll_count = props.proxy_dll_paths.size();
+  propsStruct.system_directory = props.system_directory.c_str();
+  propsStruct.content_directory = props.content_directory.c_str();
+  propsStruct.save_directory = props.save_directory.c_str();
+
+  if (propsStruct.proxy_dll_count > 0)
+  {
+    const char** proxy_dll_paths = new const char*[propsStruct.proxy_dll_count];
+    for (unsigned int i = 0; i < propsStruct.proxy_dll_count; i++)
+      proxy_dll_paths[i] = props.proxy_dll_paths[i].c_str();
+    propsStruct.proxy_dll_paths = proxy_dll_paths;
+  }
+}
+
+void CDLLGame::FreeProperties(game_client_properties& propsStruct)
+{
+  delete[] propsStruct.proxy_dll_paths;
 }

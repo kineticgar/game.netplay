@@ -83,6 +83,9 @@ namespace NETPLAY
     static GameClientProperties TranslateProperties(const game_client_properties& props);
 
   private:
+    static void TranslateProperties(const GameClientProperties& props, game_client_properties& propsStruct);
+    static void FreeProperties(game_client_properties& propsStruct);
+
     IFrontend* const           m_callbacks;
     const GameClientProperties m_properties;
     const std::string          m_strLibBasePath;
