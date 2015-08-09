@@ -23,8 +23,6 @@
 #include "LogAddon.h"
 #include "LogConsole.h"
 
-#include "platform/threads/threads.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -32,6 +30,7 @@ using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define SYS_LOG_BUFFER_SIZE  256 // bytes
+#define LOG_PREFIX_SEPARATOR ": " // Separates prefix from log line
 
 CLog::CLog(ILog* pipe) :
   m_pipe(pipe),
@@ -88,14 +87,26 @@ void CLog::SetLevel(SYS_LOG_LEVEL level)
   m_level = level;
 }
 
+void CLog::SetLogPrefix(const std::string& strLogPrefix)
+{
+  m_strLogPrefix = strLogPrefix;
+}
+
 void CLog::Log(SYS_LOG_LEVEL level, const char* format, ...)
 {
+  std::string strLogPrefix;
+
+  if (m_strLogPrefix.empty())
+    strLogPrefix = GetLogPrefix(level);
+  else
+    strLogPrefix = m_strLogPrefix + LOG_PREFIX_SEPARATOR;
+
   char fmt[SYS_LOG_BUFFER_SIZE];
   char buf[SYS_LOG_BUFFER_SIZE];
   va_list ap;
 
   va_start(ap, format);
-  snprintf(fmt, sizeof(fmt), "%s", format); // TODO: Prepend CThread::ThreadId()
+  snprintf(fmt, sizeof(fmt), "%s%s", strLogPrefix.c_str(), format);
   vsnprintf(buf, SYS_LOG_BUFFER_SIZE - 1, fmt, ap);
   va_end(ap);
 
@@ -123,19 +134,14 @@ const char* CLog::TypeToString(SYS_LOG_TYPE type)
   }
 }
 
-const char* CLog::LevelToString(SYS_LOG_LEVEL level)
+const char* CLog::GetLogPrefix(SYS_LOG_LEVEL level)
 {
   switch (level)
   {
+  case SYS_LOG_ERROR:   return "[ERROR] ";
+  case SYS_LOG_INFO:    return "[INFO]  ";
+  case SYS_LOG_DEBUG:   return "[DEBUG] ";
   case SYS_LOG_NONE:
-    return "none";
-  case SYS_LOG_ERROR:
-    return "error";
-  case SYS_LOG_INFO:
-    return "info";
-  case SYS_LOG_DEBUG:
-    return "debug";
-  default:
-    return "unknown";
+  default:              return "[?????] ";
   }
 }

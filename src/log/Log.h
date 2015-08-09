@@ -24,6 +24,8 @@
 
 #include "platform/threads/mutex.h"
 
+#include <string>
+
 // --- Shorthand logging -------------------------------------------------------
 
 #ifndef esyslog
@@ -56,15 +58,18 @@ namespace NETPLAY
     bool SetType(SYS_LOG_TYPE type);
     void SetPipe(ILog* pipe);
     void SetLevel(SYS_LOG_LEVEL level);
+    void SetLogPrefix(const std::string& strLogPrefix);
 
     void Log(SYS_LOG_LEVEL level, const char* format, ...);
 
     static const char* TypeToString(SYS_LOG_TYPE type);
-    static const char* LevelToString(SYS_LOG_LEVEL level);
 
   private:
+    static const char* GetLogPrefix(SYS_LOG_LEVEL level);
+
     ILog*            m_pipe;
     SYS_LOG_LEVEL    m_level;
+    std::string      m_strLogPrefix;
     PLATFORM::CMutex m_mutex;
   };
 }

@@ -20,14 +20,12 @@
  */
 
 #include "LogAddon.h"
-#include "utils/StringUtils.h"
+
 #include "kodi/libXBMC_addon.h"
 
 #include <assert.h>
 
 using namespace NETPLAY;
-
-#define LOG_PREFIX  "Netplay" // This gets prepended to log lines
 
 // --- TranslateLogLevel() -----------------------------------------------------
 
@@ -55,8 +53,5 @@ CLogAddon::CLogAddon(ADDON::CHelper_libXBMC_addon* frontend) :
 void CLogAddon::Log(SYS_LOG_LEVEL level, const char* logline)
 {
   if (m_frontend)
-  {
-    std::string strNetplayLog = StringUtils::Format("%s: %s", LOG_PREFIX, logline);
-    m_frontend->Log(TranslateLogLevel(level), strNetplayLog.c_str());
-  }
+    m_frontend->Log(TranslateLogLevel(level), logline);
 }

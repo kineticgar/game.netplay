@@ -25,6 +25,7 @@
 #include "interface/network/Server.h"
 #include "keyboard/Keyboard.h"
 #include "keyboard/KeyboardAddon.h"
+#include "log/Log.h"
 #include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_dll.h"
@@ -34,6 +35,8 @@
 #include <cstring>
 
 using namespace NETPLAY;
+
+#define LOG_PREFIX  "NETPLAY" // This gets prepended to log lines
 
 #ifndef SAFE_DELETE
   #define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)
@@ -96,6 +99,8 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 {
   if (callbacks == NULL || props == NULL)
     return ADDON_STATUS_UNKNOWN;
+
+  CLog::Get().SetLogPrefix(LOG_PREFIX);
 
   ADDON_STATUS returnStatus(ADDON_STATUS_UNKNOWN);
 
