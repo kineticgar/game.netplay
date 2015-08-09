@@ -140,9 +140,9 @@ macro (build_addon_library target addon_id prefix libs output_subdir)
   TARGET_LINK_LIBRARIES(${target} ${${libs}})
   set_target_properties(${target}
                         PROPERTIES
-                        ARCHIVE_OUTPUT_DIRECTORY ${output_subdir}
-                        LIBRARY_OUTPUT_DIRECTORY ${output_subdir}
-                        RUNTIME_OUTPUT_DIRECTORY ${output_subdir})
+                        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${output_subdir}"
+                        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${output_subdir}"
+                        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${output_subdir}")
   if (NOT WIN32)
     set_target_properties(${target} PROPERTIES SUFFIX ".so")
   endif()
