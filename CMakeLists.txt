@@ -60,6 +60,10 @@ set(NETPLAY_SOURCES
     src/interface/network/platform/PlatformSocket.cpp
     src/interface/network/Server.cpp
     src/interface/network/SocketFactory.cpp
+    src/keyboard/Keyboard.cpp
+    src/keyboard/KeyboardAddon.cpp
+    src/keyboard/KeyboardConsole.cpp
+    src/keyboard/KeyboardMock.cpp
     src/log/Log.cpp
     src/log/LogAddon.cpp
     src/log/LogConsole.cpp

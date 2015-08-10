@@ -22,10 +22,11 @@
 #include "interface/FrontendManager.h"
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
+#include "keyboard/Keyboard.h"
+#include "keyboard/KeyboardMock.h"
 #include "log/Log.h"
 #include "utils/AbortableTask.h"
 #include "utils/PathUtils.h"
-#include "utils/StringUtils.h"
 
 #include "kodi/kodi_addon_utils.hpp"
 
@@ -79,7 +80,15 @@ namespace NETPLAY
       }
       case OPTION_REMOTE_GAME:
       {
-        //game = new CNetworkGame(callbacks, argv[2], StringUtils::IntVal(argv[3])); // TODO
+        if (argc > 2)
+        {
+          std::queue<std::string> responses;
+          for (int i = 2; i < argc; i++)
+            responses.push(argv[i]);
+          CKeyboard::Get().SetPipe(new CKeyboardMock(responses));
+        }
+
+        game = new CNetworkGame(callbacks);
         break;
       }
       case OPTION_DISCOVER:
@@ -114,9 +123,9 @@ int main(int argc, char* argv[])
 
     if ((strOption == "-g" || strOption == "--game") && (argc == 6 || argc == 7))
       option = OPTION_GAME_CLIENT;
-    else if ((strOption == "-r" || strOption == "--remote") && argc == 4)
+    else if ((strOption == "-r" || strOption == "--remote"))
       option = OPTION_REMOTE_GAME;
-    else if ((strOption == "-d" || strOption == "--discover") && argc ==  2)
+    else if ((strOption == "-d" || strOption == "--discover"))
       option = OPTION_DISCOVER;
   }
 
@@ -131,7 +140,7 @@ int main(int argc, char* argv[])
     std::cout << "  " << strExe << " --game <proxy DLL> <DLL> <system dir> <content dir> <save dir>" << std::endl;
     std::cout << std::endl;
     std::cout << "Load remote game client" << std::endl;
-    std::cout << "  " << strExe << " --remote <address> <port>" << std::endl;
+    std::cout << "  " << strExe << " --remote [<address> [<port>]]" << std::endl;
     std::cout << std::endl;
     std::cout << "Discover servers on the network:" << std::endl;
     std::cout << "  " << strExe << " --discover" << std::endl;

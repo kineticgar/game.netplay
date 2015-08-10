@@ -22,6 +22,7 @@
 #include "Client.h"
 #include "ISocket.h"
 #include "SocketFactory.h"
+#include "keyboard/Keyboard.h"
 #include "log/Log.h"
 #include "utils/Version.h"
 
@@ -34,9 +35,8 @@
 
 using namespace NETPLAY;
 
-CNetworkGame::CNetworkGame(IFrontend* callbacks, CHelper_libKODI_guilib* gui) :
+CNetworkGame::CNetworkGame(IFrontend* callbacks) :
   m_callbacks(callbacks),
-  m_gui(gui),
   m_rpc(NULL)
 {
 }
@@ -55,6 +55,7 @@ ADDON_STATUS CNetworkGame::Initialize(void)
 
 void CNetworkGame::Deinitialize(void)
 {
+  UnloadGame();
 }
 
 void CNetworkGame::Stop(void)
@@ -143,9 +144,9 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
 {
   const unsigned int remotePort = 35890; //TODO
 
-  char strRemoteAddress[256];
+  std::string strRemoteAddress;
   const std::string strHeader = "Netplay address"; // TODO
-  if (m_gui->Dialog_Keyboard_ShowAndGetInput(*strRemoteAddress, sizeof(strRemoteAddress), strHeader.c_str(), false, false))
+  if (CKeyboard::Get().PromptForInput(strHeader, strRemoteAddress))
   {
     SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
     if (socket)

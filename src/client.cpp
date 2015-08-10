@@ -23,6 +23,8 @@
 #include "interface/FrontendManager.h"
 #include "interface/network/NetworkGame.h"
 #include "interface/network/Server.h"
+#include "keyboard/Keyboard.h"
+#include "keyboard/KeyboardAddon.h"
 #include "utils/PathUtils.h"
 
 #include "kodi/kodi_game_dll.h"
@@ -60,8 +62,7 @@ namespace NETPLAY
     return props;
   }
 
-  IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks,
-                 CHelper_libKODI_guilib* gui)
+  IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks)
   {
     IGame* game = NULL;
 
@@ -74,7 +75,7 @@ namespace NETPLAY
     const bool bStandalone = myPath.empty();
     if (bStandalone)
     {
-      game = new CNetworkGame(callbacks, gui);
+      game = new CNetworkGame(callbacks);
     }
     else
     {
@@ -104,6 +105,8 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (!GUI->RegisterMe(callbacks))
       throw ADDON_STATUS_PERMANENT_FAILURE;
 
+    CKeyboard::Get().SetPipe(new CKeyboardAddon(GUI));
+
     FRONTEND = new CDLLFrontend(callbacks);
     if (!FRONTEND->Initialize())
       throw ADDON_STATUS_PERMANENT_FAILURE;
@@ -115,7 +118,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     CALLBACKS->RegisterFrontend(FRONTEND);
 
     const game_client_properties& gameProps = *static_cast<game_client_properties*>(props);
-    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS, GUI);
+    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS);
     if (!GAME)
       throw ADDON_STATUS_UNKNOWN;
 
@@ -159,6 +162,9 @@ void ADDON_Destroy()
   SAFE_DELETE(GAME);
   SAFE_DELETE(CALLBACKS);
   SAFE_DELETE(FRONTEND);
+
+  CKeyboard::Get().SetType(SYS_KEYBOARD_TYPE_CONSOLE);
+
   SAFE_DELETE(GUI);
 }
 

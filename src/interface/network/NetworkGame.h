@@ -24,8 +24,6 @@
 #include <map>
 #include <vector>
 
-class CHelper_libKODI_guilib;
-
 namespace NETPLAY
 {
   class IFrontend;
@@ -34,7 +32,7 @@ namespace NETPLAY
   class CNetworkGame : public IGame
   {
   public:
-    CNetworkGame(IFrontend* callbacks, CHelper_libKODI_guilib* gui);
+    CNetworkGame(IFrontend* callbacks);
     virtual ~CNetworkGame(void);
 
     // implementation of IGame
@@ -70,7 +68,6 @@ namespace NETPLAY
 
   private:
     IFrontend* const              m_callbacks;
-    CHelper_libKODI_guilib* const m_gui;
     CClient*                      m_rpc;
 
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
