@@ -153,11 +153,7 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
       m_rpc = new CClient(socket, m_callbacks);
   }
 
-  if (!m_rpc || !m_rpc->Initialize())
-  {
-    esyslog("Failed to open connection to network game");
-  }
-  else
+  if (m_rpc && m_rpc->Initialize())
   {
     dsyslog("Connected to network game. Logging in...");
 
