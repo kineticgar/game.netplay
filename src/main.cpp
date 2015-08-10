@@ -162,9 +162,12 @@ int main(int argc, char* argv[])
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
       throw std::runtime_error("Failed to initialize game client");
 
-    SERVER = new CServer(GAME, CALLBACKS);
-    if (!SERVER->Initialize())
-      throw std::runtime_error("Failed to initialize server");
+    if (option == OPTION_GAME_CLIENT)
+    {
+      SERVER = new CServer(GAME, CALLBACKS);
+      if (!SERVER->Initialize())
+        throw std::runtime_error("Failed to initialize server");
+    }
   }
   catch (const std::runtime_error& error)
   {
@@ -174,9 +177,14 @@ int main(int argc, char* argv[])
 
   isyslog("Netplay initialized");
 
-  CAbortableTask task(SERVER);
-  SERVER->WaitForExit();
-  int exitCode = task.GetExitCode();
+  int exitCode = 0;
+
+  if (option == OPTION_GAME_CLIENT)
+  {
+    CAbortableTask task(SERVER);
+    SERVER->WaitForExit();
+    exitCode = task.GetExitCode();
+  }
 
   isyslog("Netplay shutting down");
 
