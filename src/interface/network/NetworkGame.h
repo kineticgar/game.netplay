@@ -66,6 +66,8 @@ namespace NETPLAY
     virtual GAME_ERROR GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size);
     virtual GAME_ERROR SetCheat(unsigned int index, bool enabled, const char* code);
 
+    void WaitForExit(void);
+
   private:
     IFrontend* const              m_callbacks;
     CClient*                      m_rpc;

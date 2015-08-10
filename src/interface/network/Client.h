@@ -55,6 +55,8 @@ namespace NETPLAY
      */
     void Deinitialize(void);
 
+    void WaitForExit(void) { Sleep(0); }
+
     bool SendRequest(RPC_METHOD method, const std::string& strRequest);
     bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse);
     bool SendResponse(RPC_METHOD method, const std::string& strResponse);

@@ -569,3 +569,9 @@ GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const char* 
 
   return GAME_ERROR_FAILED;
 }
+
+void CNetworkGame::WaitForExit(void)
+{
+  if (m_rpc)
+    m_rpc->WaitForExit();
+}
