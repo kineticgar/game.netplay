@@ -57,7 +57,7 @@ bool CPlatformSocket::Connect(void)
 
   if (!m_socket->IsOpen())
   {
-    esyslog("%s - failed to connect to the server (%s)", __FUNCTION__, m_socket->GetError().c_str());
+    esyslog("Failed to connect to the server (%s)",m_socket->GetError().c_str());
     return false;
   }
 
@@ -122,7 +122,7 @@ bool CPlatformSocket::Write(const std::string& request)
   ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.c_str()), request.length());
   if (iWriteResult != static_cast<ssize_t>(request.length()))
   {
-    esyslog("%s - Failed to write packet (%s), bytes written: %d of total: %d", __FUNCTION__, m_socket->GetError().c_str(), iWriteResult, request.length());
+    esyslog(" Failed to write packet (%s), bytes written: %d of total: %d", m_socket->GetError().c_str(), iWriteResult, request.length());
     return false;
   }
   return true;
