@@ -22,21 +22,26 @@
 #include "IAbortable.h"
 #include "SignalHandler.h"
 
+#include "platform/threads/mutex.h"
+
 namespace NETPLAY
 {
   class CAbortableTask : public ISignalReceiver
   {
   public:
-    CAbortableTask(IAbortable* callback);
+    CAbortableTask(IAbortable* callback = nullptr);
     virtual ~CAbortableTask(void);
 
     // implementation of ISignalReceiver
     virtual void OnSignal(int signum);
 
+    bool Wait(unsigned int timeoutMs = 0);
+
     int GetExitCode(void) { return m_exitCode; }
 
   private:
     IAbortable* const m_callback;
+    PLATFORM::CEvent  m_exitEvent;
     int               m_exitCode;
   };
 }

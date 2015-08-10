@@ -29,7 +29,7 @@ using namespace NETPLAY;
 // E.g. SIGINT (0x02) should return 0x82 from main()
 #define EXIT_CODE_OFFSET  0x80
 
-CAbortableTask::CAbortableTask(IAbortable* callback) :
+CAbortableTask::CAbortableTask(IAbortable* callback /* = nullptr */) :
   m_callback(callback),
   m_exitCode(0)
 {
@@ -45,6 +45,11 @@ CAbortableTask::~CAbortableTask(void)
   CSignalHandler::Get().ResetSignalReceivers();
 }
 
+bool CAbortableTask::Wait(unsigned int timeoutMs /* = 0 */)
+{
+  return m_exitEvent.Wait(timeoutMs);
+}
+
 void CAbortableTask::OnSignal(int signum)
 {
   switch (signum)
@@ -55,7 +60,9 @@ void CAbortableTask::OnSignal(int signum)
     case SIGTERM:
     {
       m_exitCode = EXIT_CODE_OFFSET + signum;
-      m_callback->Deinitialize();
+      if (m_callback)
+        m_callback->Deinitialize();
+      m_exitEvent.Signal();
       break;
     }
 
