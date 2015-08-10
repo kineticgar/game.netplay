@@ -54,6 +54,8 @@ CClient::~CClient(void)
 
 bool CClient::Initialize(void)
 {
+  isyslog("Netplay client starting up");
+
   m_socket->RegisterObserver(this);
   if (!m_socket->Connect())
     return false;
@@ -63,15 +65,20 @@ bool CClient::Initialize(void)
 
 void CClient::Deinitialize(void)
 {
-  StopThread(-1);
+  if (IsRunning())
+  {
+    isyslog("Netplay client shutting down");
 
-  // Signal socket to abort
-  m_socket->Abort();
+    StopThread(-1);
 
-  // Clean up
-  StopThread(0);
-  m_socket->Shutdown();
-  m_socket->UnregisterObserver(this);
+    // Signal socket to abort
+    m_socket->Abort();
+
+    // Clean up
+    StopThread(0);
+    m_socket->Shutdown();
+    m_socket->UnregisterObserver(this);
+  }
 }
 
 void* CClient::Process(void)
