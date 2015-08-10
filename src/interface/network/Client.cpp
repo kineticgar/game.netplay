@@ -92,7 +92,7 @@ void* CClient::Process(void)
       CLockObject lock(m_readMutex);
 
       if (!ReadHeader(bRequest, msgMethod, msgLength))
-        continue;
+        break;
 
       dsyslog("Received %s: method=%d, length=%u", bRequest ? "request" : "response", msgMethod, msgLength);
 
