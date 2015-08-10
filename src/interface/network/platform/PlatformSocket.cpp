@@ -86,6 +86,9 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   CLockObject lock(m_readMutex);
 
+  if (!m_socket)
+    return false;
+
   char* b = new char[totalBytes];
   unsigned int bytesRead = m_socket->Read(b, totalBytes, READ_TIMEOUT_MS);
   buffer = b;
