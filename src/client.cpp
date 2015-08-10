@@ -82,6 +82,8 @@ namespace NETPLAY
     }
     else
     {
+      CLog::Get().SetLogPrefix(LOG_PREFIX);
+
       const std::string myDir = PathUtils::GetParentDirectory(myPath);
       game = new CDLLGame(callbacks, PopProxyDLL(properties), PathUtils::GetHelperLibraryDir(myDir));
     }
@@ -99,8 +101,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 {
   if (callbacks == NULL || props == NULL)
     return ADDON_STATUS_UNKNOWN;
-
-  CLog::Get().SetLogPrefix(LOG_PREFIX);
 
   ADDON_STATUS returnStatus(ADDON_STATUS_UNKNOWN);
 
