@@ -117,6 +117,7 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest)
 {
   bool bSuccess = false;
 
+  if (!IsStopped())
   {
     CLockObject lock(m_writeMutex);
 
@@ -148,11 +149,18 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std:
 
 bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
 {
-  if (!SendHeader(false, method, strResponse.size()))
+  if (IsStopped())
     return false;
 
-  if (!m_socket->Write(strResponse))
-    return false;
+  {
+    CLockObject lock(m_writeMutex);
+
+    if (!SendHeader(false, method, strResponse.size()))
+      return false;
+
+    if (!m_socket->Write(strResponse))
+      return false;
+  }
 
   return true;
 }
