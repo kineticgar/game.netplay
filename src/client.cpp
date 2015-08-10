@@ -36,7 +36,7 @@
 
 using namespace NETPLAY;
 
-#define LOG_PREFIX  "NETPLAY" // This gets prepended to log lines
+#define LOG_PREFIX  "NETPLAY: " // This gets prepended to log lines
 
 #ifndef SAFE_DELETE
   #define SAFE_DELETE(x)  do { delete x; x = NULL; } while (0)

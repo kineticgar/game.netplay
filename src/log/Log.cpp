@@ -30,7 +30,6 @@ using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define SYS_LOG_BUFFER_SIZE  256 // bytes
-#define LOG_PREFIX_SEPARATOR ": " // Separates prefix from log line
 
 CLog::CLog(ILog* pipe) :
   m_pipe(pipe),
@@ -96,10 +95,10 @@ void CLog::Log(SYS_LOG_LEVEL level, const char* format, ...)
 {
   std::string strLogPrefix;
 
-  if (m_strLogPrefix.empty())
-    strLogPrefix = GetLogPrefix(level);
+  if (m_pipe && m_pipe->Type() == SYS_LOG_TYPE_CONSOLE)
+    strLogPrefix = GetLogPrefix(level) + m_strLogPrefix;
   else
-    strLogPrefix = m_strLogPrefix + LOG_PREFIX_SEPARATOR;
+    strLogPrefix = m_strLogPrefix;
 
   char fmt[SYS_LOG_BUFFER_SIZE];
   char buf[SYS_LOG_BUFFER_SIZE];
