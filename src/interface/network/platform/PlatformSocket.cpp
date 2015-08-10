@@ -27,7 +27,7 @@ using namespace NETPLAY;
 using namespace PLATFORM;
 
 #define CONNECTION_TIMEOUT_MS  2000
-#define READ_TIMEOUT_MS        1000
+#define READ_TIMEOUT_MS        5000
 
 CPlatformSocket::CPlatformSocket(const std::string& strAddress, unsigned int port) :
   m_strAddress(strAddress),
