@@ -35,9 +35,11 @@ CKeyboardAddon::CKeyboardAddon(CHelper_libKODI_guilib* gui) :
 bool CKeyboardAddon::PromptForInput(const std::string& strPrompt, std::string& strInput)
 {
   char input[1024] = { };
-
-  if (m_gui)
-    return m_gui->Dialog_Keyboard_ShowAndGetInput(*input, sizeof(input) - 1, strPrompt.c_str(), false, false);
+  if (m_gui->Dialog_Keyboard_ShowAndGetInput(*input, sizeof(input) - 1, strPrompt.c_str(), false, false))
+  {
+    strInput = input;
+    return true;
+  }
 
   return false;
 }
