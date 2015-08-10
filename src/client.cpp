@@ -65,18 +65,18 @@ namespace NETPLAY
     return props;
   }
 
+  bool IsStandalone(const GameClientProperties& properties)
+  {
+    // If no proxy DLL is given, then we're being created in standalone mode
+    // and should load a game from the network
+    return properties.proxy_dll_paths.empty();
+  }
+
   IGame* GetGame(const GameClientProperties& properties, IFrontend* callbacks)
   {
     IGame* game = NULL;
 
-    std::string myPath; // netplay DLL path
-    if (!properties.proxy_dll_paths.empty())
-      myPath = properties.proxy_dll_paths[0];
-
-    // If no proxy DLL is given, then we're being created in standalone mode
-    // and should load a game from the network
-    const bool bStandalone = myPath.empty();
-    if (bStandalone)
+    if (IsStandalone(properties))
     {
       game = new CNetworkGame(callbacks);
     }
@@ -84,7 +84,8 @@ namespace NETPLAY
     {
       CLog::Get().SetLogPrefix(LOG_PREFIX);
 
-      const std::string myDir = PathUtils::GetParentDirectory(myPath);
+      std::string myPath = properties.proxy_dll_paths[0];
+      std::string myDir = PathUtils::GetParentDirectory(myPath);
       game = new CDLLGame(callbacks, PopProxyDLL(properties), PathUtils::GetHelperLibraryDir(myDir));
     }
 
@@ -122,8 +123,8 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
     CALLBACKS->RegisterFrontend(FRONTEND);
 
-    const game_client_properties& gameProps = *static_cast<game_client_properties*>(props);
-    GAME = GetGame(CDLLGame::TranslateProperties(gameProps), CALLBACKS);
+    GameClientProperties gameProps = CDLLGame::TranslateProperties(*static_cast<game_client_properties*>(props));
+    GAME = GetGame(gameProps, CALLBACKS);
     if (!GAME)
       throw ADDON_STATUS_UNKNOWN;
 
@@ -131,9 +132,12 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
       throw status;
 
-    SERVER = new CServer(GAME, CALLBACKS);
-    if (!SERVER->Initialize())
-      throw ADDON_STATUS_PERMANENT_FAILURE;
+    if (!IsStandalone(gameProps))
+    {
+      SERVER = new CServer(GAME, CALLBACKS);
+      if (!SERVER->Initialize())
+        throw ADDON_STATUS_PERMANENT_FAILURE;
+    }
 
     returnStatus = ADDON_STATUS_OK;
   }
@@ -155,13 +159,19 @@ void ADDON_Stop()
 void ADDON_Destroy()
 {
   if (SERVER)
-  {
     SERVER->Deinitialize();
+
+  if (GAME)
     GAME->Deinitialize();
+
+  if (CALLBACKS)
+  {
     CALLBACKS->UnregisterFrontend(FRONTEND);
     CALLBACKS->Deinitialize();
-    FRONTEND->Deinitialize();
   }
+
+  if (FRONTEND)
+    FRONTEND->Deinitialize();
 
   SAFE_DELETE(SERVER);
   SAFE_DELETE(GAME);
