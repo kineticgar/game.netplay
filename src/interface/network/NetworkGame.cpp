@@ -148,9 +148,20 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
   const std::string strHeader = "Netplay address"; // TODO
   if (CKeyboard::Get().PromptForInput(strHeader, strRemoteAddress))
   {
-    SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
-    if (socket)
-      m_rpc = new CClient(socket, m_callbacks);
+    if (strRemoteAddress.empty())
+    {
+      dsyslog("Failed to load standalone: remote address is empty");
+    }
+    else
+    {
+      SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
+      if (socket)
+        m_rpc = new CClient(socket, m_callbacks);
+    }
+  }
+  else
+  {
+    dsyslog("Failed to load standalone: no input from keyboard");
   }
 
   if (m_rpc && m_rpc->Initialize())
