@@ -53,7 +53,7 @@ bool CServer::Initialize(void)
 
 void CServer::Deinitialize(void)
 {
-  StopThread();
+  StopThread(0);
 
   if (m_socket)
   {

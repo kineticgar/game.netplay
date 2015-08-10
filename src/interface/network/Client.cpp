@@ -63,11 +63,13 @@ bool CClient::Initialize(void)
 
 void CClient::Deinitialize(void)
 {
+  StopThread(-1);
+
   // Signal socket to abort
   m_socket->Abort();
 
   // Clean up
-  StopThread();
+  StopThread(0);
   m_socket->Shutdown();
   m_socket->UnregisterObserver(this);
 }
@@ -123,10 +125,7 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest)
   }
 
   if (!bSuccess)
-  {
-    m_socket->Shutdown();
     return false;
-  }
 
   dsyslog("Sent request: method=%d, length=%u", method, strRequest.length());
 
@@ -141,7 +140,6 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std:
   if (!GetResponse(method, strResponse))
   {
     esyslog("Server failed to respond, method=%d", method);
-    m_socket->Shutdown();
     return false;
   }
 
@@ -151,16 +149,10 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std:
 bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
 {
   if (!SendHeader(false, method, strResponse.size()))
-  {
-    m_socket->Shutdown();
     return false;
-  }
 
   if (!m_socket->Write(strResponse))
-  {
-    m_socket->Shutdown();
     return false;
-  }
 
   return true;
 }
