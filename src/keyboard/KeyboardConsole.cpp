@@ -26,7 +26,7 @@ using namespace NETPLAY;
 
 bool CKeyboardConsole::PromptForInput(const std::string& strPrompt, std::string& strInput)
 {
-  std::cout << strPrompt << std::endl;
+  std::cout << strPrompt << ": ";
 
   std::getline(std::cin, strInput);
 
