@@ -115,7 +115,7 @@ const char* CLog::TypeToString(SYS_LOG_TYPE type)
   case SYS_LOG_TYPE_NULL:
     return "null";
   case SYS_LOG_TYPE_CONSOLE:
-    return "syslog";
+    return "console";
   case SYS_LOG_TYPE_ADDON:
     return "addon";
   default:
