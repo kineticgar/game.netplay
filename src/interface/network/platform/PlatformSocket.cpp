@@ -105,12 +105,6 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
       if (bytes > 0)
         bytesRead += bytes;
     }
-    else
-    {
-      SetChanged();
-      NotifyObservers(ObservableMessageConnectionLost);
-      Shutdown();
-    }
   }
 
   return bytesRead == totalBytes;

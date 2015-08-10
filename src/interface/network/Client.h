@@ -36,8 +36,7 @@ namespace NETPLAY
   class IGame;
   class IRequestHandler;
 
-  class CClient : public Observer,
-                  public Observable,
+  class CClient : public Observable,
                   protected PLATFORM::CThread
   {
   public:
@@ -59,9 +58,6 @@ namespace NETPLAY
     bool SendRequest(RPC_METHOD method, const std::string& strRequest);
     bool SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse);
     bool SendResponse(RPC_METHOD method, const std::string& strResponse);
-
-    // implementation of Observer
-    virtual void Notify(const Observable& obs, const ObservableMessage msg);
 
   protected:
     // implementation of CThead

@@ -19,13 +19,11 @@
  */
 #pragma once
 
-#include "utils/Observer.h"
-
 #include <string>
 
 namespace NETPLAY
 {
-  class ISocket : public Observable
+  class ISocket
   {
   public:
     virtual ~ISocket(void) { }

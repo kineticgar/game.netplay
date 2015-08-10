@@ -56,7 +56,6 @@ bool CClient::Initialize(void)
 {
   isyslog("Netplay client starting up");
 
-  m_socket->RegisterObserver(this);
   if (!m_socket->Connect())
     return false;
 
@@ -77,7 +76,6 @@ void CClient::Deinitialize(void)
     // Clean up
     StopThread(0);
     m_socket->Shutdown();
-    m_socket->UnregisterObserver(this);
   }
 }
 
@@ -116,6 +114,9 @@ void* CClient::Process(void)
         break;
     }
   }
+
+  SetChanged();
+  NotifyObservers(ObservableMessageConnectionLost);
 
   return NULL;
 }
@@ -335,19 +336,4 @@ void CClient::FreeInvocation(Invocation& invocation) const
 
   delete invocation.result;
   invocation.result = NULL;
-}
-
-void CClient::Notify(const Observable& obs, const ObservableMessage msg)
-{
-  switch (msg)
-  {
-    case ObservableMessageConnectionLost:
-    {
-      SetChanged();
-      NotifyObservers(msg);
-      break;
-    }
-    default:
-      break;
-  }
 }

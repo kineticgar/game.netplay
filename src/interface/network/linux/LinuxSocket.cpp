@@ -199,9 +199,6 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
     else if (p == 0)
     {
       dsyslog("CLinuxSocket: End of stream, connection closed");
-      SetChanged();
-      NotifyObservers(ObservableMessageConnectionLost);
-      Shutdown();
       return false;
     }
 
