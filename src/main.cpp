@@ -40,7 +40,7 @@ using namespace NETPLAY;
 enum OPTION
 {
   OPTION_INVALID,
-  OPTION_GAME_CLIENT, // Load game client
+  OPTION_LOCAL_GAME,  // Load local game client
   OPTION_REMOTE_GAME, // Load remote game client
   OPTION_DISCOVER,    // Discover servers on the network
 };
@@ -55,7 +55,7 @@ namespace NETPLAY
 
     switch (option)
     {
-      case OPTION_GAME_CLIENT:
+      case OPTION_LOCAL_GAME:
       {
         GameClientProperties props;
         if (argc == 6)
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     std::string strOption = argv[1];
 
     if ((strOption == "-g" || strOption == "--game") && (argc == 6 || argc == 7))
-      option = OPTION_GAME_CLIENT;
+      option = OPTION_LOCAL_GAME;
     else if ((strOption == "-r" || strOption == "--remote"))
       option = OPTION_REMOTE_GAME;
     else if ((strOption == "-d" || strOption == "--discover"))
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
       throw std::runtime_error("Failed to initialize game client");
 
-    if (option == OPTION_GAME_CLIENT)
+    if (option == OPTION_LOCAL_GAME)
     {
       SERVER = new CServer(GAME, CALLBACKS);
       if (!SERVER->Initialize())
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 
   int exitCode = 0;
 
-  if (option == OPTION_GAME_CLIENT)
+  if (option == OPTION_LOCAL_GAME)
   {
     CAbortableTask task(SERVER);
     SERVER->WaitForExit();
