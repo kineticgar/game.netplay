@@ -53,12 +53,14 @@ bool CServer::Initialize(void)
 
 void CServer::Deinitialize(void)
 {
-  isyslog("Netplay server shutting down");
-
   StopThread();
 
   if (m_socket)
+  {
+    isyslog("Netplay server shutting down");
     m_socket->Shutdown();
+    m_socket.reset();
+  }
 }
 
 void* CServer::Process(void)
