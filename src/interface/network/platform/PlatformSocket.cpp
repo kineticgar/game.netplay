@@ -84,11 +84,12 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
   if (totalBytes == 0)
     return false;
 
-  buffer.assign(totalBytes, '\0');
-
   CLockObject lock(m_readMutex);
 
-  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, READ_TIMEOUT_MS);
+  char* b = new char[totalBytes];
+  unsigned int bytesRead = m_socket->Read(b, totalBytes, READ_TIMEOUT_MS);
+  buffer = b;
+  delete[] b;
 
   if (m_socket->GetErrorNumber() == ETIMEDOUT)
   {
