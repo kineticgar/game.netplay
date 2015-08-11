@@ -57,6 +57,7 @@ set(NETPLAY_SOURCES
     src/interface/network/NetworkFrontend.cpp
     src/interface/network/NetworkGame.cpp
     src/interface/network/platform/PlatformSocket.cpp
+    src/interface/network/RPCMethods.cpp
     src/interface/network/Server.cpp
     src/interface/network/SocketFactory.cpp
     src/keyboard/Keyboard.cpp

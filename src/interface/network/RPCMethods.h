@@ -73,4 +73,10 @@ namespace NETPLAY
 
     RPC_METHOD_COUNT,
   };
+
+  class RPCMethods
+  {
+  public:
+    static const char* TranslateMethod(RPC_METHOD method);
+  };
 }

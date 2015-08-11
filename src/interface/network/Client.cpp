@@ -94,7 +94,8 @@ void* CClient::Process(void)
       if (!ReadHeader(bRequest, msgMethod, msgLength))
         break;
 
-      dsyslog("Received %s: method=%d, length=%u", bRequest ? "request" : "response", msgMethod, msgLength);
+      dsyslog("Received %s: method=%s, length=%u", bRequest ? "request" : "response",
+          RPCMethods::TranslateMethod(msgMethod), msgLength);
 
       if (bRequest)
       {
@@ -136,7 +137,8 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest)
   if (!bSuccess)
     return false;
 
-  dsyslog("Sent request: method=%d, length=%u", method, strRequest.length());
+  dsyslog("Sent request: method=%s, length=%u",
+      RPCMethods::TranslateMethod(method), strRequest.length());
 
   return true;
 }
@@ -148,7 +150,7 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std:
 
   if (!GetResponse(method, strResponse))
   {
-    esyslog("Server failed to respond, method=%d", method);
+    esyslog("Server failed to respond, method=%s", RPCMethods::TranslateMethod(method));
     return false;
   }
 
@@ -170,7 +172,8 @@ bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
       return false;
   }
 
-  dsyslog("Sent response: method=%d, length=%u", method, strResponse.length());
+  dsyslog("Sent response: method=%s, length=%u",
+      RPCMethods::TranslateMethod(method), strResponse.length());
 
   return true;
 }
@@ -250,7 +253,7 @@ bool CClient::GetResponse(RPC_METHOD   method,
   else
   {
     // Event wasn't signaled, need to remove invocation from the array
-    dsyslog("Timed out waiting for event (method=%d)", method);
+    dsyslog("Timed out waiting for event (method=%s)", RPCMethods::TranslateMethod(method));
 
     CLockObject lock(m_invocationMutex);
 
