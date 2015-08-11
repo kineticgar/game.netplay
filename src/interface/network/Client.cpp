@@ -170,6 +170,8 @@ bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
       return false;
   }
 
+  dsyslog("Sent response: method=%d, length=%u", method, strResponse.length());
+
   return true;
 }
 
