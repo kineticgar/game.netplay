@@ -160,21 +160,27 @@ ADDON_STATUS CDLLGame::Initialize(void)
 
 void CDLLGame::Deinitialize(void)
 {
-  CLockObject lock(m_mutex);
-
-  if (m_ADDON_Destroy)
-    m_ADDON_Destroy();
-
-  delete m_pHelper;
-  m_pHelper = NULL;
-
-  if (m_dll)
+  if (m_bInitialized)
   {
-    dlclose(m_dll);
-    m_dll = NULL;
-  }
+    CLockObject lock(m_mutex);
 
-  m_bInitialized = false;
+    if (m_ADDON_Destroy)
+    {
+      m_ADDON_Destroy();
+      m_ADDON_Destroy = NULL;
+    }
+
+    delete m_pHelper;
+    m_pHelper = NULL;
+
+    if (m_dll)
+    {
+      dlclose(m_dll);
+      m_dll = NULL;
+    }
+
+    m_bInitialized = false;
+  }
 }
 
 void CDLLGame::Stop(void)
