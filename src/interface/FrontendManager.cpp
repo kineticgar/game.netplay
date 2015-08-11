@@ -32,11 +32,15 @@ using namespace NETPLAY;
 
 void CFrontendManager::RegisterFrontend(IFrontend* frontend)
 {
+  CWriteLockObject lock(m_mutex);
+
   m_frontends.push_back(frontend);
 }
 
 bool CFrontendManager::UnregisterFrontend(IFrontend* frontend)
 {
+  CWriteLockObject lock(m_mutex);
+
   const unsigned int oldSize = m_frontends.size();
 
   m_frontends.erase(std::remove(m_frontends.begin(), m_frontends.end(), frontend), m_frontends.end());
@@ -54,12 +58,16 @@ IFrontend* CFrontendManager::GetMaster(void)
 
 void CFrontendManager::Log(const ADDON::addon_log_t loglevel, const char* msg)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->Log(loglevel, msg);
 }
 
 bool CFrontendManager::GetSetting(const char* settingName, void* settingValue)
 {
+  CReadLockObject lock(m_mutex);
+
   IFrontend* master = GetMaster();
   if (master)
     return master->GetSetting(settingName, settingValue);
@@ -69,12 +77,16 @@ bool CFrontendManager::GetSetting(const char* settingName, void* settingValue)
 
 void CFrontendManager::QueueNotification(const ADDON::queue_msg_t type, const char* msg)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->QueueNotification(type, msg);
 }
 
 bool CFrontendManager::WakeOnLan(const char* mac)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->WakeOnLan(mac))
@@ -86,6 +98,8 @@ bool CFrontendManager::WakeOnLan(const char* mac)
 
 std::string CFrontendManager::UnknownToUTF8(const char* str)
 {
+  CReadLockObject lock(m_mutex);
+
   IFrontend* master = GetMaster();
   if (master)
     return master->UnknownToUTF8(str);
@@ -95,6 +109,8 @@ std::string CFrontendManager::UnknownToUTF8(const char* str)
 
 std::string CFrontendManager::GetLocalizedString(int dwCode, const char* strDefault /* = "" */)
 {
+  CReadLockObject lock(m_mutex);
+
   IFrontend* master = GetMaster();
   if (master)
     return master->GetLocalizedString(dwCode, strDefault);
@@ -104,6 +120,8 @@ std::string CFrontendManager::GetLocalizedString(int dwCode, const char* strDefa
 
 std::string CFrontendManager::GetDVDMenuLanguage(void)
 {
+  CReadLockObject lock(m_mutex);
+
   IFrontend* master = GetMaster();
   if (master)
     return master->GetDVDMenuLanguage();
@@ -113,6 +131,8 @@ std::string CFrontendManager::GetDVDMenuLanguage(void)
 
 void* CFrontendManager::OpenFile(const char* strFileName, unsigned int flags)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     void* file = (*it)->OpenFile(strFileName, flags);
@@ -125,6 +145,8 @@ void* CFrontendManager::OpenFile(const char* strFileName, unsigned int flags)
 
 void* CFrontendManager::OpenFileForWrite(const char* strFileName, bool bOverWrite)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     void* file = (*it)->OpenFileForWrite(strFileName, bOverWrite);
@@ -137,6 +159,8 @@ void* CFrontendManager::OpenFileForWrite(const char* strFileName, bool bOverWrit
 
 ssize_t CFrontendManager::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     ssize_t result = (*it)->ReadFile(file, lpBuf, uiBufSize);
@@ -149,6 +173,8 @@ ssize_t CFrontendManager::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
 
 bool CFrontendManager::ReadFileString(void* file, char* szLine, int iLineLength)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->ReadFileString(file, szLine, iLineLength))
@@ -160,6 +186,8 @@ bool CFrontendManager::ReadFileString(void* file, char* szLine, int iLineLength)
 
 ssize_t CFrontendManager::WriteFile(void* file, const void* lpBuf, size_t uiBufSize)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     ssize_t result = (*it)->WriteFile(file, lpBuf, uiBufSize);
@@ -172,12 +200,16 @@ ssize_t CFrontendManager::WriteFile(void* file, const void* lpBuf, size_t uiBufS
 
 void CFrontendManager::FlushFile(void* file)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->FlushFile(file);
 }
 
 int64_t CFrontendManager::SeekFile(void* file, int64_t iFilePosition, int iWhence)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     int64_t result = (*it)->SeekFile(file, iFilePosition, iWhence);
@@ -190,6 +222,8 @@ int64_t CFrontendManager::SeekFile(void* file, int64_t iFilePosition, int iWhenc
 
 int CFrontendManager::TruncateFile(void* file, int64_t iSize)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     int result = (*it)->TruncateFile(file, iSize);
@@ -202,6 +236,8 @@ int CFrontendManager::TruncateFile(void* file, int64_t iSize)
 
 int64_t CFrontendManager::GetFilePosition(void* file)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     int64_t result = (*it)->GetFilePosition(file);
@@ -214,6 +250,8 @@ int64_t CFrontendManager::GetFilePosition(void* file)
 
 int64_t CFrontendManager::GetFileLength(void* file)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     int64_t result = (*it)->GetFileLength(file);
@@ -226,12 +264,16 @@ int64_t CFrontendManager::GetFileLength(void* file)
 
 void CFrontendManager::CloseFile(void* file)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->CloseFile(file);
 }
 
 int CFrontendManager::GetFileChunkSize(void* file)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     int result = (*it)->GetFileChunkSize(file);
@@ -244,6 +286,8 @@ int CFrontendManager::GetFileChunkSize(void* file)
 
 bool CFrontendManager::FileExists(const char* strFileName, bool bUseCache)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->FileExists(strFileName, bUseCache))
@@ -255,6 +299,8 @@ bool CFrontendManager::FileExists(const char* strFileName, bool bUseCache)
 
 bool CFrontendManager::StatFile(const char* strFileName, STAT_STRUCTURE& buffer)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->StatFile(strFileName, buffer))
@@ -266,6 +312,8 @@ bool CFrontendManager::StatFile(const char* strFileName, STAT_STRUCTURE& buffer)
 
 bool CFrontendManager::DeleteFile(const char* strFileName)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->DeleteFile(strFileName))
@@ -277,6 +325,8 @@ bool CFrontendManager::DeleteFile(const char* strFileName)
 
 bool CFrontendManager::CanOpenDirectory(const char* strUrl)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->CanOpenDirectory(strUrl))
@@ -288,6 +338,8 @@ bool CFrontendManager::CanOpenDirectory(const char* strUrl)
 
 bool CFrontendManager::CreateDirectory(const char* strPath)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->CreateDirectory(strPath))
@@ -299,6 +351,8 @@ bool CFrontendManager::CreateDirectory(const char* strPath)
 
 bool CFrontendManager::DirectoryExists(const char* strPath)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->DirectoryExists(strPath))
@@ -310,6 +364,8 @@ bool CFrontendManager::DirectoryExists(const char* strPath)
 
 bool CFrontendManager::RemoveDirectory(const char* strPath)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->RemoveDirectory(strPath))
@@ -321,30 +377,40 @@ bool CFrontendManager::RemoveDirectory(const char* strPath)
 
 void CFrontendManager::CloseGame(void)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->CloseGame();
 }
 
 void CFrontendManager::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->VideoFrame(data, width, height, format);
 }
 
 void CFrontendManager::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->AudioFrames(data, frames, format);
 }
 
 void CFrontendManager::HwSetInfo(const game_hw_info* hw_info)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->HwSetInfo(hw_info);
 }
 
 uintptr_t CFrontendManager::HwGetCurrentFramebuffer(void)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     uintptr_t framebuffer = (*it)->HwGetCurrentFramebuffer();
@@ -357,6 +423,8 @@ uintptr_t CFrontendManager::HwGetCurrentFramebuffer(void)
 
 game_proc_address_t CFrontendManager::HwGetProcAddress(const char* symbol)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     game_proc_address_t proc = (*it)->HwGetProcAddress(symbol);
@@ -369,6 +437,8 @@ game_proc_address_t CFrontendManager::HwGetProcAddress(const char* symbol)
 
 bool CFrontendManager::OpenPort(unsigned int port)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
   {
     if ((*it)->OpenPort(port))
@@ -380,12 +450,16 @@ bool CFrontendManager::OpenPort(unsigned int port)
 
 void CFrontendManager::ClosePort(unsigned int port)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->ClosePort(port);
 }
 
 void CFrontendManager::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
 {
+  CReadLockObject lock(m_mutex);
+
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
     (*it)->RumbleSetState(port, effect, strength);
 }

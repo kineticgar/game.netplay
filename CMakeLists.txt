@@ -69,6 +69,7 @@ set(NETPLAY_SOURCES
     src/utils/AbortableTask.cpp
     src/utils/Observer.cpp
     src/utils/PathUtils.cpp
+    src/utils/ReadWriteLock.cpp
     src/utils/SignalHandler.cpp
     src/utils/StringUtils.cpp
     src/utils/Version.cpp

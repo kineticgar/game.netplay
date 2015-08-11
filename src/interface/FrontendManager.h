@@ -20,6 +20,7 @@
 #pragma once
 
 #include "IFrontend.h"
+#include "utils/ReadWriteLock.h"
 
 #include <vector>
 
@@ -89,5 +90,6 @@ namespace NETPLAY
     IFrontend* GetMaster(void);
 
     std::vector<IFrontend*> m_frontends;
+    CReadWriteLock          m_mutex;
   };
 }
