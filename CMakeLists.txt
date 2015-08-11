@@ -202,11 +202,6 @@ endmacro()
 #
 ################################################################################
 
-# TODO
-if(NOT CORE_SYSTEM_NAME)
-    set(CORE_SYSTEM_NAME linux)
-endif()
-
 if("${CORE_SYSTEM_NAME}" STREQUAL "windows")
     # pass
 elseif("${CORE_SYSTEM_NAME}" STREQUAL "android")
