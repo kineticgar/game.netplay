@@ -45,12 +45,6 @@ namespace NETPLAY
 
     // --- Game methods --------------------------------------------------------
 
-    GetGameAPIVersion,
-    GetMininumGameAPIVersion,
-    LoadGame,
-    LoadGameSpecial,
-    LoadStandalone,
-    UnloadGame,
     GetGameInfo,
     GetRegion,
     FrameEvent,
