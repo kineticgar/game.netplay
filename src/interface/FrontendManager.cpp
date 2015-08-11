@@ -113,62 +113,133 @@ std::string CFrontendManager::GetDVDMenuLanguage(void)
 
 void* CFrontendManager::OpenFile(const char* strFileName, unsigned int flags)
 {
-  return NULL; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    void* file = (*it)->OpenFile(strFileName, flags);
+    if (file)
+      return file;
+  }
+
+  return NULL;
 }
 
 void* CFrontendManager::OpenFileForWrite(const char* strFileName, bool bOverWrite)
 {
-  return NULL; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    void* file = (*it)->OpenFileForWrite(strFileName, bOverWrite);
+    if (file)
+      return file;
+  }
+
+  return NULL;
 }
 
 ssize_t CFrontendManager::ReadFile(void* file, void* lpBuf, size_t uiBufSize)
 {
-  return 0; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    ssize_t result = (*it)->ReadFile(file, lpBuf, uiBufSize);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 bool CFrontendManager::ReadFileString(void* file, char* szLine, int iLineLength)
 {
-  return false; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    if ((*it)->ReadFileString(file, szLine, iLineLength))
+      return true;
+  }
+
+  return false;
 }
 
 ssize_t CFrontendManager::WriteFile(void* file, const void* lpBuf, size_t uiBufSize)
 {
-  return 0; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    ssize_t result = (*it)->WriteFile(file, lpBuf, uiBufSize);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 void CFrontendManager::FlushFile(void* file)
 {
-  // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->FlushFile(file);
 }
 
 int64_t CFrontendManager::SeekFile(void* file, int64_t iFilePosition, int iWhence)
 {
-  return -1; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    int64_t result = (*it)->SeekFile(file, iFilePosition, iWhence);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 int CFrontendManager::TruncateFile(void* file, int64_t iSize)
 {
-  return -1; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    int result = (*it)->TruncateFile(file, iSize);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 int64_t CFrontendManager::GetFilePosition(void* file)
 {
-  return -1; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    int64_t result = (*it)->GetFilePosition(file);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 int64_t CFrontendManager::GetFileLength(void* file)
 {
-  return -1; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    int64_t result = (*it)->GetFileLength(file);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 void CFrontendManager::CloseFile(void* file)
 {
-  // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+    (*it)->CloseFile(file);
 }
 
 int CFrontendManager::GetFileChunkSize(void* file)
 {
-  return -1; // TODO
+  for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
+  {
+    int result = (*it)->GetFileChunkSize(file);
+    if (result != -1)
+      return result;
+  }
+
+  return -1;
 }
 
 bool CFrontendManager::FileExists(const char* strFileName, bool bUseCache)
