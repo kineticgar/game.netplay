@@ -23,7 +23,6 @@
 #include "interface/IFrontend.h"
 #include "log/Log.h"
 
-#include "kodi/kodi_addon_callbacks.h"
 #include "kodi/kodi_game_callbacks.h"
 
 using namespace NETPLAY;

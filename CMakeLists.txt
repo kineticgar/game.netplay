@@ -40,7 +40,6 @@ include_directories(
     ${platform_INCLUDE_DIRS}
     ${PROTOBUF_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR} # For protobuf
-    ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src
 )
 

@@ -19,10 +19,11 @@
  */
 #pragma once
 
+#include "kodi/kodi_addon_callbacks.h"
+
 #include <cstring>
 #include <string>
 
-struct CB_AddOnLib;
 struct CB_GameLib;
 
 namespace NETPLAY

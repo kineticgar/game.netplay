@@ -150,32 +150,32 @@ char* CFrontendCallbacksAddon::UnknownToUTF8(const char* sourceDest)
   return DuplicateString(frontend->UnknownToUTF8(sourceDest));
 }
 
-char* CFrontendCallbacksAddon::GetLocalizedString(void* addonData, long dwCode)
+char* CFrontendCallbacksAddon::GetLocalizedString(const void* addonData, long dwCode)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return NULL;
 
   return DuplicateString(frontend->GetLocalizedString(dwCode));
 }
 
-char* CFrontendCallbacksAddon::GetDVDMenuLanguage(void* addonData)
+char* CFrontendCallbacksAddon::GetDVDMenuLanguage(const void* addonData)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return NULL;
 
   return DuplicateString(frontend->GetDVDMenuLanguage());
 }
 
-void CFrontendCallbacksAddon::FreeString(void* addonData, char* str)
+void CFrontendCallbacksAddon::FreeString(const void* addonData, char* str)
 {
   return UnduplicateString(str);
 }
 
-void* CFrontendCallbacksAddon::OpenFile(void* addonData, const char* strFileName, unsigned int flags)
+void* CFrontendCallbacksAddon::OpenFile(const void* addonData, const char* strFileName, unsigned int flags)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return NULL;
 
@@ -185,9 +185,9 @@ void* CFrontendCallbacksAddon::OpenFile(void* addonData, const char* strFileName
   return frontend->OpenFile(strFileName, flags);
 }
 
-void* CFrontendCallbacksAddon::OpenFileForWrite(void* addonData, const char* strFileName, bool bOverWrite)
+void* CFrontendCallbacksAddon::OpenFileForWrite(const void* addonData, const char* strFileName, bool bOverWrite)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return NULL;
 
@@ -197,9 +197,9 @@ void* CFrontendCallbacksAddon::OpenFileForWrite(void* addonData, const char* str
   return frontend->OpenFileForWrite(strFileName, bOverWrite);
 }
 
-ssize_t CFrontendCallbacksAddon::ReadFile(void* addonData, void* file, void* lpBuf, size_t uiBufSize)
+ssize_t CFrontendCallbacksAddon::ReadFile(const void* addonData, void* file, void* lpBuf, size_t uiBufSize)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return 0;
 
@@ -209,9 +209,9 @@ ssize_t CFrontendCallbacksAddon::ReadFile(void* addonData, void* file, void* lpB
   return frontend->ReadFile(file, lpBuf, uiBufSize);
 }
 
-bool CFrontendCallbacksAddon::ReadFileString(void* addonData, void* file, char* szLine, int iLineLength)
+bool CFrontendCallbacksAddon::ReadFileString(const void* addonData, void* file, char* szLine, int iLineLength)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -221,9 +221,9 @@ bool CFrontendCallbacksAddon::ReadFileString(void* addonData, void* file, char* 
   return frontend->ReadFileString(file, szLine, iLineLength);
 }
 
-ssize_t CFrontendCallbacksAddon::WriteFile(void* addonData, void* file, const void* lpBuf, size_t uiBufSize)
+ssize_t CFrontendCallbacksAddon::WriteFile(const void* addonData, void* file, const void* lpBuf, size_t uiBufSize)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return 0;
 
@@ -233,9 +233,9 @@ ssize_t CFrontendCallbacksAddon::WriteFile(void* addonData, void* file, const vo
   return frontend->WriteFile(file, lpBuf, uiBufSize);
 }
 
-void CFrontendCallbacksAddon::FlushFile(void* addonData, void* file)
+void CFrontendCallbacksAddon::FlushFile(const void* addonData, void* file)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return;
 
@@ -245,9 +245,9 @@ void CFrontendCallbacksAddon::FlushFile(void* addonData, void* file)
   return frontend->FlushFile(file);
 }
 
-int64_t CFrontendCallbacksAddon::SeekFile(void* addonData, void* file, int64_t iFilePosition, int iWhence)
+int64_t CFrontendCallbacksAddon::SeekFile(const void* addonData, void* file, int64_t iFilePosition, int iWhence)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -257,9 +257,9 @@ int64_t CFrontendCallbacksAddon::SeekFile(void* addonData, void* file, int64_t i
   return frontend->SeekFile(file, iFilePosition, iWhence);
 }
 
-int CFrontendCallbacksAddon::TruncateFile(void* addonData, void* file, int64_t iSize)
+int CFrontendCallbacksAddon::TruncateFile(const void* addonData, void* file, int64_t iSize)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -269,9 +269,9 @@ int CFrontendCallbacksAddon::TruncateFile(void* addonData, void* file, int64_t i
   return frontend->TruncateFile(file, iSize);
 }
 
-int64_t CFrontendCallbacksAddon::GetFilePosition(void* addonData, void* file)
+int64_t CFrontendCallbacksAddon::GetFilePosition(const void* addonData, void* file)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -281,9 +281,9 @@ int64_t CFrontendCallbacksAddon::GetFilePosition(void* addonData, void* file)
   return frontend->GetFilePosition(file);
 }
 
-int64_t CFrontendCallbacksAddon::GetFileLength(void* addonData, void* file)
+int64_t CFrontendCallbacksAddon::GetFileLength(const void* addonData, void* file)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -293,9 +293,9 @@ int64_t CFrontendCallbacksAddon::GetFileLength(void* addonData, void* file)
   return frontend->GetFileLength(file);
 }
 
-void CFrontendCallbacksAddon::CloseFile(void* addonData, void* file)
+void CFrontendCallbacksAddon::CloseFile(const void* addonData, void* file)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return;
 
@@ -305,9 +305,9 @@ void CFrontendCallbacksAddon::CloseFile(void* addonData, void* file)
   return frontend->CloseFile(file);
 }
 
-int CFrontendCallbacksAddon::GetFileChunkSize(void* addonData, void* file)
+int CFrontendCallbacksAddon::GetFileChunkSize(const void* addonData, void* file)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -317,9 +317,9 @@ int CFrontendCallbacksAddon::GetFileChunkSize(void* addonData, void* file)
   return frontend->GetFileChunkSize(file);
 }
 
-bool CFrontendCallbacksAddon::FileExists(void* addonData, const char* strFileName, bool bUseCache)
+bool CFrontendCallbacksAddon::FileExists(const void* addonData, const char* strFileName, bool bUseCache)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -329,9 +329,9 @@ bool CFrontendCallbacksAddon::FileExists(void* addonData, const char* strFileNam
   return frontend->FileExists(strFileName, bUseCache);
 }
 
-int CFrontendCallbacksAddon::StatFile(void* addonData, const char* strFileName, struct __stat64* buffer)
+int CFrontendCallbacksAddon::StatFile(const void* addonData, const char* strFileName, struct __stat64* buffer)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return -1;
 
@@ -348,9 +348,9 @@ int CFrontendCallbacksAddon::StatFile(void* addonData, const char* strFileName, 
   return -1;
 }
 
-bool CFrontendCallbacksAddon::DeleteFile(void* addonData, const char* strFileName)
+bool CFrontendCallbacksAddon::DeleteFile(const void* addonData, const char* strFileName)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -360,9 +360,9 @@ bool CFrontendCallbacksAddon::DeleteFile(void* addonData, const char* strFileNam
   return frontend->DeleteFile(strFileName);
 }
 
-bool CFrontendCallbacksAddon::CanOpenDirectory(void* addonData, const char* strURL)
+bool CFrontendCallbacksAddon::CanOpenDirectory(const void* addonData, const char* strURL)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -372,9 +372,9 @@ bool CFrontendCallbacksAddon::CanOpenDirectory(void* addonData, const char* strU
   return frontend->CanOpenDirectory(strURL);
 }
 
-bool CFrontendCallbacksAddon::CreateDirectory(void* addonData, const char* strPath)
+bool CFrontendCallbacksAddon::CreateDirectory(const void* addonData, const char* strPath)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -384,9 +384,9 @@ bool CFrontendCallbacksAddon::CreateDirectory(void* addonData, const char* strPa
   return frontend->CreateDirectory(strPath);
 }
 
-bool CFrontendCallbacksAddon::DirectoryExists(void* addonData, const char* strPath)
+bool CFrontendCallbacksAddon::DirectoryExists(const void* addonData, const char* strPath)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
@@ -396,9 +396,9 @@ bool CFrontendCallbacksAddon::DirectoryExists(void* addonData, const char* strPa
   return frontend->DirectoryExists(strPath);
 }
 
-bool CFrontendCallbacksAddon::RemoveDirectory(void* addonData, const char* strPath)
+bool CFrontendCallbacksAddon::RemoveDirectory(const void* addonData, const char* strPath)
 {
-  IFrontend* frontend = GetFrontend(addonData);
+  IFrontend* frontend = GetFrontend(const_cast<void*>(addonData));
   if (frontend == NULL)
     return false;
 
