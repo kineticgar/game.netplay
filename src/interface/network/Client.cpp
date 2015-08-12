@@ -68,16 +68,12 @@ void CClient::Deinitialize(void)
   if (IsRunning())
   {
     isyslog("Netplay client shutting down");
-
     StopThread(-1);
-
-    // Signal socket to abort
-    m_socket->Abort();
-
-    // Clean up
-    StopThread(0);
-    m_socket->Shutdown();
   }
+
+  m_socket->Shutdown();
+
+  StopThread(0);
 }
 
 void* CClient::Process(void)
@@ -103,10 +99,7 @@ void* CClient::Process(void)
       if (bRequest)
       {
         if (!m_socket->Read(strRequest, msgLength))
-        {
-          esyslog("Failed to read message (%u bytes), bailing", msgLength);
           break;
-        }
       }
       else
       {
@@ -122,7 +115,7 @@ void* CClient::Process(void)
     }
   }
 
-  dsyslog("Connection lost, ending client thread");
+  dsyslog("Ending client thread");
 
   SetChanged();
   NotifyObservers(ObservableMessageConnectionLost);
@@ -287,10 +280,7 @@ bool CClient::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
 
   std::string message;
   if (!m_socket->Read(message, HEADER_SIZE))
-  {
-    esyslog("Failed to read message header (%u bytes), bailing", HEADER_SIZE);
     return false;
-  }
 
   return ParseHeader(message, bRequest, method, length);
 }

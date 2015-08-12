@@ -40,6 +40,9 @@ bool CPlatformSocket::Connect(void)
 {
   Shutdown();
 
+  CLockObject lock(m_abortMutex);
+  CLockObject lock2(m_socketMutex);
+
   isyslog("Connecting to %s", Address().c_str());
 
   uint64_t iNow = GetTimeMs();
@@ -58,6 +61,8 @@ bool CPlatformSocket::Connect(void)
   if (!m_socket->IsOpen())
   {
     esyslog("Failed to connect to the server (%s)", m_socket->GetError().c_str());
+    delete m_socket;
+    m_socket = NULL;
     return false;
   }
 
@@ -66,6 +71,11 @@ bool CPlatformSocket::Connect(void)
 
 void CPlatformSocket::Shutdown(void)
 {
+  AbortRead();
+
+  CLockObject lock(m_abortMutex);
+  CLockObject lock2(m_socketMutex);
+
   if (m_socket && m_socket->IsOpen())
   {
     isyslog("Closing connection to %s", Address().c_str());
@@ -86,36 +96,62 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   buffer.resize(totalBytes);
 
-  CLockObject lock(m_readMutex);
+  unsigned int totalBytesRead = 0;
 
-  if (!m_socket)
-    return false;
-
-  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.data()), totalBytes, READ_TIMEOUT_MS);
-
-  if (m_socket->GetErrorNumber() == ETIMEDOUT)
+  while (totalBytesRead < totalBytes)
   {
-    if (0 < bytesRead && bytesRead < totalBytes)
+    bool bInterrupted = false;
+
     {
-      // We read something, so try to finish the read
-      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.data()) + bytesRead,
-                                          totalBytes - bytesRead,
-                                          READ_TIMEOUT_MS);
-      if (bytes > 0)
-        bytesRead += bytes;
+      CLockObject lock(m_socketMutex);
+
+      if (!m_socket)
+        return false;
+
+      ssize_t bytesRead = m_socket->Read(const_cast<char*>(buffer.data()) + totalBytesRead,
+                                         totalBytes - totalBytesRead,
+                                         READ_TIMEOUT_MS);
+
+      if (bytesRead > 0)
+        totalBytesRead += bytesRead;
+
+      if (m_socket->GetErrorNumber() == ETIMEDOUT)
+      {
+        esyslog("Socket timed out, read %u or %u bytes", totalBytesRead, totalBytes);
+        break;
+      }
+      else if (m_socket->GetErrorNumber() == EINTR)
+      {
+        bInterrupted = true;
+      }
+    }
+
+    if (bInterrupted)
+    {
+      // Read was interrupted, try again, but not too soon
+      CEvent::Sleep(1);
     }
   }
 
-  return bytesRead == totalBytes;
+  return totalBytesRead == totalBytes;
 }
 
-void CPlatformSocket::Abort(void)
+void CPlatformSocket::AbortRead(void)
 {
-  m_socket->AbortRead();
+  CLockObject lock(m_abortMutex);
+  if (m_socket)
+    m_socket->AbortRead();
 }
 
 bool CPlatformSocket::Write(const std::string& request)
 {
+  AbortRead();
+
+  CLockObject lock(m_socketMutex);
+
+  if (!m_socket)
+    return false;
+
   ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.data()), request.length());
   if (iWriteResult != static_cast<ssize_t>(request.length()))
   {

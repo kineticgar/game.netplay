@@ -37,15 +37,16 @@ namespace NETPLAY
     virtual bool Connect(void);
     virtual void Shutdown(void);
     virtual bool Read(std::string& buffer, unsigned int totalBytes);
-    virtual void Abort(void);
     virtual bool Write(const std::string& request);
 
   private:
+    void AbortRead(void);
     std::string Address(void) const;
 
     const std::string         m_strAddress;
     const unsigned int        m_port;
     PLATFORM::CTcpConnection* m_socket;
-    PLATFORM::CMutex          m_readMutex;
+    PLATFORM::CMutex          m_abortMutex;
+    PLATFORM::CMutex          m_socketMutex;
   };
 }

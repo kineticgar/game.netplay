@@ -48,8 +48,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-using namespace PLATFORM;
 using namespace NETPLAY;
+using namespace PLATFORM;
 
 #define WRITE_POLL_TIMEOUT_MS  100 // Timeout for polling fd before write
 
@@ -140,10 +140,12 @@ bool CLinuxSocket::Connect(void)
 
   m_strAddress = ip2txt(sin.sin_addr.s_addr, sin.sin_port);
 
+  isyslog("Client connected: %s", m_strAddress.c_str());
+
+  CLockObject lock(m_abortMutex);
+
   m_pollerRead  = new CLinuxPoller(m_fd);
   m_pollerWrite = new CLinuxPoller(m_fd, true);
-
-  isyslog("Client connected: %s", m_strAddress.c_str());
 
   return true;
 }
@@ -153,6 +155,8 @@ void CLinuxSocket::Shutdown(void)
   Abort();
 
   isyslog("Client %s disconnected", m_strAddress.c_str());
+
+  CLockObject lock(m_abortMutex);
 
   delete m_pollerRead;
   m_pollerRead = NULL;
@@ -213,7 +217,11 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 void CLinuxSocket::Abort(void)
 {
   m_bStop = true;
-  m_pollerRead->Abort();
+
+  CLockObject lock(m_abortMutex);
+
+  if (m_pollerRead)
+    m_pollerRead->Abort();
 }
 
 bool CLinuxSocket::Write(const std::string& request)
@@ -224,7 +232,7 @@ bool CLinuxSocket::Write(const std::string& request)
 
   const ssize_t written = static_cast<ssize_t>(size);
 
-  CLockObject lock(m_MutexWrite);
+  CLockObject lock(m_writeMutex);
 
   while (size > 0)
   {
