@@ -102,8 +102,11 @@ void* CClient::Process(void)
 
       if (bRequest)
       {
-        if (!m_socket->Read(strRequest, msgLength))
-          break;
+        if (msgLength > 0)
+        {
+          if (!m_socket->Read(strRequest, msgLength))
+            break;
+        }
       }
       else
       {
@@ -112,7 +115,7 @@ void* CClient::Process(void)
       }
     }
 
-    if (!strRequest.empty())
+    if (bRequest)
     {
       if (!m_requestHandler->HandleRequest(msgMethod, strRequest, this))
         break;
