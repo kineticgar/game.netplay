@@ -29,6 +29,7 @@
 using namespace NETPLAY;
 using namespace PLATFORM;
 
+#define HEADER_SIZE            5 // bytes
 #define MAX_MESSAGE_LENGTH     (5 * 1024 * 1024) // 5 MB
 #define RESPONSE_TIMEOUT_MS    (5 * 1000) // 5 seconds
 #define REQUEST_MASK           0x80 // MSB
@@ -81,6 +82,8 @@ void CClient::Deinitialize(void)
 
 void* CClient::Process(void)
 {
+  dsyslog("Starting client thread");
+
   while (!IsStopped())
   {
     bool bRequest;
@@ -100,7 +103,10 @@ void* CClient::Process(void)
       if (bRequest)
       {
         if (!m_socket->Read(strRequest, msgLength))
+        {
+          esyslog("Failed to read message (%u bytes), bailing", msgLength);
           break;
+        }
       }
       else
       {
@@ -115,6 +121,8 @@ void* CClient::Process(void)
         break;
     }
   }
+
+  dsyslog("Connection lost, ending client thread");
 
   SetChanged();
   NotifyObservers(ObservableMessageConnectionLost);
@@ -275,18 +283,21 @@ bool CClient::GetResponse(RPC_METHOD   method,
 bool CClient::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
 {
   std::string header;
-  header.resize(5);
+  header.resize(HEADER_SIZE);
 
   std::string message;
-  if (!m_socket->Read(message, 5))
+  if (!m_socket->Read(message, HEADER_SIZE))
+  {
+    esyslog("Failed to read message header (%u bytes), bailing", HEADER_SIZE);
     return false;
+  }
 
   return ParseHeader(message, bRequest, method, length);
 }
 
 bool CClient::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length)
 {
-  header.resize(5);
+  header.resize(HEADER_SIZE);
 
   header[0] = (static_cast<uint16_t>(method) >> 8) | (bRequest ? REQUEST_MASK : 0);
   header[1] = static_cast<uint16_t>(method) & 0xff;
