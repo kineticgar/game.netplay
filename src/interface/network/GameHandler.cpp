@@ -159,6 +159,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         response.mutable_info()->mutable_geometry()->set_base_height(info.geometry.base_height);
         response.mutable_info()->mutable_geometry()->set_max_width(info.geometry.max_width);
         response.mutable_info()->mutable_geometry()->set_max_height(info.geometry.max_height);
+        response.mutable_info()->mutable_geometry()->set_aspect_ratio(info.geometry.aspect_ratio);
         response.mutable_info()->mutable_timing()->set_fps(info.timing.fps);
         response.mutable_info()->mutable_timing()->set_sample_rate(info.timing.sample_rate);
         if (response.SerializeToString(&strResponse))
