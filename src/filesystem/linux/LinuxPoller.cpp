@@ -88,6 +88,13 @@ bool CLinuxPoller::Poll(int timeoutMs /* = 0 */)
   {
     if (poll(m_pfd, m_numFileHandles, timeoutMs) != 0)
     {
+      // Flush pipe
+      if (m_selfPipe[0] != -1)
+      {
+        char dummy;
+        while (read(m_selfPipe[0], &dummy, 1) == 1)
+          ;
+      }
       // returns true even in case of an error, to let the caller
       // access the file and thus see the error code
       return true;
