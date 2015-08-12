@@ -91,14 +91,14 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
   if (!m_socket)
     return false;
 
-  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.c_str()), totalBytes, READ_TIMEOUT_MS);
+  unsigned int bytesRead = m_socket->Read(const_cast<char*>(buffer.data()), totalBytes, READ_TIMEOUT_MS);
 
   if (m_socket->GetErrorNumber() == ETIMEDOUT)
   {
     if (0 < bytesRead && bytesRead < totalBytes)
     {
       // We read something, so try to finish the read
-      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.c_str()) + bytesRead,
+      unsigned int bytes = m_socket->Read(const_cast<char*>(buffer.data()) + bytesRead,
                                           totalBytes - bytesRead,
                                           READ_TIMEOUT_MS);
       if (bytes > 0)
@@ -116,7 +116,7 @@ void CPlatformSocket::Abort(void)
 
 bool CPlatformSocket::Write(const std::string& request)
 {
-  ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.c_str()), request.length());
+  ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.data()), request.length());
   if (iWriteResult != static_cast<ssize_t>(request.length()))
   {
     esyslog(" Failed to write packet (%s), bytes written: %d of total: %d", m_socket->GetError().c_str(), iWriteResult, request.length());

@@ -481,7 +481,7 @@ GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
   {
     game::DeserializeRequest request;
     request.mutable_data()->resize(size);
-    std::memcpy(const_cast<char*>(request.mutable_data()->c_str()), data, size);
+    std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
     std::string strRequest;
     if (request.SerializeToString(&strRequest))
     {

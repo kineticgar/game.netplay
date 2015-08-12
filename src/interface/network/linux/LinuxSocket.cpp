@@ -173,7 +173,7 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   ssize_t missing = static_cast<ssize_t>(totalBytes);
 
-  uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.c_str()));
+  uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
   while (missing > 0)
   {
@@ -218,7 +218,7 @@ void CLinuxSocket::Abort(void)
 
 bool CLinuxSocket::Write(const std::string& request)
 {
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(request.c_str());
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(request.data());
 
   size_t size = request.size();
 

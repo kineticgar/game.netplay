@@ -290,7 +290,7 @@ void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsig
   if (size > 0)
   {
     request.mutable_data()->resize(size);
-    std::memcpy(const_cast<char*>(request.mutable_data()->c_str()), data, size);
+    std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
     request.set_width(width);
     request.set_height(height);
     request.set_format(format);
@@ -322,7 +322,7 @@ void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAM
   if (size > 0)
   {
     request.mutable_data()->resize(size);
-    std::memcpy(const_cast<char*>(request.mutable_data()->c_str()), data, size);
+    std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
     request.set_frames(frames);
     request.set_format(format);
     std::string strRequest;
