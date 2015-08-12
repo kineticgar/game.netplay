@@ -207,7 +207,6 @@ message AudioFramesRequest {
 }
 
 message AudioFramesResponse {
-  required uint32 result = 1;
 }
 
 message OpenPortRequest {
