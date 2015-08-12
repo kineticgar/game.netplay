@@ -109,8 +109,6 @@ namespace NETPLAY
 
 int main(int argc, char* argv[])
 {
-  isyslog("Netplay server initializing");
-
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
   CServer*          SERVER    = NULL;
@@ -147,6 +145,8 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
     return 1;
   }
+
+  isyslog("Netplay server initializing");
 
   try
   {
