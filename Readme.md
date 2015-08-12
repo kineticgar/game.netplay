@@ -109,7 +109,7 @@ git clone https://github.com/Pulse-Eight/platform.git
 ...
 ```
 
-With these dependencies in place, the add-on can be built. Use the CMake command above, or use this command to copy add-ons to your Kodi source tree:
+With these dependencies in place, the add-on can be built. Use the CMake command for kodi-platform above, or use this command to copy add-ons to your Kodi source tree:
 
 ```shell
 cmake -DCMAKE_BUILD_TYPE=Debug \
@@ -118,8 +118,6 @@ cmake -DCMAKE_BUILD_TYPE=Debug \
       -DPACKAGE_ZIP=1 \
       ..
 ```
-
-If you omit the line `-DKODI_LIB_DIR=$HOME/workspace/xbmc`, the helper libraries will be installed to the CMake prefix instead of the correct destination.
 
 ## Building in-tree (cross-compiling)
 
