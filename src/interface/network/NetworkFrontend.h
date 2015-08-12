@@ -80,5 +80,6 @@ namespace NETPLAY
 
   private:
     CClient* const m_rpc;
+    bool           m_bLoggedIn;
   };
 }

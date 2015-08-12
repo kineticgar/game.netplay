@@ -20,6 +20,7 @@
 #pragma once
 
 #include "RPCMethods.h"
+#include "utils/Observer.h"
 
 #include <string>
 
@@ -27,7 +28,7 @@ namespace NETPLAY
 {
   class CClient;
 
-  class IRequestHandler
+  class IRequestHandler : public Observable
   {
   public:
     virtual ~IRequestHandler(void) { }

@@ -31,6 +31,7 @@ namespace NETPLAY
   {
     ObservableMessageNone,
     ObservableMessageConnectionLost,
+    ObservableMessageLoggedIn,
   } ObservableMessage;
 
   class Observer

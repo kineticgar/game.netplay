@@ -75,6 +75,8 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         {
           dsyslog("Client logged in");
           bLoginSuccess = true;
+          SetChanged();
+          NotifyObservers(ObservableMessageLoggedIn);
         }
 
         addon::LoginResponse response;

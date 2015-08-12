@@ -30,7 +30,8 @@
 using namespace NETPLAY;
 
 CNetworkFrontend::CNetworkFrontend(IGame* callbacks, const SocketPtr& socket) :
-  m_rpc(new CClient(socket, callbacks))
+  m_rpc(new CClient(socket, callbacks)),
+  m_bLoggedIn(false)
 {
   assert(m_rpc);
   m_rpc->RegisterObserver(this);
@@ -55,14 +56,17 @@ void CNetworkFrontend::Deinitialize(void)
 
 void CNetworkFrontend::Log(const ADDON::addon_log_t loglevel, const char* msg)
 {
-  addon::LogRequest request;
-  request.set_level(loglevel);
-  request.set_msg(msg);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::Log, strRequest, strResponse);
+    addon::LogRequest request;
+    request.set_level(loglevel);
+    request.set_msg(msg);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::Log, strRequest, strResponse);
+    }
   }
 }
 
@@ -73,30 +77,36 @@ bool CNetworkFrontend::GetSetting(const char* settingName, void* settingValue)
 
 void CNetworkFrontend::QueueNotification(const ADDON::queue_msg_t type, const char* msg)
 {
-  addon::QueueNotificationRequest request;
-  request.set_type(type);
-  request.set_msg(msg);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::QueueNotification, strRequest, strResponse);
+    addon::QueueNotificationRequest request;
+    request.set_type(type);
+    request.set_msg(msg);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::QueueNotification, strRequest, strResponse);
+    }
   }
 }
 
 bool CNetworkFrontend::WakeOnLan(const char* mac)
 {
-  addon::WakeOnLanRequest request;
-  request.set_mac_address(mac);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::WakeOnLan, strRequest, strResponse))
+    addon::WakeOnLanRequest request;
+    request.set_mac_address(mac);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      addon::WakeOnLanResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::WakeOnLan, strRequest, strResponse))
+      {
+        addon::WakeOnLanResponse response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -105,17 +115,20 @@ bool CNetworkFrontend::WakeOnLan(const char* mac)
 
 std::string CNetworkFrontend::UnknownToUTF8(const char* str)
 {
-  addon::UnknownToUTF8Request request;
-  request.set_str(str);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
+    addon::UnknownToUTF8Request request;
+    request.set_str(str);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      addon::UnknownToUTF8Response response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::UnknownToUTF8, strRequest, strResponse))
+      {
+        addon::UnknownToUTF8Response response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -126,17 +139,20 @@ std::string CNetworkFrontend::GetLocalizedString(int dwCode, const char* strDefa
 {
   std::string result(strDefault);
 
-  addon::GetLocalizedStringRequest request;
-  request.set_code(dwCode);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
+    addon::GetLocalizedStringRequest request;
+    request.set_code(dwCode);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      addon::GetLocalizedStringResponse response;
-      if (response.ParseFromString(strResponse))
-        result = response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetLocalizedString, strRequest, strResponse))
+      {
+        addon::GetLocalizedStringResponse response;
+        if (response.ParseFromString(strResponse))
+          result = response.result();
+      }
     }
   }
 
@@ -145,16 +161,19 @@ std::string CNetworkFrontend::GetLocalizedString(int dwCode, const char* strDefa
 
 std::string CNetworkFrontend::GetDVDMenuLanguage()
 {
-  addon::GetDVDMenuLanguageRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
+    addon::GetDVDMenuLanguageRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      addon::GetDVDMenuLanguageResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::GetDVDMenuLanguage, strRequest, strResponse))
+      {
+        addon::GetDVDMenuLanguageResponse response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -258,12 +277,15 @@ bool CNetworkFrontend::RemoveDirectory(const char* strPath)
 
 void CNetworkFrontend::CloseGame(void)
 {
-  game::CloseGameRequest request;
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::CloseGame, strRequest, strResponse);
+    game::CloseGameRequest request;
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::CloseGame, strRequest, strResponse);
+    }
   }
 }
 
@@ -285,20 +307,23 @@ unsigned int GetStride(GAME_RENDER_FORMAT format, unsigned int width)
 
 void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
-  game::VideoFrameRequest request;
-  unsigned int size = GetStride(format, width) * height; // TODO
-  if (size > 0)
+  if (m_bLoggedIn)
   {
-    request.mutable_data()->resize(size);
-    std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
-    request.set_width(width);
-    request.set_height(height);
-    request.set_format(format);
-    std::string strRequest;
-    if (request.SerializeToString(&strRequest))
+    game::VideoFrameRequest request;
+    unsigned int size = GetStride(format, width) * height; // TODO
+    if (size > 0)
     {
-      std::string strResponse;
-      m_rpc->SendRequest(RPC_METHOD::VideoFrame, strRequest, strResponse);
+      request.mutable_data()->resize(size);
+      std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
+      request.set_width(width);
+      request.set_height(height);
+      request.set_format(format);
+      std::string strRequest;
+      if (request.SerializeToString(&strRequest))
+      {
+        std::string strResponse;
+        m_rpc->SendRequest(RPC_METHOD::VideoFrame, strRequest, strResponse);
+      }
     }
   }
 }
@@ -317,19 +342,22 @@ unsigned int GetFrameSize(GAME_AUDIO_FORMAT format)
 
 void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
-  game::AudioFramesRequest request;
-  unsigned int size = GetFrameSize(format) * frames; // TODO
-  if (size > 0)
+  if (m_bLoggedIn)
   {
-    request.mutable_data()->resize(size);
-    std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
-    request.set_frames(frames);
-    request.set_format(format);
-    std::string strRequest;
-    if (request.SerializeToString(&strRequest))
+    game::AudioFramesRequest request;
+    unsigned int size = GetFrameSize(format) * frames; // TODO
+    if (size > 0)
     {
-      std::string strResponse;
-      m_rpc->SendRequest(RPC_METHOD::AudioFrames, strRequest, strResponse);
+      request.mutable_data()->resize(size);
+      std::memcpy(const_cast<char*>(request.mutable_data()->data()), data, size);
+      request.set_frames(frames);
+      request.set_format(format);
+      std::string strRequest;
+      if (request.SerializeToString(&strRequest))
+      {
+        std::string strResponse;
+        m_rpc->SendRequest(RPC_METHOD::AudioFrames, strRequest, strResponse);
+      }
     }
   }
 }
@@ -350,17 +378,20 @@ game_proc_address_t CNetworkFrontend::HwGetProcAddress(const char* symbol)
 
 bool CNetworkFrontend::OpenPort(unsigned int port)
 {
-  game::OpenPortRequest request;
-  request.set_port(port);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    if (m_rpc->SendRequest(RPC_METHOD::OpenPort, strRequest, strResponse))
+    game::OpenPortRequest request;
+    request.set_port(port);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
     {
-      game::OpenPortResponse response;
-      if (response.ParseFromString(strResponse))
-        return response.result();
+      std::string strResponse;
+      if (m_rpc->SendRequest(RPC_METHOD::OpenPort, strRequest, strResponse))
+      {
+        game::OpenPortResponse response;
+        if (response.ParseFromString(strResponse))
+          return response.result();
+      }
     }
   }
 
@@ -369,27 +400,33 @@ bool CNetworkFrontend::OpenPort(unsigned int port)
 
 void CNetworkFrontend::ClosePort(unsigned int port)
 {
-  game::ClosePortRequest request;
-  request.set_port(port);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::ClosePort, strRequest, strResponse);
+    game::ClosePortRequest request;
+    request.set_port(port);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::ClosePort, strRequest, strResponse);
+    }
   }
 }
 
 void CNetworkFrontend::RumbleSetState(unsigned int port, GAME_RUMBLE_EFFECT effect, float strength)
 {
-  game::RumbleSetStateRequest request;
-  request.set_port(port);
-  request.set_effect(effect);
-  request.set_strength(strength);
-  std::string strRequest;
-  if (request.SerializeToString(&strRequest))
+  if (m_bLoggedIn)
   {
-    std::string strResponse;
-    m_rpc->SendRequest(RPC_METHOD::RumbleSetState, strRequest, strResponse);
+    game::RumbleSetStateRequest request;
+    request.set_port(port);
+    request.set_effect(effect);
+    request.set_strength(strength);
+    std::string strRequest;
+    if (request.SerializeToString(&strRequest))
+    {
+      std::string strResponse;
+      m_rpc->SendRequest(RPC_METHOD::RumbleSetState, strRequest, strResponse);
+    }
   }
 }
 
@@ -401,6 +438,11 @@ void CNetworkFrontend::Notify(const Observable& obs, const ObservableMessage msg
     {
       SetChanged();
       NotifyObservers(msg);
+      break;
+    }
+    case ObservableMessageLoggedIn:
+    {
+      m_bLoggedIn = true;
       break;
     }
     default:

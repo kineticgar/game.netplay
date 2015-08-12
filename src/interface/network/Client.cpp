@@ -39,6 +39,7 @@ CClient::CClient(const SocketPtr& socket, IGame* game) :
   m_requestHandler(new CGameHandler(game))
 {
   assert(m_socket.get() != NULL);
+  m_requestHandler->RegisterObserver(this);
 }
 
 CClient::CClient(const SocketPtr& socket, IFrontend* frontend) :
@@ -46,11 +47,13 @@ CClient::CClient(const SocketPtr& socket, IFrontend* frontend) :
   m_requestHandler(new CFrontendHandler(frontend))
 {
   assert(m_socket.get() != NULL);
+  m_requestHandler->RegisterObserver(this);
 }
 
 CClient::~CClient(void)
 {
   Deinitialize();
+  m_requestHandler->UnregisterObserver(this);
   delete m_requestHandler;
 }
 
@@ -343,4 +346,19 @@ void CClient::FreeInvocation(Invocation& invocation) const
 
   delete invocation.result;
   invocation.result = NULL;
+}
+
+void CClient::Notify(const Observable& obs, const ObservableMessage msg)
+{
+  switch (msg)
+  {
+    case ObservableMessageLoggedIn:
+    {
+      SetChanged();
+      NotifyObservers(msg);
+      break;
+    }
+    default:
+      break;
+  }
 }
