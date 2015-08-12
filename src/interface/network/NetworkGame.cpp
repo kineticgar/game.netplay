@@ -37,7 +37,8 @@ using namespace NETPLAY;
 
 CNetworkGame::CNetworkGame(IFrontend* callbacks) :
   m_callbacks(callbacks),
-  m_rpc(NULL)
+  m_rpc(NULL),
+  m_bLoggedIn(false)
 {
 }
 
@@ -65,7 +66,7 @@ void CNetworkGame::Stop(void)
 
 ADDON_STATUS CNetworkGame::GetStatus(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     addon::GetStatusRequest request;
     std::string strRequest;
@@ -105,7 +106,7 @@ void CNetworkGame::FreeSettings(void)
 
 void CNetworkGame::Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     addon::AnnounceRequest request;
     request.set_flag(flag ? flag : "");
@@ -210,7 +211,11 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
     }
   }
 
-  if (result != GAME_ERROR_NO_ERROR)
+  if (result == GAME_ERROR_NO_ERROR)
+  {
+    m_bLoggedIn = true;
+  }
+  else
   {
     delete m_rpc;
     m_rpc = NULL;
@@ -221,8 +226,10 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
 
 GAME_ERROR CNetworkGame::UnloadGame(void)
 {
-  if (!m_rpc)
+  if (!m_bLoggedIn)
     return GAME_ERROR_FAILED;
+
+  m_bLoggedIn = false;
 
   addon::LogoutRequest request;
   std::string strRequest;
@@ -244,7 +251,7 @@ GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::GetGameInfoRequest request;
     std::string strRequest;
@@ -276,7 +283,7 @@ GAME_ERROR CNetworkGame::GetGameInfo(game_system_av_info* info)
 
 GAME_REGION CNetworkGame::GetRegion(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::GetRegionRequest request;
     std::string strRequest;
@@ -297,7 +304,7 @@ GAME_REGION CNetworkGame::GetRegion(void)
 
 void CNetworkGame::FrameEvent(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::FrameEventRequest request;
     std::string strRequest;
@@ -311,7 +318,7 @@ void CNetworkGame::FrameEvent(void)
 
 GAME_ERROR CNetworkGame::Reset(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::ResetRequest request;
     std::string strRequest;
@@ -342,7 +349,7 @@ GAME_ERROR CNetworkGame::HwContextDestroy(void)
 
 void CNetworkGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::UpdatePortRequest request;
     request.set_port(port);
@@ -366,7 +373,7 @@ void CNetworkGame::UpdatePort(unsigned int port, bool connected, const game_cont
 
 bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::InputEventRequest request;
     request.set_port(port);
@@ -426,7 +433,7 @@ bool CNetworkGame::InputEvent(unsigned int port, const game_input_event* event)
 
 size_t CNetworkGame::SerializeSize(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::SerializeSizeRequest request;
     std::string strRequest;
@@ -449,7 +456,7 @@ GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::SerializeRequest request;
     std::string strRequest;
@@ -477,7 +484,7 @@ GAME_ERROR CNetworkGame::Serialize(uint8_t* data, size_t size)
 
 GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::DeserializeRequest request;
     request.mutable_data()->resize(size);
@@ -500,7 +507,7 @@ GAME_ERROR CNetworkGame::Deserialize(const uint8_t* data, size_t size)
 
 GAME_ERROR CNetworkGame::CheatReset(void)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::CheatResetRequest request;
     std::string strRequest;
@@ -523,7 +530,7 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
 {
   GAME_ERROR result(GAME_ERROR_FAILED);
 
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::GetMemoryRequest request;
     request.set_type(type);
@@ -555,7 +562,7 @@ GAME_ERROR CNetworkGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_
 
 GAME_ERROR CNetworkGame::SetCheat(unsigned int index, bool enabled, const char* code)
 {
-  if (m_rpc)
+  if (m_bLoggedIn)
   {
     game::SetCheatRequest request;
     request.set_index(index);

@@ -71,6 +71,7 @@ namespace NETPLAY
   private:
     IFrontend* const              m_callbacks;
     CClient*                      m_rpc;
+    bool                          m_bLoggedIn;
 
     std::map<GAME_MEMORY, std::vector<uint8_t> > m_memory;
   };
