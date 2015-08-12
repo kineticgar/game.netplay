@@ -57,7 +57,7 @@ bool CPlatformSocket::Connect(void)
 
   if (!m_socket->IsOpen())
   {
-    esyslog("Failed to connect to the server (%s)",m_socket->GetError().c_str());
+    esyslog("Failed to connect to the server (%s)", m_socket->GetError().c_str());
     return false;
   }
 
