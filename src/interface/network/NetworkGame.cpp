@@ -146,25 +146,28 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
 
   std::string strRemoteAddress;
   const std::string strHeader = "Netplay address"; // TODO
-  if (CKeyboard::Get().PromptForInput(strHeader, strRemoteAddress))
-  {
-    if (strRemoteAddress.empty())
-    {
-      dsyslog("Failed to load standalone: remote address is empty");
-    }
-    else
-    {
-      SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
-      if (socket)
-        m_rpc = new CClient(socket, m_callbacks);
-    }
-  }
-  else
+  if (!CKeyboard::Get().PromptForInput(strHeader, strRemoteAddress))
   {
     dsyslog("Failed to load standalone: no input from keyboard");
+    return GAME_ERROR_FAILED;
+  }
+  else if (strRemoteAddress.empty())
+  {
+    dsyslog("Failed to load standalone: remote address is empty");
+    return GAME_ERROR_FAILED;
   }
 
-  if (m_rpc && m_rpc->Initialize())
+  SocketPtr socket = CSocketFactory::CreateClientSocket(strRemoteAddress, remotePort);
+  if (!socket)
+  {
+    dsyslog("Failed to create socket for %s:%u", strRemoteAddress.c_str(), remotePort);
+    return GAME_ERROR_FAILED;
+  }
+
+  GAME_ERROR result = GAME_ERROR_FAILED;
+
+  m_rpc = new CClient(socket, m_callbacks);
+  if (m_rpc->Initialize())
   {
     dsyslog("Connected to network game. Logging in...");
 
@@ -195,21 +198,25 @@ GAME_ERROR CNetworkGame::LoadStandalone(void)
           if (!bLoginResult)
           {
             esyslog("Login rejected");
+            result = GAME_ERROR_REJECTED;
           }
           else
           {
             isyslog("Logged into network game");
-            return GAME_ERROR_NO_ERROR;
+            result = GAME_ERROR_NO_ERROR;
           }
         }
       }
     }
   }
 
-  delete m_rpc;
-  m_rpc = NULL;
+  if (result != GAME_ERROR_NO_ERROR)
+  {
+    delete m_rpc;
+    m_rpc = NULL;
+  }
 
-  return GAME_ERROR_FAILED;
+  return result;
 }
 
 GAME_ERROR CNetworkGame::UnloadGame(void)
