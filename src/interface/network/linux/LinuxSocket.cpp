@@ -152,21 +152,26 @@ bool CLinuxSocket::Connect(void)
 
 void CLinuxSocket::Shutdown(void)
 {
-  Abort();
+  if (m_fd >= 0)
+  {
+    Abort();
 
-  isyslog("Client %s disconnected", m_strAddress.c_str());
+    isyslog("Client %s disconnected", m_strAddress.c_str());
 
-  CLockObject lock(m_abortMutex);
+    CLockObject lock(m_abortMutex);
 
-  delete m_pollerRead;
-  m_pollerRead = NULL;
+    delete m_pollerRead;
+    m_pollerRead = NULL;
 
-  delete m_pollerWrite;
-  m_pollerWrite = NULL;
+    delete m_pollerWrite;
+    m_pollerWrite = NULL;
 
-  shutdown(m_fd, SHUT_RD);
+    shutdown(m_fd, SHUT_RD);
 
-  close(m_fd);
+    close(m_fd);
+
+    m_fd = -1;
+  }
 }
 
 bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)

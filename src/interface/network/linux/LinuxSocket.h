@@ -50,7 +50,7 @@ namespace NETPLAY
    private:
     void Abort(void);
 
-    const int        m_fd;
+    int              m_fd;
     std::string      m_strAddress;
     PLATFORM::CMutex m_abortMutex;
     PLATFORM::CMutex m_writeMutex;
