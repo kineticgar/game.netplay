@@ -232,23 +232,21 @@ void CLinuxSocket::Abort(void)
 bool CLinuxSocket::Write(const std::string& request)
 {
   const uint8_t* ptr = reinterpret_cast<const uint8_t*>(request.data());
-
-  size_t size = request.size();
-
-  const ssize_t written = static_cast<ssize_t>(size);
+  int bytesLeft = request.size();
 
   CLockObject lock(m_writeMutex);
 
-  while (size > 0)
+  while (bytesLeft > 0)
   {
     if (!m_pollerWrite->Poll(WRITE_POLL_TIMEOUT_MS))
     {
-      esyslog("CLinuxSocket: Write timed out");
-      return written - size;
+      esyslog("CLinuxSocket: Write timed out, wrote %d of %u bytes",
+              request.size() - bytesLeft, request.size());
+      return false;
     }
 
     const bool more_data = false;
-    ssize_t p = send(m_fd, ptr, size, (more_data ? MSG_MORE : 0));
+    ssize_t p = send(m_fd, ptr, bytesLeft, (more_data ? MSG_MORE : 0));
 
     if (p <= 0)
     {
@@ -259,14 +257,14 @@ bool CLinuxSocket::Write(const std::string& request)
       }
       else if (errno != EPIPE)
       {
-        esyslog("CLinuxSocket: Write error");
+        esyslog("CLinuxSocket: Write error (errno=%d)", errno);
       }
-      return p;
+      return false;
     }
 
     ptr += p;
-    size -= p;
+    bytesLeft -= p;
   }
 
-  return written;
+  return true;
 }
