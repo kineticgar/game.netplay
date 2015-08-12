@@ -50,6 +50,7 @@ CClient::CClient(const SocketPtr& socket, IFrontend* frontend) :
 
 CClient::~CClient(void)
 {
+  Deinitialize();
   delete m_requestHandler;
 }
 
