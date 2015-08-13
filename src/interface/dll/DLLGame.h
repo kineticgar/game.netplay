@@ -20,10 +20,10 @@
 #pragma once
 
 #include "interface/IGame.h"
+#include "utils/ReadWriteLock.h"
 
 #include "kodi/xbmc_addon_types.h"
 #include "kodi/kodi_game_types.h"
-#include "platform/threads/mutex.h"
 
 #include <string>
 #include <vector>
@@ -92,7 +92,7 @@ namespace NETPLAY
     bool                       m_bInitialized;
     void*                      m_dll;
     CFrontendCallbackLib*      m_pHelper;
-    PLATFORM::CMutex           m_mutex;
+    CReadWriteLock             m_mutex;
 
     ADDON_STATUS (*m_ADDON_Create)(void* callbacks, void* props);
     void         (*m_ADDON_Stop)(void);

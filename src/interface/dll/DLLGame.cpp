@@ -29,7 +29,6 @@
 #endif
 
 using namespace NETPLAY;
-using namespace PLATFORM;
 
 // --- REGISTER_SYMBOL() macro -------------------------------------------------
 
@@ -98,6 +97,8 @@ ADDON_STATUS CDLLGame::Initialize(void)
   else
     strDllPath = m_properties.game_client_dll_path;
 
+  CWriteLockObject lock(m_mutex);
+
   m_dll = dlopen(strDllPath.c_str(), RTLD_LAZY);
   if (m_dll == NULL)
   {
@@ -160,10 +161,10 @@ ADDON_STATUS CDLLGame::Initialize(void)
 
 void CDLLGame::Deinitialize(void)
 {
+  CWriteLockObject lock(m_mutex);
+
   if (m_bInitialized)
   {
-    CLockObject lock(m_mutex);
-
     if (m_ADDON_Destroy)
     {
       m_ADDON_Destroy();
@@ -185,163 +186,163 @@ void CDLLGame::Deinitialize(void)
 
 void CDLLGame::Stop(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_Stop();
 }
 
 ADDON_STATUS CDLLGame::GetStatus(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_GetStatus();
 }
 
 bool CDLLGame::HasSettings(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_HasSettings();
 }
 
 unsigned int CDLLGame::GetSettings(ADDON_StructSetting*** sSet)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_GetSettings(sSet);
 }
 
 ADDON_STATUS CDLLGame::SetSetting(const char* settingName, const void* settingValue)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_SetSetting(settingName, settingValue);
 }
 
 void CDLLGame::FreeSettings(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_FreeSettings();
 }
 
 void CDLLGame::Announce(const char* flag, const char* sender, const char* message, const void* data)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_ADDON_Announce(flag, sender, message, data);
 }
 
 std::string CDLLGame::GetGameAPIVersion(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_GetGameAPIVersion();
 }
 
 std::string CDLLGame::GetMininumGameAPIVersion(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_GetMininumGameAPIVersion();
 }
 
 GAME_ERROR CDLLGame::LoadGame(const char* url)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_LoadGame(url);
 }
 
 GAME_ERROR CDLLGame::LoadGameSpecial(SPECIAL_GAME_TYPE type, const char** urls, size_t urlCount)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_LoadGameSpecial(type, urls, urlCount);
 }
 
 GAME_ERROR CDLLGame::LoadStandalone(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_LoadStandalone();
 }
 
 GAME_ERROR CDLLGame::UnloadGame(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_UnloadGame();
 }
 
 GAME_ERROR CDLLGame::GetGameInfo(game_system_av_info* info)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_GetGameInfo(info);
 }
 
 GAME_REGION CDLLGame::GetRegion(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_GetRegion();
 }
 
 void CDLLGame::FrameEvent(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_FrameEvent();
 }
 
 GAME_ERROR CDLLGame::Reset(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_Reset();
 }
 
 GAME_ERROR CDLLGame::HwContextReset(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_HwContextReset();
 }
 
 GAME_ERROR CDLLGame::HwContextDestroy(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_HwContextDestroy();
 }
 
 void CDLLGame::UpdatePort(unsigned int port, bool connected, const game_controller* controller)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_UpdatePort(port, connected, controller);
 }
 
 bool CDLLGame::InputEvent(unsigned int port, const game_input_event* event)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_InputEvent(port, event);
 }
 
 size_t CDLLGame::SerializeSize(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_SerializeSize();
 }
 
 GAME_ERROR CDLLGame::Serialize(uint8_t* data, size_t size)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_Serialize(data, size);
 }
 
 GAME_ERROR CDLLGame::Deserialize(const uint8_t* data, size_t size)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_Deserialize(data, size);
 }
 
 GAME_ERROR CDLLGame::CheatReset(void)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_CheatReset();
 }
 
 GAME_ERROR CDLLGame::GetMemory(GAME_MEMORY type, const uint8_t** data, size_t* size)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_GetMemory(type, data, size);
 }
 
 GAME_ERROR CDLLGame::SetCheat(unsigned int index, bool enabled, const char* code)
 {
-  CLockObject lock(m_mutex);
+  CReadLockObject lock(m_mutex);
   return m_SetCheat(index, enabled, code);
 }
 
