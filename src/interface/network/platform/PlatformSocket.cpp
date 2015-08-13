@@ -152,12 +152,16 @@ bool CPlatformSocket::Write(const std::string& request)
   if (!m_socket)
     return false;
 
-  ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.data()), request.length());
-  if (iWriteResult != static_cast<ssize_t>(request.length()))
+  if (!request.empty())
   {
-    esyslog(" Failed to write packet (%s), bytes written: %d of total: %d", m_socket->GetError().c_str(), iWriteResult, request.length());
-    return false;
+    ssize_t iWriteResult = m_socket->Write(const_cast<char*>(request.data()), request.length());
+    if (iWriteResult != static_cast<ssize_t>(request.length()))
+    {
+      esyslog(" Failed to write packet (%s), bytes written: %d of total: %d", m_socket->GetError().c_str(), iWriteResult, request.length());
+      return false;
+    }
   }
+
   return true;
 }
 
