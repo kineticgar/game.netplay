@@ -270,12 +270,10 @@ bool CClient::GetResponse(Invocation&  invocation,
 bool CClient::ReadHeader(RPC_MESSAGE_TYPE& messageType, RPC_METHOD& method, size_t& length)
 {
   std::string header;
-
-  std::string message;
-  if (!m_socket->Read(message, HEADER_SIZE))
+  if (!m_socket->Read(header, HEADER_SIZE))
     return false;
 
-  return ParseHeader(message, messageType, method, length);
+  return ParseHeader(header, messageType, method, length);
 }
 
 bool CClient::FormatHeader(RPC_MESSAGE_TYPE messageType, RPC_METHOD method, size_t length, std::string& header)
