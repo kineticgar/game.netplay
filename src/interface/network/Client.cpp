@@ -176,8 +176,11 @@ bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
     if (!SendHeader(false, method, strResponse.size()))
       return false;
 
-    if (!m_socket->Write(strResponse))
-      return false;
+    if (!strResponse.empty())
+    {
+      if (!m_socket->Write(strResponse))
+        return false;
+    }
   }
 
   dsyslog("Sent response: method=%s, length=%u",
