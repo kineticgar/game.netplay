@@ -19,19 +19,22 @@
  */
 #pragma once
 
-#include "IRequestHandler.h"
+#include "RequestHandler.h"
 
 namespace NETPLAY
 {
   class IFrontend;
 
-  class CFrontendHandler : public IRequestHandler
+  class CFrontendHandler : public CRequestHandler
   {
   public:
-    CFrontendHandler(IFrontend* frontendCallback);
+    CFrontendHandler(CClient* client, IFrontend* frontendCallback);
     virtual ~CFrontendHandler(void) { }
 
-    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client);
+  protected:
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest);
+
+    virtual CRequestHandler* Clone(void) const { return new CFrontendHandler(m_client, m_frontend); }
 
   private:
     IFrontend* const m_frontend;

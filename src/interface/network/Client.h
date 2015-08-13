@@ -34,7 +34,7 @@ namespace NETPLAY
 {
   class IFrontend;
   class IGame;
-  class IRequestHandler;
+  class CRequestHandler;
 
   class CClient : public Observer,
                   public Observable,
@@ -101,7 +101,7 @@ namespace NETPLAY
     void FreeInvocation(Invocation& invocation) const;
 
     const SocketPtr         m_socket;
-    IRequestHandler* const  m_requestHandler;
+    CRequestHandler* const  m_requestHandler;
     PLATFORM::CMutex        m_readMutex;
     PLATFORM::CMutex        m_writeMutex;
     std::vector<Invocation> m_invocations;

@@ -36,7 +36,7 @@ using namespace PLATFORM;
 
 CClient::CClient(const SocketPtr& socket, IGame* game) :
   m_socket(socket),
-  m_requestHandler(new CGameHandler(game))
+  m_requestHandler(new CGameHandler(this, game))
 {
   assert(m_socket.get() != NULL);
   m_requestHandler->RegisterObserver(this);
@@ -44,7 +44,7 @@ CClient::CClient(const SocketPtr& socket, IGame* game) :
 
 CClient::CClient(const SocketPtr& socket, IFrontend* frontend) :
   m_socket(socket),
-  m_requestHandler(new CFrontendHandler(frontend))
+  m_requestHandler(new CFrontendHandler(this, frontend))
 {
   assert(m_socket.get() != NULL);
   m_requestHandler->RegisterObserver(this);
@@ -104,8 +104,8 @@ void* CClient::Process(void)
       {
         if (msgLength > 0)
         {
-          if (!m_socket->Read(strRequest, msgLength))
-            break;
+          if (m_socket->Read(strRequest, msgLength))
+            m_requestHandler->ReceiveRequest(msgMethod, strRequest);
         }
       }
       else
@@ -113,12 +113,6 @@ void* CClient::Process(void)
         if (!ReadResponse(msgMethod, msgLength))
           break;
       }
-    }
-
-    if (messageType == RPC_REQUEST)
-    {
-      if (!m_requestHandler->HandleRequest(msgMethod, strRequest, this))
-        break;
     }
   }
 

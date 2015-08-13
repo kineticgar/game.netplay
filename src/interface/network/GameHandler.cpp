@@ -34,17 +34,15 @@
 
 using namespace NETPLAY;
 
-CGameHandler::CGameHandler(IGame* gameCallback) :
+CGameHandler::CGameHandler(CClient* client, IGame* gameCallback) :
+  CRequestHandler(client),
   m_game(gameCallback)
 {
   assert(m_game);
 }
 
-bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client)
+bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strRequest)
 {
-  if (!client)
-    return false;
-
   std::string strResponse;
 
   switch (method)
@@ -82,7 +80,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         addon::LoginResponse response;
         response.set_result(bLoginSuccess);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -94,9 +92,9 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         addon::LogoutResponse response;
         if (response.SerializeToString(&strResponse))
         {
-          if (client->SendResponse(method, strResponse))
+          if (m_client->SendResponse(method, strResponse))
           {
-            client->Deinitialize();
+            m_client->Deinitialize();
             return true;
           }
         }
@@ -114,7 +112,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         addon::GetStatusResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -127,7 +125,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         addon::SetSettingResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       */
       return true;
@@ -141,7 +139,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
 
         addon::AnnounceResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -163,7 +161,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         response.mutable_info()->mutable_timing()->set_fps(info.timing.fps);
         response.mutable_info()->mutable_timing()->set_sample_rate(info.timing.sample_rate);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -177,7 +175,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::GetRegionResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -190,7 +188,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
 
         game::FrameEventResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -204,7 +202,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::ResetResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -227,7 +225,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
 
         game::UpdatePortResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -281,7 +279,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::InputEventResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -295,7 +293,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::SerializeSizeResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -319,7 +317,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         if (size > 0)
           response.set_data(data.data(), size);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -335,7 +333,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::DeserializeResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -349,7 +347,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::CheatResetResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -370,7 +368,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         if (result == GAME_ERROR_NO_ERROR && size > 0)
           response.set_data(data, size);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -384,7 +382,7 @@ bool CGameHandler::HandleRequest(RPC_METHOD method, const std::string& strReques
         game::SetCheatResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }

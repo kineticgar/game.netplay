@@ -30,17 +30,15 @@
 
 using namespace NETPLAY;
 
-CFrontendHandler::CFrontendHandler(IFrontend* frontendCallback) :
+CFrontendHandler::CFrontendHandler(CClient* client, IFrontend* frontendCallback) :
+  CRequestHandler(client),
   m_frontend(frontendCallback)
 {
   assert(m_frontend);
 }
 
-bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client)
+bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRequest)
 {
-  if (!client)
-    return false;
-
   std::string strResponse;
 
   switch (method)
@@ -54,7 +52,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         addon::LogResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -68,7 +66,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         addon::GetSettingResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -81,7 +79,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         addon::QueueNotificationResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -95,7 +93,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         addon::WakeOnLanResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -109,7 +107,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         addon::UnknownToUTF8Response response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -123,7 +121,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         addon::GetLocalizedStringResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -137,7 +135,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         addon::GetDVDMenuLanguageResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -150,7 +148,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         game::CloseGameResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -166,7 +164,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         game::VideoFrameResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -181,7 +179,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         game::AudioFramesResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -195,7 +193,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
         game::OpenPortResponse response;
         response.set_result(result);
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -208,7 +206,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         game::ClosePortResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }
@@ -223,7 +221,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
 
         game::RumbleSetStateResponse response;
         if (response.SerializeToString(&strResponse))
-          return client->SendResponse(method, strResponse);
+          return m_client->SendResponse(method, strResponse);
       }
       break;
     }

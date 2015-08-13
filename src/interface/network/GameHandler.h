@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include "IRequestHandler.h"
+#include "RequestHandler.h"
 
 #include <string>
 
@@ -27,13 +27,16 @@ namespace NETPLAY
 {
   class IGame;
 
-  class CGameHandler : public IRequestHandler
+  class CGameHandler : public CRequestHandler
   {
   public:
-    CGameHandler(IGame* gameCallback);
+    CGameHandler(CClient* client, IGame* gameCallback);
     virtual ~CGameHandler(void) { }
 
-    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest, CClient* client);
+  protected:
+    virtual bool HandleRequest(RPC_METHOD method, const std::string& strRequest);
+
+    virtual CRequestHandler* Clone(void) const { return new CGameHandler(m_client, m_game); }
 
   private:
     IGame* const m_game;

@@ -184,6 +184,8 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
+  dsyslog("Reading %u bytes", totalBytes);
+
   while (missing > 0)
   {
     m_pollerRead->Poll(-1);
@@ -215,6 +217,8 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
     ptr += p;
     missing -= p;
   }
+
+  dsyslog("Read %u bytes", totalBytes);
 
   return true;
 }
