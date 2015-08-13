@@ -120,7 +120,7 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
 
       if (m_socket->GetErrorNumber() == ETIMEDOUT)
       {
-        esyslog("Socket timed out, read %u or %u bytes", totalBytesRead, totalBytes);
+        esyslog("Socket timed out, read %u of %u bytes", totalBytesRead, totalBytes);
         break;
       }
       else if (m_socket->GetErrorNumber() == ECONNRESET)
