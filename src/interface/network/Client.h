@@ -70,6 +70,14 @@ namespace NETPLAY
     virtual void* Process(void);
 
   private:
+    enum RPC_MESSAGE_TYPE
+    {
+      RPC_REQUEST,
+      RPC_RESPONSE,
+    };
+
+    bool SendMessage(RPC_MESSAGE_TYPE messageType, RPC_METHOD method, const std::string& strMessage);
+
     struct Invocation
     {
       RPC_METHOD        method;
@@ -77,18 +85,17 @@ namespace NETPLAY
       PLATFORM::CEvent* finished_event;
     };
 
-    bool GetResponse(RPC_METHOD   method,
+    bool GetResponse(Invocation&  invocation,
+                     RPC_METHOD   method,
                      std::string& response,
                      unsigned int iInitialTimeoutMs    = 10000,
                      unsigned int iDatapacketTimeoutMs = 10000);
 
-    bool SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength);
-
-    bool ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length);
+    bool ReadHeader(RPC_MESSAGE_TYPE& messageType, RPC_METHOD& method, size_t& length);
     bool ReadResponse(RPC_METHOD method, size_t length);
 
-    bool FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length);
-    bool ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length);
+    bool FormatHeader(RPC_MESSAGE_TYPE messageType, RPC_METHOD method, size_t length, std::string& header);
+    bool ParseHeader(const std::string& header, RPC_MESSAGE_TYPE& messageType, RPC_METHOD& method, size_t& length);
 
     Invocation Invoke(RPC_METHOD method);
     void FreeInvocation(Invocation& invocation) const;

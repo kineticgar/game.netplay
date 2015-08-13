@@ -86,7 +86,7 @@ void* CClient::Process(void)
 
   while (!IsStopped())
   {
-    bool bRequest;
+    RPC_MESSAGE_TYPE messageType;
     size_t msgLength;
     RPC_METHOD msgMethod;
     std::string strRequest;
@@ -94,13 +94,13 @@ void* CClient::Process(void)
     {
       CLockObject lock(m_readMutex);
 
-      if (!ReadHeader(bRequest, msgMethod, msgLength))
+      if (!ReadHeader(messageType, msgMethod, msgLength))
         break;
 
-      dsyslog("Received %s: method=%s, length=%u", bRequest ? "request" : "response",
+      dsyslog("Sent %s: method=%s, length=%u", messageType == RPC_REQUEST ? "request" : "response",
           RPCMethods::TranslateMethod(msgMethod), msgLength);
 
-      if (bRequest)
+      if (messageType == RPC_REQUEST)
       {
         if (msgLength > 0)
         {
@@ -115,7 +115,7 @@ void* CClient::Process(void)
       }
     }
 
-    if (bRequest)
+    if (messageType == RPC_REQUEST)
     {
       if (!m_requestHandler->HandleRequest(msgMethod, strRequest, this))
         break;
@@ -132,31 +132,29 @@ void* CClient::Process(void)
 
 bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest)
 {
-  bool bSuccess = false;
+  Invocation invocation = Invoke(method);
 
-  if (!IsStopped())
   {
-    CLockObject lock(m_writeMutex);
-
-    if (SendHeader(true, method, strRequest.size()))
-      bSuccess = m_socket->Write(strRequest);
+    CLockObject lock(m_invocationMutex);
+    m_invocations.push_back(invocation);
   }
 
-  if (!bSuccess)
-    return false;
-
-  dsyslog("Sent request: method=%s, length=%u",
-      RPCMethods::TranslateMethod(method), strRequest.length());
-
-  return true;
+  return SendMessage(RPC_REQUEST, method, strRequest);
 }
 
 bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std::string& strResponse)
 {
-  if (!SendRequest(method, strRequest))
+  Invocation invocation = Invoke(method);
+
+  {
+    CLockObject lock(m_invocationMutex);
+    m_invocations.push_back(invocation);
+  }
+
+  if (!SendMessage(RPC_REQUEST, method, strRequest))
     return false;
 
-  if (!GetResponse(method, strResponse))
+  if (!GetResponse(invocation, method, strResponse))
   {
     esyslog("Server failed to respond, method=%s", RPCMethods::TranslateMethod(method));
     return false;
@@ -167,43 +165,37 @@ bool CClient::SendRequest(RPC_METHOD method, const std::string& strRequest, std:
 
 bool CClient::SendResponse(RPC_METHOD method, const std::string& strResponse)
 {
+  return SendMessage(RPC_RESPONSE, method, strResponse);
+}
+
+bool CClient::SendMessage(RPC_MESSAGE_TYPE messageType, RPC_METHOD method, const std::string& strMessage)
+{
   if (IsStopped())
     return false;
 
-  {
-    CLockObject lock(m_writeMutex);
-
-    if (!SendHeader(false, method, strResponse.size()))
-      return false;
-
-    if (!strResponse.empty())
-    {
-      if (!m_socket->Write(strResponse))
-        return false;
-    }
-  }
-
-  dsyslog("Sent response: method=%s, length=%u",
-      RPCMethods::TranslateMethod(method), strResponse.length());
-
-  return true;
-}
-
-bool CClient::SendHeader(bool bRequest, RPC_METHOD method, size_t msgLength)
-{
   std::string header;
-  if (!FormatHeader(header, bRequest, method, msgLength))
+  if (!FormatHeader(messageType, method, strMessage.length(), header))
     return false;
+
+  CLockObject lock(m_writeMutex);
 
   if (!m_socket->Write(header))
     return false;
+
+  if (!strMessage.empty())
+  {
+    if (!m_socket->Write(strMessage))
+      return false;
+  }
+
+  dsyslog("Sent %s: method=%s, length=%u", messageType == RPC_REQUEST ? "request" : "response",
+      RPCMethods::TranslateMethod(method), strMessage.length());
 
   return true;
 }
 
 bool CClient::ReadResponse(RPC_METHOD method, size_t length)
 {
-
   bool bInvocationFound = false;
   Invocation invocation;
 
@@ -242,19 +234,13 @@ bool CClient::ReadResponse(RPC_METHOD method, size_t length)
   return true;
 }
 
-bool CClient::GetResponse(RPC_METHOD   method,
+bool CClient::GetResponse(Invocation&  invocation,
+                          RPC_METHOD   method,
                           std::string& response,
                           unsigned int iInitialTimeoutMs    /* = 10000 */,
                           unsigned int iDatapacketTimeoutMs /* = 10000 */)
 {
   bool bSuccess = false;
-
-  Invocation invocation = Invoke(method);
-
-  {
-    CLockObject lock(m_invocationMutex);
-    m_invocations.push_back(invocation);
-  }
 
   if (invocation.finished_event->Wait(RESPONSE_TIMEOUT_MS))
   {
@@ -284,7 +270,7 @@ bool CClient::GetResponse(RPC_METHOD   method,
   return bSuccess;
 }
 
-bool CClient::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
+bool CClient::ReadHeader(RPC_MESSAGE_TYPE& messageType, RPC_METHOD& method, size_t& length)
 {
   std::string header;
   header.resize(HEADER_SIZE);
@@ -293,14 +279,14 @@ bool CClient::ReadHeader(bool& bRequest, RPC_METHOD& method, size_t& length)
   if (!m_socket->Read(message, HEADER_SIZE))
     return false;
 
-  return ParseHeader(message, bRequest, method, length);
+  return ParseHeader(message, messageType, method, length);
 }
 
-bool CClient::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method, size_t length)
+bool CClient::FormatHeader(RPC_MESSAGE_TYPE messageType, RPC_METHOD method, size_t length, std::string& header)
 {
   header.resize(HEADER_SIZE);
 
-  header[0] = (static_cast<uint16_t>(method) >> 8) | (bRequest ? REQUEST_MASK : 0);
+  header[0] = (static_cast<uint16_t>(method) >> 8) | (messageType == RPC_REQUEST ? REQUEST_MASK : 0);
   header[1] = static_cast<uint16_t>(method) & 0xff;
   header[2] = length >> 16;
   header[3] = (length >> 8) & 0xff;
@@ -309,14 +295,14 @@ bool CClient::FormatHeader(std::string& header, bool bRequest, RPC_METHOD method
   return true;
 }
 
-bool CClient::ParseHeader(const std::string& header, bool& bRequest, RPC_METHOD& method, size_t& length)
+bool CClient::ParseHeader(const std::string& header, RPC_MESSAGE_TYPE& messageType, RPC_METHOD& method, size_t& length)
 {
   if (header.size() != 5)
     return false;
 
   const uint8_t* data = reinterpret_cast<const uint8_t*>(header.c_str());
 
-  bRequest = (data[0] & REQUEST_MASK) ? true : false;
+  messageType = (data[0] & REQUEST_MASK) ? RPC_REQUEST : RPC_RESPONSE;
 
   method = static_cast<RPC_METHOD>(((data[0] & ~REQUEST_MASK) << 8)  | data[1]);
   if (static_cast<int>(method) >= static_cast<int>(RPC_METHOD::RPC_METHOD_COUNT))
