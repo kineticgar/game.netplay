@@ -104,8 +104,8 @@ void* CClient::Process(void)
       {
         if (msgLength > 0)
         {
-          if (m_socket->Read(strRequest, msgLength))
-            m_requestHandler->ReceiveRequest(msgMethod, strRequest);
+          if (!m_socket->Read(strRequest, msgLength))
+            break;
         }
       }
       else
@@ -114,6 +114,9 @@ void* CClient::Process(void)
           break;
       }
     }
+
+    if (messageType == RPC_REQUEST)
+      m_requestHandler->ReceiveRequest(msgMethod, strRequest);
   }
 
   dsyslog("Ending client thread");
