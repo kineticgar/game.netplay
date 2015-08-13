@@ -158,6 +158,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
       if (request.ParseFromString(strRequest))
       {
         m_frontend->VideoFrame(reinterpret_cast<const uint8_t*>(request.data().c_str()),
+                               request.data().size(),
                                request.width(),
                                request.height(),
                                static_cast<GAME_RENDER_FORMAT>(request.format()));
@@ -174,6 +175,7 @@ bool CFrontendHandler::HandleRequest(RPC_METHOD method, const std::string& strRe
       if (request.ParseFromString(strRequest))
       {
         m_frontend->AudioFrames(reinterpret_cast<const uint8_t*>(request.data().c_str()),
+                                request.data().size(),
                                 request.frames(),
                                 static_cast<GAME_AUDIO_FORMAT>(request.format()));
 

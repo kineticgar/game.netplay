@@ -65,8 +65,8 @@ namespace NETPLAY
     virtual bool DirectoryExists(const char* strPath);
     virtual bool RemoveDirectory(const char* strPath);
     virtual void CloseGame(void);
-    virtual void VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format);
-    virtual void AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format);
+    virtual void VideoFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format);
+    virtual void AudioFrames(const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format);
     virtual void HwSetInfo(const game_hw_info* hw_info);
     virtual uintptr_t HwGetCurrentFramebuffer(void);
     virtual game_proc_address_t HwGetProcAddress(const char* symbol);

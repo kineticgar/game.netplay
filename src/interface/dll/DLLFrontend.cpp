@@ -206,14 +206,14 @@ void CDLLFrontend::CloseGame(void)
   return m_game->CloseGame();
 }
 
-void CDLLFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+void CDLLFrontend::VideoFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
-  return m_game->VideoFrame(data, width, height, format);
+  return m_game->VideoFrame(data, size, width, height, format);
 }
 
-void CDLLFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CDLLFrontend::AudioFrames(const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
-  return m_game->AudioFrames(data, frames, format);
+  return m_game->AudioFrames(data, size, frames, format);
 }
 
 void CDLLFrontend::HwSetInfo(const game_hw_info* hw_info)

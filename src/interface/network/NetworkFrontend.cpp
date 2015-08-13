@@ -289,28 +289,11 @@ void CNetworkFrontend::CloseGame(void)
   }
 }
 
-unsigned int GetStride(GAME_RENDER_FORMAT format, unsigned int width)
-{
-  switch (format)
-  {
-    case GAME_RENDER_FMT_0RGB8888:
-      return width * 4;
-    case GAME_RENDER_FMT_RGB565:
-      return width * 2;
-    case GAME_RENDER_FMT_0RGB1555:
-      return width * 2;
-    default:
-      break;
-  }
-  return 0;
-}
-
-void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
   if (m_bLoggedIn)
   {
     game::VideoFrameRequest request;
-    unsigned int size = GetStride(format, width) * height; // TODO
     if (size > 0)
     {
       request.mutable_data()->resize(size);
@@ -328,24 +311,11 @@ void CNetworkFrontend::VideoFrame(const uint8_t* data, unsigned int width, unsig
   }
 }
 
-unsigned int GetFrameSize(GAME_AUDIO_FORMAT format)
-{
-  switch (format)
-  {
-    case GAME_AUDIO_FMT_S16NE:
-      return 4;
-    default:
-      break;
-  }
-  return 0;
-}
-
-void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CNetworkFrontend::AudioFrames(const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   if (m_bLoggedIn)
   {
     game::AudioFramesRequest request;
-    unsigned int size = GetFrameSize(format) * frames; // TODO
     if (size > 0)
     {
       request.mutable_data()->resize(size);

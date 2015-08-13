@@ -70,20 +70,20 @@ DLLEXPORT void GAME_close_game(AddonCB* handle, CB_GameLib* cbTable)
   return cbTable->CloseGame(handle->addonData);
 }
 
-DLLEXPORT void GAME_video_frame(AddonCB* handle, CB_GameLib* cbTable, const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+DLLEXPORT void GAME_video_frame(AddonCB* handle, CB_GameLib* cbTable, const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
   if (handle == NULL || cbTable == NULL)
     return;
 
-  return cbTable->VideoFrame(handle->addonData, data, width, height, format);
+  return cbTable->VideoFrame(handle->addonData, data, size, width, height, format);
 }
 
-DLLEXPORT void GAME_audio_frames(AddonCB* handle, CB_GameLib* cbTable, const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+DLLEXPORT void GAME_audio_frames(AddonCB* handle, CB_GameLib* cbTable, const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   if (handle == NULL || cbTable == NULL)
     return;
 
-  return cbTable->AudioFrames(handle->addonData, data, frames, format);
+  return cbTable->AudioFrames(handle->addonData, data, size, frames, format);
 }
 
 DLLEXPORT void GAME_hw_set_info(AddonCB* handle, CB_GameLib* cbTable, game_hw_info* hw_info)

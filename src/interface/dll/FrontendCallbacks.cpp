@@ -433,7 +433,7 @@ void CFrontendCallbacksGame::CloseGame(void* addonData)
   return frontend->CloseGame();
 }
 
-void CFrontendCallbacksGame::VideoFrame(void* addonData, const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+void CFrontendCallbacksGame::VideoFrame(void* addonData, const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
   IFrontend* frontend = GetFrontend(addonData);
   if (frontend == NULL)
@@ -442,10 +442,10 @@ void CFrontendCallbacksGame::VideoFrame(void* addonData, const uint8_t* data, un
   if (data == NULL || width == 0 || height == 0)
     return;
 
-  return frontend->VideoFrame(data, width, height, format);
+  return frontend->VideoFrame(data, size, width, height, format);
 }
 
-void CFrontendCallbacksGame::AudioFrames(void* addonData, const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CFrontendCallbacksGame::AudioFrames(void* addonData, const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   IFrontend* frontend = GetFrontend(addonData);
   if (frontend == NULL)
@@ -454,7 +454,7 @@ void CFrontendCallbacksGame::AudioFrames(void* addonData, const uint8_t* data, u
   if (data == NULL || frames == 0)
     return;
 
-  return frontend->AudioFrames(data, frames, format);
+  return frontend->AudioFrames(data, size, frames, format);
 }
 
 void CFrontendCallbacksGame::HwSetInfo(void* addonData, const game_hw_info* hw_info)

@@ -383,20 +383,20 @@ void CFrontendManager::CloseGame(void)
     (*it)->CloseGame();
 }
 
-void CFrontendManager::VideoFrame(const uint8_t* data, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
+void CFrontendManager::VideoFrame(const uint8_t* data, unsigned int size, unsigned int width, unsigned int height, GAME_RENDER_FORMAT format)
 {
   CReadLockObject lock(m_mutex);
 
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
-    (*it)->VideoFrame(data, width, height, format);
+    (*it)->VideoFrame(data, size, width, height, format);
 }
 
-void CFrontendManager::AudioFrames(const uint8_t* data, unsigned int frames, GAME_AUDIO_FORMAT format)
+void CFrontendManager::AudioFrames(const uint8_t* data, unsigned int size, unsigned int frames, GAME_AUDIO_FORMAT format)
 {
   CReadLockObject lock(m_mutex);
 
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)
-    (*it)->AudioFrames(data, frames, format);
+    (*it)->AudioFrames(data, size, frames, format);
 }
 
 void CFrontendManager::HwSetInfo(const game_hw_info* hw_info)
