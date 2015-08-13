@@ -233,6 +233,7 @@ bool CClient::ReadResponse(RPC_METHOD method, size_t length)
   }
   else
   {
+    esyslog("Received response, but method wasn't invoked!");
     std::string dummy;
     if (!m_socket->Read(dummy, length))
       return false;
