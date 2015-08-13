@@ -97,7 +97,7 @@ void* CClient::Process(void)
       if (!ReadHeader(messageType, msgMethod, msgLength))
         break;
 
-      dsyslog("Sent %s: method=%s, length=%u", messageType == RPC_REQUEST ? "request" : "response",
+      dsyslog("Received %s: method=%s, length=%u", messageType == RPC_REQUEST ? "request" : "response",
           RPCMethods::TranslateMethod(msgMethod), msgLength);
 
       if (messageType == RPC_REQUEST)
