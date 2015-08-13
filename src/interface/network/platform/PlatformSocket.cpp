@@ -108,9 +108,13 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
       if (!m_socket)
         return false;
 
+      dsyslog("Reading %d bytes", totalBytes - totalBytesRead);
+
       ssize_t bytesRead = m_socket->Read(const_cast<char*>(buffer.data()) + totalBytesRead,
                                          totalBytes - totalBytesRead,
                                          READ_TIMEOUT_MS);
+
+      dsyslog("Read %d bytes", bytesRead);
 
       if (bytesRead > 0)
         totalBytesRead += bytesRead;
@@ -129,6 +133,7 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
     if (bInterrupted)
     {
       // Read was interrupted, try again, but not too soon
+      dsyslog("Read was interrupted, sleeping for 1ms");
       CEvent::Sleep(1);
     }
   }
@@ -138,14 +143,18 @@ bool CPlatformSocket::Read(std::string& buffer, unsigned int totalBytes)
 
 void CPlatformSocket::AbortRead(void)
 {
+  dsyslog("Aborting read");
   CLockObject lock(m_abortMutex);
   if (m_socket)
     m_socket->AbortRead();
+  dsyslog("Read aborted");
 }
 
 bool CPlatformSocket::Write(const std::string& request)
 {
   AbortRead();
+
+  dsyslog("Writing %u bytes", request.size());
 
   CLockObject lock(m_socketMutex);
 
@@ -161,6 +170,8 @@ bool CPlatformSocket::Write(const std::string& request)
       return false;
     }
   }
+
+  dsyslog("Wrote %u bytes", request.size());
 
   return true;
 }
