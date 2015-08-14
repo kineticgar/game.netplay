@@ -158,18 +158,15 @@ int main(int argc, char* argv[])
     if (!GAME)
       throw std::runtime_error("Server failed to connect to a game client. Call with no args for help.");
 
-    if (option == OPTION_REMOTE_GAME || option == OPTION_DISCOVER)
-    {
-      if (GAME->LoadStandalone() != GAME_ERROR_NO_ERROR)
-        throw std::runtime_error("Failed to login to remote game");
-    }
-
     ADDON_STATUS status = GAME->Initialize();
     if (status == ADDON_STATUS_UNKNOWN ||status == ADDON_STATUS_PERMANENT_FAILURE)
       throw std::runtime_error("Failed to initialize game client");
 
     if (option == OPTION_LOCAL_GAME)
     {
+      if (GAME->LoadStandalone() != GAME_ERROR_NO_ERROR)
+        throw std::runtime_error("Failed to login to remote game");
+
       SERVER = new CServer(GAME, CALLBACKS);
       if (!SERVER->Initialize())
         throw std::runtime_error("Failed to initialize server");
