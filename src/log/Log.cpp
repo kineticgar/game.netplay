@@ -48,6 +48,11 @@ CLog::~CLog(void)
   SetPipe(NULL);
 }
 
+SYS_LOG_TYPE CLog::Type(void) const
+{
+  return m_pipe ? m_pipe->Type() : SYS_LOG_TYPE_NULL;
+}
+
 bool CLog::SetType(SYS_LOG_TYPE type)
 {
   PLATFORM::CLockObject lock(m_mutex);

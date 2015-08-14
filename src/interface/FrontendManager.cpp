@@ -21,6 +21,7 @@
 #include "FrontendManager.h"
 #include "interface/IFrontend.h"
 #include "interface/IGame.h"
+#include "log/Log.h"
 
 #include "kodi/libKODI_game.h"
 #include "kodi/libXBMC_addon.h"
@@ -58,6 +59,25 @@ IFrontend* CFrontendManager::GetMaster(void)
 
 void CFrontendManager::Log(const ADDON::addon_log_t loglevel, const char* msg)
 {
+  if (CLog::Get().Type() != SYS_LOG_TYPE_ADDON)
+  {
+    switch (loglevel)
+    {
+      case ADDON::LOG_DEBUG:
+        dsyslog("GAME: %s", msg);
+        break;
+      case ADDON::LOG_INFO:
+        isyslog("GAME: %s", msg);
+        break;
+      case ADDON::LOG_NOTICE:
+        isyslog("GAME: %s", msg);
+        break;
+      case ADDON::LOG_ERROR:
+        esyslog("GAME: %s", msg);
+        break;
+    }
+  }
+
   CReadLockObject lock(m_mutex);
 
   for (std::vector<IFrontend*>::iterator it = m_frontends.begin(); it != m_frontends.end(); ++it)

@@ -55,6 +55,8 @@ namespace NETPLAY
     static CLog& Get(void);
     ~CLog(void);
 
+    SYS_LOG_TYPE Type(void) const;
+
     bool SetType(SYS_LOG_TYPE type);
     void SetPipe(ILog* pipe);
     void SetLevel(SYS_LOG_LEVEL level);
