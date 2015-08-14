@@ -51,6 +51,10 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
+    src/interface/network/Netplay.cpp
+    src/interface/network/NetplayUtils.cpp
+    src/interface/network/Network.cpp
+    src/interface/network/Socket.cpp
     src/keyboard/Keyboard.cpp
     src/keyboard/KeyboardAddon.cpp
     src/keyboard/KeyboardConsole.cpp
