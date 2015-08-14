@@ -20,8 +20,6 @@
 
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
-#include "interface/network/NetworkGame.h"
-#include "interface/network/Server.h"
 #include "keyboard/Keyboard.h"
 #include "keyboard/KeyboardMock.h"
 #include "log/Log.h"
@@ -88,7 +86,7 @@ namespace NETPLAY
           CKeyboard::Get().SetPipe(new CKeyboardMock(responses));
         }
 
-        game = new CNetworkGame(callbacks);
+        // TODO
         break;
       }
       case OPTION_DISCOVER:
@@ -111,7 +109,6 @@ int main(int argc, char* argv[])
 {
   CFrontendManager* CALLBACKS = NULL;
   IGame*            GAME      = NULL;
-  CServer*          SERVER    = NULL;
 
   OPTION option(OPTION_INVALID);
 
@@ -166,10 +163,6 @@ int main(int argc, char* argv[])
     {
       if (GAME->LoadStandalone() != GAME_ERROR_NO_ERROR)
         throw std::runtime_error("Failed to login to remote game");
-
-      SERVER = new CServer(GAME, CALLBACKS);
-      if (!SERVER->Initialize())
-        throw std::runtime_error("Failed to initialize server");
     }
   }
   catch (const std::runtime_error& error)
@@ -184,8 +177,8 @@ int main(int argc, char* argv[])
 
   if (option == OPTION_LOCAL_GAME)
   {
-    CAbortableTask task(SERVER);
-    SERVER->WaitForExit();
+    CAbortableTask task;
+    task.Wait();
     exitCode = task.GetExitCode();
   }
   else if (option == OPTION_REMOTE_GAME || option == OPTION_DISCOVER)
@@ -198,7 +191,6 @@ int main(int argc, char* argv[])
 
   isyslog("Netplay shutting down");
 
-  delete SERVER;
   delete CALLBACKS;
   delete GAME;
 

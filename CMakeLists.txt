@@ -51,16 +51,6 @@ set(NETPLAY_SOURCES
     src/interface/dll/FrontendCallbackLib.cpp
     src/interface/dll/FrontendCallbacks.cpp
     src/interface/FrontendManager.cpp
-    src/interface/network/Client.cpp
-    src/interface/network/FrontendHandler.cpp
-    src/interface/network/GameHandler.cpp
-    src/interface/network/NetworkFrontend.cpp
-    src/interface/network/NetworkGame.cpp
-    src/interface/network/platform/PlatformSocket.cpp
-    src/interface/network/RequestHandler.cpp
-    src/interface/network/RPCMethods.cpp
-    src/interface/network/Server.cpp
-    src/interface/network/SocketFactory.cpp
     src/keyboard/Keyboard.cpp
     src/keyboard/KeyboardAddon.cpp
     src/keyboard/KeyboardConsole.cpp
@@ -76,16 +66,6 @@ set(NETPLAY_SOURCES
     src/utils/StringUtils.cpp
     src/utils/Version.cpp
 )
-
-if(WIN32)
-    # TODO
-else(WIN32)
-    list(APPEND NETPLAY_SOURCES
-        src/filesystem/linux/LinuxPoller.cpp
-        src/interface/network/linux/LinuxServerSocket.cpp
-        src/interface/network/linux/LinuxSocket.cpp
-    )
-endif(WIN32)
 
 set(STANDALONE_SOURCES
     ${NETPLAY_SOURCES}

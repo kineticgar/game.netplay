@@ -21,8 +21,6 @@
 #include "interface/dll/DLLFrontend.h"
 #include "interface/dll/DLLGame.h"
 #include "interface/FrontendManager.h"
-#include "interface/network/NetworkGame.h"
-#include "interface/network/Server.h"
 #include "keyboard/Keyboard.h"
 #include "keyboard/KeyboardAddon.h"
 #include "log/Log.h"
@@ -48,7 +46,6 @@ namespace NETPLAY
   IFrontend*              FRONTEND  = NULL;
   CFrontendManager*       CALLBACKS = NULL;
   IGame*                  GAME      = NULL;
-  CServer*                SERVER    = NULL;
 }
 
 // --- Helper functions --------------------------------------------------------
@@ -76,11 +73,7 @@ namespace NETPLAY
   {
     IGame* game = NULL;
 
-    if (IsStandalone(properties))
-    {
-      game = new CNetworkGame(callbacks);
-    }
-    else
+    if (!IsStandalone(properties))
     {
       CLog::Get().SetLogPrefix(LOG_PREFIX);
 
@@ -132,13 +125,6 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
     if (status == ADDON_STATUS_UNKNOWN || status == ADDON_STATUS_PERMANENT_FAILURE)
       throw status;
 
-    if (!IsStandalone(gameProps))
-    {
-      SERVER = new CServer(GAME, CALLBACKS);
-      if (!SERVER->Initialize())
-        throw ADDON_STATUS_PERMANENT_FAILURE;
-    }
-
     returnStatus = ADDON_STATUS_OK;
   }
   catch (const ADDON_STATUS& status)
@@ -158,9 +144,6 @@ void ADDON_Stop()
 
 void ADDON_Destroy()
 {
-  if (SERVER)
-    SERVER->Deinitialize();
-
   if (GAME)
     GAME->Deinitialize();
 
@@ -173,7 +156,6 @@ void ADDON_Destroy()
   if (FRONTEND)
     FRONTEND->Deinitialize();
 
-  SAFE_DELETE(SERVER);
   SAFE_DELETE(GAME);
   SAFE_DELETE(CALLBACKS);
   SAFE_DELETE(FRONTEND);
