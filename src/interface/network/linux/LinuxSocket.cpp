@@ -184,8 +184,6 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
 
   uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
-  dsyslog("Reading %u bytes", totalBytes);
-
   while (missing > 0)
   {
     m_pollerRead->Poll(-1);
@@ -218,8 +216,6 @@ bool CLinuxSocket::Read(std::string& buffer, unsigned int totalBytes)
     missing -= p;
   }
 
-  dsyslog("Read %u bytes", totalBytes);
-
   return true;
 }
 
@@ -229,20 +225,14 @@ void CLinuxSocket::Abort(void)
 
   CLockObject lock(m_abortMutex);
 
-  dsyslog("Aborting poller");
-
   if (m_pollerRead)
     m_pollerRead->Abort();
-
-  dsyslog("Poller aborted");
 }
 
 bool CLinuxSocket::Write(const std::string& request)
 {
   const uint8_t* ptr = reinterpret_cast<const uint8_t*>(request.data());
   int bytesLeft = request.size();
-
-  dsyslog("Writing message of length %u", request.size());
 
   CLockObject lock(m_writeMutex);
 
@@ -275,8 +265,6 @@ bool CLinuxSocket::Write(const std::string& request)
     ptr += p;
     bytesLeft -= p;
   }
-
-  dsyslog("Wrote message of length %u", request.size());
 
   return true;
 }
