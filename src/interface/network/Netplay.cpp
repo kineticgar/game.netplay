@@ -67,7 +67,7 @@ using namespace NETPLAY;
 #define PREV_PTR(x) ((x) == 0 ? this->buffer_size - 1 : (x) - 1)
 #define NEXT_PTR(x) ((x + 1) % this->buffer_size)
 
-/* RetroArch specific bind IDs. */
+// RetroArch specific bind IDs
 #define RARCH_FIRST_CUSTOM_BIND 16
 
 enum
@@ -267,7 +267,7 @@ void CNetplay::flip_users(void)
     return;
   }
 
-  /* Make sure both clients are definitely synced up. */
+  // Make sure both clients are definitely synced up
   if (this->frame_count < (this->flip_frame + 2 * UDP_FRAME_PACKETS))
   {
     esyslog("Cannot flip users yet. Wait a second or two before attempting flip");
@@ -278,7 +278,7 @@ void CNetplay::flip_users(void)
   {
     dsyslog("Netplay users are flipped");
 
-    /* Queue up a flip well enough in the future. */
+    // Queue up a flip well enough in the future
     this->flip ^= true;
     this->flip_frame = flip_frame;
   }
