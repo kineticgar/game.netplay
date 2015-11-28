@@ -1,1 +1,1 @@
-protobuf https://github.com/google/protobuf/archive/ad8a889d1e1e2b0efd5b7579aa57ea5326cda6da.zip
+protobuf https://github.com/google/protobuf tags/v3.0.0-beta-1
